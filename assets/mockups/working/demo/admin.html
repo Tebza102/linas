@@ -1,0 +1,240 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Admin — Lead Inbox (working demo)</title>
+<link rel="icon" href="../../../source/brand/Linas_Favicon.jpg">
+<link rel="stylesheet" href="demo.css">
+</head>
+<body>
+<div class="demo-banner" role="note">CLIENT WORKING-MODEL DEMO — this is a client-review demo of the admin area, not a production-secure login. In production this route requires authentication.</div>
+<header class="demo-header">
+  <a class="demo-header__mark" href="index.html"><img src="../../../source/brand/Linas_Favicon.jpg" alt="Lina's mark" width="28" height="28"><span>Lina's — Demo</span></a>
+  <nav class="demo-header__nav" aria-label="Demo navigation">
+    <a href="index.html">Hub</a>
+    <a href="enquiry.html">Enquiry</a>
+    <a href="admin.html" aria-current="page">Admin</a>
+    <a href="dashboard.html">Dashboard</a>
+  </nav>
+</header>
+
+<main class="demo-main">
+  <h1 class="demo-title">Lead Inbox</h1>
+  <p class="demo-lede">All catering and mobile-kitchen enquiries submitted through the <a href="enquiry.html">public form</a>. Click a row to view details, update status, or add a follow-up note.</p>
+
+  <div class="admin-toolbar">
+    <input type="search" id="searchBox" placeholder="Search name, reference, event type…" aria-label="Search enquiries">
+    <select id="statusFilter" aria-label="Filter by status">
+      <option value="">All statuses</option>
+      <option>New</option>
+      <option>Contacted</option>
+      <option>Quoted</option>
+      <option>Confirmed</option>
+      <option>Completed</option>
+      <option>Lost</option>
+    </select>
+  </div>
+
+  <div class="admin-table-scroll">
+    <table class="admin-table" id="leadTable">
+      <thead>
+        <tr>
+          <th>Reference</th>
+          <th>Name</th>
+          <th>Event type</th>
+          <th>Event date</th>
+          <th>Source</th>
+          <th>Submitted</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody id="leadTableBody">
+        <tr><td colspan="7">Loading…</td></tr>
+      </tbody>
+    </table>
+  </div>
+</main>
+
+<div class="detail-panel" id="detailPanel" hidden role="dialog" aria-modal="true" aria-label="Enquiry details">
+  <div class="detail-panel__inner">
+    <button class="detail-panel__close" id="detailClose" aria-label="Close enquiry details">Close ✕</button>
+    <h2 id="detailReference" style="font-family:var(--font-display);"></h2>
+    <dl id="detailFields"></dl>
+
+    <label style="display:grid; gap:4px; font-size:14px; margin-top:16px;">
+      Status
+      <select id="statusSelect">
+        <option>New</option>
+        <option>Contacted</option>
+        <option>Quoted</option>
+        <option>Confirmed</option>
+        <option>Completed</option>
+        <option>Lost</option>
+      </select>
+    </label>
+    <label style="display:grid; gap:4px; font-size:14px; margin-top:12px;">
+      Add follow-up note
+      <textarea id="noteInput" rows="3" style="font:inherit;padding:8px;background:var(--black-soft);color:var(--white);border:1px solid var(--border);border-radius:2px;"></textarea>
+    </label>
+    <label style="display:grid; gap:4px; font-size:14px; margin-top:12px;">
+      Next action date
+      <input type="date" id="nextActionInput" style="font:inherit;padding:8px;background:var(--black-soft);color:var(--white);border:1px solid var(--border);border-radius:2px;">
+    </label>
+    <button class="btn btn--primary" id="saveDetailBtn" style="margin-top:16px;">Save changes</button>
+    <p class="form-status" id="detailStatus" role="status" aria-live="polite"></p>
+
+    <div class="detail-field" style="margin-top:24px;">
+      <dt>Follow-up log</dt>
+      <dd id="followUpLog" style="white-space:pre-line;"></dd>
+    </div>
+  </div>
+</div>
+
+<script src="demo.js"></script>
+<script>
+(function () {
+  var tbody = document.getElementById("leadTableBody");
+  var searchBox = document.getElementById("searchBox");
+  var statusFilter = document.getElementById("statusFilter");
+  var allLeads = [];
+  var currentId = null;
+
+  var panel = document.getElementById("detailPanel");
+  var detailClose = document.getElementById("detailClose");
+  var detailReference = document.getElementById("detailReference");
+  var detailFields = document.getElementById("detailFields");
+  var statusSelect = document.getElementById("statusSelect");
+  var noteInput = document.getElementById("noteInput");
+  var nextActionInput = document.getElementById("nextActionInput");
+  var saveDetailBtn = document.getElementById("saveDetailBtn");
+  var detailStatus = document.getElementById("detailStatus");
+  var followUpLog = document.getElementById("followUpLog");
+  var lastTrigger = null;
+
+  function loadLeads() {
+    return fetch("/api/enquiries").then(function (r) { return r.json(); }).then(function (data) {
+      allLeads = data.enquiries || [];
+      renderTable();
+    });
+  }
+
+  function renderTable() {
+    var q = searchBox.value.trim().toLowerCase();
+    var statusQ = statusFilter.value;
+    var rows = allLeads.filter(function (row) {
+      var matchesQ = !q || (row.reference + row.name + row.event_type).toLowerCase().indexOf(q) !== -1;
+      var matchesStatus = !statusQ || row.status === statusQ;
+      return matchesQ && matchesStatus;
+    });
+    if (rows.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="7">No enquiries match. Submit one from the <a href="enquiry.html">enquiry form</a> to see it here.</td></tr>';
+      return;
+    }
+    tbody.innerHTML = "";
+    rows.forEach(function (row) {
+      var tr = document.createElement("tr");
+      tr.tabIndex = 0;
+      tr.setAttribute("role", "button");
+      tr.innerHTML =
+        "<td>" + row.reference + "</td>" +
+        "<td>" + escapeHtml(row.name) + "</td>" +
+        "<td>" + escapeHtml(row.event_type) + "</td>" +
+        "<td>" + (row.event_date || "—") + "</td>" +
+        "<td>" + escapeHtml(row.lead_source) + "</td>" +
+        "<td>" + LinaDemo.formatDate(row.created_at) + "</td>" +
+        '<td><span class="status-badge status-badge--' + row.status + '">' + row.status + "</span></td>";
+      tr.addEventListener("click", function () { openDetail(row.id); });
+      tr.addEventListener("keydown", function (e) { if (e.key === "Enter") openDetail(row.id); });
+      tbody.appendChild(tr);
+    });
+  }
+
+  function escapeHtml(s) {
+    return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  }
+
+  function openDetail(id) {
+    lastTrigger = document.activeElement;
+    var row = allLeads.find(function (r) { return r.id === id; });
+    if (!row) return;
+    currentId = id;
+    detailReference.textContent = row.reference;
+    detailFields.innerHTML = [
+      ["Name", row.name],
+      ["Phone", row.phone],
+      ["Email", row.email || "—"],
+      ["Event type", row.event_type],
+      ["Event date", row.event_date || "—"],
+      ["Location", row.event_location || "—"],
+      ["Guests", row.guest_count || "—"],
+      ["Service required", row.service_required || "—"],
+      ["Menu interest", row.menu_interest || "—"],
+      ["Budget range", row.budget_range || "—"],
+      ["Notes", row.notes || "—"],
+      ["Lead source", row.lead_source],
+      ["Submitted", LinaDemo.formatDate(row.created_at)]
+    ].map(function (pair) {
+      return '<div class="detail-field"><dt>' + pair[0] + "</dt><dd>" + escapeHtml(pair[1]) + "</dd></div>";
+    }).join("");
+    statusSelect.value = row.status;
+    noteInput.value = "";
+    nextActionInput.value = row.next_action_date || "";
+    followUpLog.textContent = row.follow_up_log || "No follow-up notes yet.";
+    detailStatus.textContent = "";
+    detailStatus.removeAttribute("data-state");
+    panel.hidden = false;
+    detailClose.focus();
+    document.addEventListener("keydown", onDetailKey);
+  }
+  function closeDetail() {
+    panel.hidden = true;
+    document.removeEventListener("keydown", onDetailKey);
+    if (lastTrigger) lastTrigger.focus();
+  }
+  function onDetailKey(e) { if (e.key === "Escape") closeDetail(); }
+  detailClose.addEventListener("click", closeDetail);
+  panel.addEventListener("click", function (e) { if (e.target === panel) closeDetail(); });
+
+  saveDetailBtn.addEventListener("click", function () {
+    if (currentId == null) return;
+    detailStatus.textContent = "Saving...";
+    detailStatus.removeAttribute("data-state");
+    fetch("/api/enquiries/" + currentId, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        status: statusSelect.value,
+        follow_up_note: noteInput.value,
+        next_action_date: nextActionInput.value || null
+      })
+    })
+      .then(function (r) { return r.json(); })
+      .then(function (data) {
+        if (data.ok) {
+          detailStatus.textContent = "Saved.";
+          detailStatus.setAttribute("data-state", "success");
+          followUpLog.textContent = data.enquiry.follow_up_log || "No follow-up notes yet.";
+          noteInput.value = "";
+          return loadLeads();
+        } else {
+          detailStatus.textContent = "Could not save: " + data.error;
+          detailStatus.setAttribute("data-state", "error");
+        }
+      })
+      .catch(function () {
+        detailStatus.textContent = "Could not reach the server — changes were not saved.";
+        detailStatus.setAttribute("data-state", "error");
+      });
+  });
+
+  searchBox.addEventListener("input", renderTable);
+  statusFilter.addEventListener("change", renderTable);
+
+  loadLeads();
+})();
+</script>
+</body>
+</html>

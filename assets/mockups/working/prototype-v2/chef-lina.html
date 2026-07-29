@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Chef Lina — Lina's (prototype v2)</title>
+<link rel="icon" href="../../../source/brand/Linas_Favicon.jpg">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<div class="prototype-banner" role="note">PROTOTYPE V2 — Direction D, provisional. Not yet approved by Tebogo.</div>
+
+<header class="site-header">
+  <a class="site-header__mark" href="index.html">
+    <img src="../../../source/brand/Linas_Favicon.jpg" alt="Lina's mark" width="28" height="28">
+    <span>Lina's</span>
+  </a>
+  <div class="site-header__right">
+    <button class="nav-toggle" id="navToggle" aria-haspopup="true" aria-controls="siteNav" aria-label="Open menu"><span></span><span></span><span></span></button>
+  </div>
+</header>
+
+<div class="nav-backdrop" id="navBackdrop" hidden></div>
+<nav class="site-nav" id="siteNav" hidden aria-label="Site navigation">
+  <button class="site-nav__close" id="navClose" aria-label="Close menu">Close ✕</button>
+  <a href="catering.html">Catering</a>
+  <a href="menu.html">Menu</a>
+  <a href="chef-lina.html" aria-current="page">Chef Lina</a>
+  <a href="mobile-kitchen.html">Mobile Kitchen</a>
+  <a href="gallery.html">Gallery</a>
+  <a href="contact.html" class="site-nav__cta">Request a Quote</a>
+</nav>
+
+<main>
+  <section class="split" aria-label="Meet Chef Lina">
+    <div class="split__media">
+      <img src="../media/lina-hero-poster-working-v1-20260728.jpg" alt="Chef Lina inside her mobile kitchen trailer, presenting a plated meal" loading="eager">
+    </div>
+    <div class="split__text">
+      <p class="gateway__eyebrow">The Chef</p>
+      <h1 class="section-title" style="font-size:clamp(30px,5vw,52px);">Meet Chef Lina</h1>
+      <p>Lina cooks every plate herself, from the trailer counter to your hands — chicken, chakalaka, potato salad and fresh bread, made to order.</p>
+      <p class="placeholder-note">Placeholder biography — real background/story pending Tebogo (Client Inputs Register I-005). No claims beyond what's confirmed are made here.</p>
+    </div>
+  </section>
+
+  <section class="split split--reverse" aria-label="Chef at work">
+    <div class="split__media">
+      <img src="../media/lina-chef-trailer-frame-working-v1-20260728.jpg" alt="Chef Lina presenting a finished plate at the trailer counter" loading="lazy">
+    </div>
+    <div class="split__text">
+      <h2 class="section-title" style="font-size:clamp(28px,4.5vw,44px);">Every plate, cooked and plated by hand.</h2>
+      <p class="placeholder-note">Genuine footage/photo, confirmed via Lina's own <code>@chef_lina_moek</code> watermark. See <code>docs/LINA-ASSET-REGISTER.md</code>.</p>
+      <a href="menu.html" class="btn btn--ghost" style="align-self:flex-start;">See what she's cooking →</a>
+    </div>
+  </section>
+</main>
+
+<footer class="site-footer">
+  <dl class="contact-list">
+    <div><dt>Address</dt><dd>Confirming — see Client Inputs Register I-013</dd></div>
+    <div><dt>Hours</dt><dd>Confirming — see Client Inputs Register I-007</dd></div>
+    <div><dt>WhatsApp / phone</dt><dd>Confirming — see Client Inputs Register I-006 / I-014</dd></div>
+    <div><dt>Instagram</dt><dd><a href="https://instagram.com/chef_lina_moek" target="_blank" rel="noopener">@chef_lina_moek</a></dd></div>
+  </dl>
+  <p class="placeholder-note">This is a design-review prototype (V2), not the live Lina's site.</p>
+</footer>
+
+<button class="sticky-whatsapp" id="stickyWhatsapp" data-whatsapp-trigger aria-describedby="whatsappNote">💬 WhatsApp</button>
+<p class="whatsapp-note" id="whatsappNote" role="status" aria-live="polite"></p>
+
+<script src="menu-data.js"></script>
+<script src="script.js"></script>
+</body>
+</html>

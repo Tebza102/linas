@@ -1,0 +1,261 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lina's — Chef-led mobile kitchen &amp; private catering (prototype)</title>
+<link rel="icon" href="../../../source/brand/Linas_Favicon.jpg">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<div class="prototype-banner" role="note">
+  PROTOTYPE — Direction C (provisional). Menu &amp; forms use static in-memory data for demonstration only. No orders, enquiries or messages are actually sent or stored.
+</div>
+
+<!-- 1. Header and navigation -->
+<nav class="nav" id="nav">
+  <a class="nav__mark" href="#top">
+    <img src="../../../source/brand/Linas_Favicon.jpg" alt="Lina's mark" width="28" height="28">
+    <span>Lina's</span>
+  </a>
+  <div class="nav__links">
+    <a href="#menu">Menu</a>
+    <a href="#chef">Chef</a>
+    <a href="#trailer">Trailer</a>
+    <a href="#gallery">Gallery</a>
+    <a href="#enquiry">Enquire</a>
+  </div>
+  <a class="nav__cta" href="#menu">Order now</a>
+</nav>
+
+<main id="top">
+
+  <!-- 2. Chef-and-trailer hero -->
+  <section class="hero" id="hero" aria-label="Lina's — chef-led mobile kitchen and private catering">
+    <video class="hero__video" id="heroVideo" poster="../media/lina-hero-poster-working-v1-20260728.jpg"
+      muted loop playsinline preload="metadata">
+      <source src="../media/lina-hero-preview-working-v1-20260728.mp4" type="video/mp4">
+    </video>
+    <img class="hero__image" src="../media/lina-hero-poster-working-v1-20260728.jpg" alt="Chef Lina inside her mobile kitchen trailer, presenting a plated meal">
+    <div class="hero__scrim"></div>
+    <div class="hero__content">
+      <p class="eyebrow">Chef Lina · Mobile kitchen &amp; private catering</p>
+      <h1>Cooked by hand.<br>Served from the trailer.</h1>
+      <p class="hero__sub">A real chef, a real trailer, and a menu you can see before you order — for a quick plate or a fully catered event.</p>
+      <div class="hero__actions">
+        <a href="#menu" class="btn btn--primary">See the menu</a>
+        <a href="#enquiry" class="btn btn--secondary">Get a catering quote</a>
+      </div>
+    </div>
+    <p class="hero__caption">Chef Lina, confirmed genuine footage/photo — <a href="#trust">verification note</a></p>
+  </section>
+
+  <!-- 3. Clear catering value proposition -->
+  <section class="statement" aria-label="What Lina's offers">
+    <p class="statement__quote">One chef, one trailer, two ways to work with her: order a plate today, or book her for your next event.</p>
+    <p class="statement__note">Placeholder positioning line — final wording pending Tebogo's approval. Not published copy.</p>
+  </section>
+
+  <!-- 4. Service/event categories -->
+  <section class="journeys" aria-label="Ways to work with Lina's">
+    <div class="journeys__item">
+      <h2>Mobile-kitchen orders</h2>
+      <p>Kota, chips, plates and drinks — order straight from today's menu, collect or arrange delivery, confirmed over WhatsApp.</p>
+      <a href="#menu" class="link-cta">Browse the menu →</a>
+    </div>
+    <div class="journeys__item">
+      <h2>Private catering</h2>
+      <p>Weddings, funerals, corporate functions and family events. Tell us the occasion and Lina will follow up with a quote.</p>
+      <a href="#enquiry" class="link-cta">Start an enquiry →</a>
+    </div>
+  </section>
+
+  <!-- 5. Editorial catering presentation (occasions) -->
+  <section class="occasions" id="occasions" aria-label="Catering occasions">
+    <h2 class="section-title">Occasions Lina's caters</h2>
+    <ul class="occasions__list">
+      <li><span>Weddings</span><p>Presentation-led plates and packages for the big day.</p></li>
+      <li><span>Funerals</span><p>Reliable, respectful catering at scale.</p></li>
+      <li><span>Corporate events</span><p>Order-ready catering for teams and functions.</p></li>
+      <li><span>Private functions</span><p>Family gatherings, birthdays and get-togethers.</p></li>
+    </ul>
+  </section>
+
+  <!-- 6. Interactive visual menu -->
+  <section class="menu" id="menu" aria-label="Menu">
+    <h2 class="section-title">Today's menu</h2>
+    <p class="section-lede">Every item, name and price below is taken directly from Lina's own menu. Nothing is invented.</p>
+
+    <noscript>
+      <div class="menu__noscript">
+        <p><strong>JavaScript is off — showing the plain menu list:</strong></p>
+        <ul>
+          <li>Plates (R60 each): Short-rib, chakalaka, potato salad · Braised chicken, dombolo, spinach, potato salad · Beef stew, potato salad, spinach</li>
+          <li>Kota: Chips/½ vienna/polony/atchar R25 · Chips/cheese/½ russian &amp; vienna/polony R30 · Chips/full russian/full vienna/cheese/polony/egg R50 · 4 slice with butter R10 · 3 slices/chips/½ russian R12</li>
+          <li>Chips &amp; Snacks: Small R15 · Medium R25 · Large R30 · Vienna R10 · Russian R15 · Noodles R10</li>
+          <li>Drinks: Juice R17 · Energy drinks R12 · Cold drinks R14 · 2 litre cold drinks R27</li>
+        </ul>
+        <p>To order, contact Lina's directly — see the Contact section in the footer.</p>
+      </div>
+    </noscript>
+
+    <div class="menu__interactive" id="menuInteractive" hidden>
+      <div class="menu__tabs" role="tablist" aria-label="Menu categories" id="menuTabs"></div>
+      <div class="menu__grid" id="menuGrid"></div>
+    </div>
+  </section>
+
+  <!-- 7. Chef Lina story -->
+  <section class="chef" id="chef" aria-label="Chef Lina's story">
+    <div class="chef__media">
+      <img src="../media/lina-chef-trailer-frame-working-v1-20260728.jpg" alt="Chef Lina presenting a finished plate at the trailer counter" loading="lazy">
+    </div>
+    <div class="chef__text">
+      <h2 class="section-title">Meet Chef Lina</h2>
+      <p>Lina cooks every plate herself, from the trailer counter to your hands — chicken, chakalaka, potato salad and fresh bread, made to order.</p>
+      <p class="placeholder-note">Placeholder biography — real background/story pending Tebogo (Client Inputs Register I-005). No claims beyond what's confirmed are made here.</p>
+    </div>
+  </section>
+
+  <!-- 8. Mobile-kitchen / trailer story -->
+  <section class="chef chef--reverse" id="trailer" aria-label="The mobile kitchen trailer">
+    <div class="chef__media">
+      <img src="../media/lina-gallery-frame-05-signage-working-v1-20260728.jpg" alt="Lina's mobile kitchen trailer with signage, set up at a private catering event" loading="lazy">
+    </div>
+    <div class="chef__text">
+      <h2 class="section-title">The trailer</h2>
+      <p>The same trailer that serves quick plates also travels to weddings, funerals, corporate functions and private events — one kitchen, wherever the occasion needs it.</p>
+      <p class="placeholder-note">Exact trailer specification and service-area radius pending Tebogo (Client Inputs Register I-008).</p>
+    </div>
+  </section>
+
+  <!-- 9. Food and catering gallery -->
+  <section class="gallery" id="gallery" aria-label="Gallery">
+    <h2 class="section-title">From the trailer</h2>
+    <div class="gallery__grid" id="galleryGrid">
+      <button class="gallery__item" data-full="../media/lina-gallery-frame-05-signage-working-v1-20260728.jpg" data-caption="Lina's trailer at a private catering event">
+        <img src="../media/lina-gallery-frame-05-signage-working-v1-20260728.jpg" alt="Lina's trailer at a private catering event" loading="lazy">
+      </button>
+      <button class="gallery__item" data-full="../media/lina-gallery-frame-02-working-v1-20260728.jpg" data-caption="Plate being assembled: stew, potato salad, spinach and bread">
+        <img src="../media/lina-gallery-frame-02-working-v1-20260728.jpg" alt="Plate being assembled: stew, potato salad, spinach and bread" loading="lazy">
+      </button>
+      <button class="gallery__item" data-full="../media/lina-gallery-frame-03-working-v1-20260728.jpg" data-caption="Catering event table with plated food">
+        <img src="../media/lina-gallery-frame-03-working-v1-20260728.jpg" alt="Catering event table with plated food" loading="lazy">
+      </button>
+      <button class="gallery__item" data-full="../media/lina-preparation-frame-working-v1-20260728.jpg" data-caption="Chakalaka and spinach being prepared at the trailer">
+        <img src="../media/lina-preparation-frame-working-v1-20260728.jpg" alt="Chakalaka and spinach being prepared at the trailer" loading="lazy">
+      </button>
+      <button class="gallery__item" data-full="../media/lina-gallery-frame-04-working-v1-20260728.jpg" data-caption="Bowl of glazed chicken pieces">
+        <img src="../media/lina-gallery-frame-04-working-v1-20260728.jpg" alt="Bowl of glazed chicken pieces" loading="lazy">
+      </button>
+      <button class="gallery__item gallery__item--placeholder" aria-label="More photos coming soon" disabled>
+        <span>More photos coming soon</span>
+      </button>
+    </div>
+    <div class="lightbox" id="lightbox" hidden role="dialog" aria-modal="true" aria-label="Photo viewer">
+      <button class="lightbox__close" id="lightboxClose" aria-label="Close photo viewer">Close ✕</button>
+      <img id="lightboxImage" src="" alt="">
+      <p id="lightboxCaption" class="lightbox__caption"></p>
+    </div>
+  </section>
+
+  <!-- 10. Trust / credibility — verified information only -->
+  <section class="trust" id="trust" aria-label="Verified information">
+    <h2 class="section-title">What's verified here</h2>
+    <p class="section-lede">No reviews, ratings or client names are shown because none have been supplied yet. This section only states what has actually been confirmed.</p>
+    <ul class="trust__list">
+      <li>✓ Every photo and video credited to Lina on this page carries her own <code>@chef_lina_moek</code> watermark, confirming it's genuinely hers.</li>
+      <li>✓ The menu, item names and prices are transcribed directly from Lina's own menu document — nothing added or invented.</li>
+      <li>✓ The trailer shown is Lina's actual mobile kitchen, photographed at a real private catering event.</li>
+      <li>— Testimonials, ratings, business registration details and precise contact information are not yet supplied and are intentionally left out rather than fabricated (see Client Inputs Register).</li>
+    </ul>
+  </section>
+
+  <!-- 11. Enquiry or quotation section -->
+  <section class="enquiry" id="enquiry" aria-label="Order or request a quotation">
+    <div class="enquiry__col">
+      <h2 class="section-title">Order from the menu</h2>
+      <p>Quick orders are confirmed over WhatsApp — no account needed.</p>
+      <button type="button" class="btn btn--primary" id="whatsappOrderBtn" aria-describedby="whatsappNote">
+        Order on WhatsApp →
+      </button>
+      <p class="placeholder-note" id="whatsappNote">Prototype only — see the WhatsApp note below for the current verification status of this action.</p>
+    </div>
+    <div class="enquiry__col">
+      <h2 class="section-title">Catering quotation</h2>
+      <form id="enquiryForm" novalidate>
+        <label>Occasion
+          <select name="occasion" required>
+            <option value="">Select an occasion</option>
+            <option>Wedding</option>
+            <option>Funeral</option>
+            <option>Corporate event</option>
+            <option>Private function</option>
+          </select>
+        </label>
+        <label>Event date
+          <input type="date" name="date" required>
+        </label>
+        <label>Estimated guests
+          <input type="number" name="guests" min="1" required>
+        </label>
+        <label>Your name
+          <input type="text" name="name" required>
+        </label>
+        <label>Contact number
+          <input type="tel" name="phone" required>
+        </label>
+        <label>Message
+          <textarea name="message" rows="3"></textarea>
+        </label>
+        <label class="checkbox">
+          <input type="checkbox" name="consent" required>
+          <span>I consent to Lina's storing my details to respond to this enquiry (POPIA).</span>
+        </label>
+        <button type="submit" class="btn btn--primary">Send enquiry (prototype)</button>
+        <p class="form__status" id="formStatus" role="status" aria-live="polite"></p>
+      </form>
+    </div>
+  </section>
+
+  <!-- 12. Closing call to action -->
+  <section class="closing-cta" aria-label="Get in touch">
+    <h2>Ready when you are.</h2>
+    <p>Browse today's menu, or tell us about your event — Lina follows up personally.</p>
+    <div class="hero__actions closing-cta__actions">
+      <a href="#menu" class="btn btn--primary">See the menu</a>
+      <a href="#enquiry" class="btn btn--secondary btn--on-dark">Get a catering quote</a>
+    </div>
+  </section>
+
+</main>
+
+<!-- 13. Persistent WhatsApp action -->
+<div class="sticky-bar" id="stickyBar">
+  <a href="#enquiry">Quote</a>
+  <button type="button" class="sticky-bar__primary" id="stickyWhatsapp" aria-describedby="whatsappNote">
+    <span aria-hidden="true">💬</span> WhatsApp
+  </button>
+  <a href="#contact">Contact</a>
+</div>
+
+<!-- 14. Footer -->
+<footer class="footer" id="contact">
+  <div class="footer__brand">
+    <img src="../../../source/brand/Linas_Favicon.jpg" alt="" width="24" height="24">
+    <span>Lina's</span>
+  </div>
+  <dl class="contact__list">
+    <div><dt>Address</dt><dd>Confirming — see Client Inputs Register I-013</dd></div>
+    <div><dt>Hours</dt><dd>Confirming — see Client Inputs Register I-007</dd></div>
+    <div><dt>WhatsApp / phone</dt><dd>Confirming — see Client Inputs Register I-006 / I-014</dd></div>
+    <div><dt>Instagram</dt><dd><a href="https://instagram.com/chef_lina_moek" target="_blank" rel="noopener">@chef_lina_moek</a></dd></div>
+  </dl>
+  <p class="placeholder-note">This is a design-review prototype, not the live Lina's site. Every photo/video here is confirmed genuine or clearly labelled as a placeholder — see <code>docs/LINA-ASSET-REGISTER.md</code>.</p>
+</footer>
+
+<script src="menu-data.js"></script>
+<script src="script.js"></script>
+</body>
+</html>

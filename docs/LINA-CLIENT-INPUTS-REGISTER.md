@@ -1,0 +1,21 @@
+# Lina Client Inputs Register
+
+| ID | Input | Purpose | Current source/status | Owner | Needed by | Build treatment |
+|---|---|---|---|---|---|---|
+| I-001 | Existing logo files | Brand application and interface | Client has logo; file not yet added here | Tebogo/client | 28 Jul | Use supplied file once uploaded |
+| I-002 | Menu and prices | Menu page, ordering and menu asset | To be attached | Tebogo/client | 28 Jul | Structured placeholder until received |
+| I-003 | Instagram handle/content | Interim gallery and visual direction | Account exists; details not yet recorded | Tebogo/client | 28 Jul | Use only approved/publicly supplied media |
+| I-004 | Original food/event photography | Final website and campaigns | Client will produce | Client | Post-Phase 1 acceptable | Use labelled interim imagery; replace later |
+| I-005 | Business legal/trading information | Profile, footer and formal stationery | Not yet supplied | Client | 30 Jul | Do not invent; placeholder/omit as appropriate |
+| I-006 | Contact details and WhatsApp | Conversion actions | Not yet confirmed in this pack | Client | 28 Jul | Keep configurable placeholder |
+| I-007 | Operating hours | Ordering/contact expectations | Not yet confirmed | Client | 29 Jul | Label as pending |
+| I-008 | Delivery/service area | Ordering qualification | Not yet confirmed | Client | 29 Jul | Do not promise unsupported areas |
+| I-009 | Catering package details | Catering conversion | Not yet confirmed | Client | 29 Jul | Use enquiry-led structure rather than invented packages |
+| I-010 | Testimonials/reviews | Trust proof | Not supplied | Client | Phase 2 or before launch | Omit rather than fabricate |
+| I-011 | GEP scope/reporting requirements | Compliance and reporting | Existing project context; source document to be added if available | Tebogo | 29 Jul | Use current known requirements, flag assumptions |
+| I-012 | Confirm usage rights/relevance of 8 images + 1 video in `assets/source/social/` depicting fine-dining plating and an unrelated "Lina's Kitchen" wellness ad | Determine whether any of this media is genuinely Lina's to use, or should be removed from the repository | All 8 images + 1 video remain **Rejected**. The 11 `VID_20260728_*.mp4` clips have now been visually reviewed (all confirmed genuine via `@CHEF_LINA_MOEK` watermark) — see `docs/LINA-VIDEO-MEDIA-REVIEW.md` — so the video-review part of this item is resolved; only the 8 rejected images/1 video remain open | Tebogo | Before any of the 8 rejected items is used in a build | Do not use any of the 8 rejected items until confirmed |
+| I-013 | Re-confirm mobile-kitchen address/hours against the "OPENING" flyer (`instagram_1785236732091.png`: 1 Chris Street, Heidelberg Town, Unique Builders parking lot before Oasis Center) | The flyer's event date (27 Apr 2026) is already past; location may have changed since | Flagged during design-direction sprint, 28 Jul | Tebogo/client | 29 Jul (aligns with I-007/I-008 deadline) | Treat as unconfirmed until re-verified; do not present as current on the live site without confirmation |
+| I-014 | Confirm exact phone number and email shown on the trailer's own signage in `VID_20260728_040923_128.mp4` (partially legible: "PHONE: +27 6483 4344"-style number and an email beginning "moeketsimagdalin...@...") | This is a real, physical-signage lead for I-006 (contact details/WhatsApp), but digits are not fully legible at source resolution and signage can go stale | Found during video review, 28 Jul | Tebogo/client | Before contact details go live | Do not publish this number/email as confirmed; use as a lead for Tebogo to verify the exact digits and current validity |
+
+## Status values
+Not requested / Requested / Received / Approved / Rejected / Replaced

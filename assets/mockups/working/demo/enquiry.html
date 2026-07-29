@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Request a Quote — Lina's (working demo)</title>
+<link rel="icon" href="../../../source/brand/Linas_Favicon.jpg">
+<link rel="stylesheet" href="demo.css">
+</head>
+<body>
+<div class="demo-banner" role="note">CLIENT WORKING-MODEL DEMO — this form really stores your enquiry in a local demo database. Not the production platform.</div>
+<header class="demo-header">
+  <a class="demo-header__mark" href="index.html"><img src="../../../source/brand/Linas_Favicon.jpg" alt="Lina's mark" width="28" height="28"><span>Lina's — Demo</span></a>
+  <nav class="demo-header__nav" aria-label="Demo navigation">
+    <a href="index.html">Hub</a>
+    <a href="client-journey.html">Journey</a>
+    <a href="enquiry.html" aria-current="page">Enquiry</a>
+    <a href="admin.html">Admin</a>
+    <a href="dashboard.html">Dashboard</a>
+  </nav>
+</header>
+
+<main class="demo-main">
+  <h1 class="demo-title">Request a Catering Quote</h1>
+  <p class="demo-lede">Tell us about your event and Lina will follow up personally. This working demo really stores your enquiry — try it, then check the <a href="admin.html">admin view</a> to see it appear.</p>
+
+  <form class="demo-form" id="enquiryForm" novalidate>
+    <div class="two-col">
+      <label>Full name *
+        <input type="text" name="name" required>
+      </label>
+      <label>Phone number *
+        <input type="tel" name="phone" required>
+      </label>
+    </div>
+    <div class="two-col">
+      <label>Email address
+        <input type="email" name="email">
+      </label>
+      <label>Event type *
+        <select name="event_type" required>
+          <option value="">Select an event type</option>
+          <option>Wedding</option>
+          <option>Funeral</option>
+          <option>Corporate event</option>
+          <option>Private function</option>
+          <option>Mobile-kitchen order</option>
+        </select>
+      </label>
+    </div>
+    <div class="two-col">
+      <label>Event date
+        <input type="date" name="event_date">
+      </label>
+      <label>Event location
+        <input type="text" name="event_location" placeholder="Suburb / venue">
+      </label>
+    </div>
+    <div class="two-col">
+      <label>Estimated guest count
+        <input type="number" name="guest_count" min="1">
+      </label>
+      <label>Service required
+        <select name="service_required">
+          <option value="">Select a service</option>
+          <option>Private catering</option>
+          <option>Mobile-kitchen booking</option>
+          <option>Not sure yet</option>
+        </select>
+      </label>
+    </div>
+    <div class="two-col">
+      <label>Menu interest
+        <select name="menu_interest">
+          <option value="">Select an area of interest</option>
+          <option>Plates</option>
+          <option>Kota</option>
+          <option>Chips &amp; Snacks</option>
+          <option>Full event menu — to discuss</option>
+        </select>
+      </label>
+      <label>Budget range (optional)
+        <select name="budget_range">
+          <option value="">Prefer not to say / not sure yet</option>
+          <option>Under R5,000</option>
+          <option>R5,000 - R15,000</option>
+          <option>R15,000 - R25,000</option>
+          <option>R25,000+</option>
+        </select>
+      </label>
+    </div>
+    <label>How did you hear about Lina's?
+      <select name="lead_source">
+        <option value="Website (demo)">Website</option>
+        <option>Instagram</option>
+        <option>WhatsApp</option>
+        <option>Referral</option>
+        <option>Other</option>
+      </select>
+    </label>
+    <label>Additional notes
+      <textarea name="notes" rows="3" placeholder="Dietary needs, service style, anything else Lina should know"></textarea>
+    </label>
+    <label class="checkbox">
+      <input type="checkbox" name="popia_consent" required>
+      <span>I consent to Lina's storing my details to respond to this enquiry (POPIA). *</span>
+    </label>
+    <button type="submit" class="btn btn--primary" id="submitBtn">Send Enquiry</button>
+    <p class="form-status" id="formStatus" role="status" aria-live="polite"></p>
+    <div class="reference-box" id="referenceBox" hidden>
+      <span>Your enquiry has been received. Reference number:</span>
+      <strong id="referenceNumber"></strong>
+    </div>
+  </form>
+</main>
+
+<script src="demo.js"></script>
+<script>
+  (function () {
+    var form = document.getElementById("enquiryForm");
+    var status = document.getElementById("formStatus");
+    var submitBtn = document.getElementById("submitBtn");
+    var refBox = document.getElementById("referenceBox");
+    var refNumber = document.getElementById("referenceNumber");
+    var submitting = false;
+
+    form.addEventListener("submit", function (e) {
+      e.preventDefault();
+      if (submitting) return; // prevent accidental duplicate submission
+      if (!form.checkValidity()) {
+        status.textContent = "Please fill in every required field, including consent, before sending.";
+        status.setAttribute("data-state", "error");
+        return;
+      }
+      submitting = true;
+      submitBtn.disabled = true;
+      status.textContent = "Sending...";
+      status.removeAttribute("data-state");
+
+      var fd = new FormData(form);
+      var payload = {};
+      fd.forEach(function (value, key) { payload[key] = value; });
+      payload.popia_consent = form.popia_consent.checked;
+
+      fetch("/api/enquiries", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      })
+        .then(function (res) { return res.json().then(function (data) { return { ok: res.ok, data: data }; }); })
+        .then(function (result) {
+          submitting = false;
+          submitBtn.disabled = false;
+          if (result.ok && result.data.ok) {
+            status.textContent = "Enquiry received — thank you.";
+            status.setAttribute("data-state", "success");
+            refNumber.textContent = result.data.enquiry.reference;
+            refBox.hidden = false;
+            form.reset();
+          } else {
+            status.textContent = "Something went wrong: " + (result.data.error || "the enquiry could not be stored.");
+            status.setAttribute("data-state", "error");
+            refBox.hidden = true;
+          }
+        })
+        .catch(function () {
+          submitting = false;
+          submitBtn.disabled = false;
+          status.textContent = "Could not reach the server — the enquiry was not stored. Please try again.";
+          status.setAttribute("data-state", "error");
+          refBox.hidden = true;
+        });
+    });
+  })();
+</script>
+</body>
+</html>

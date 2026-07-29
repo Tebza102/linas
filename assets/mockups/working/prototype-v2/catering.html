@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Catering — Lina's (prototype v2)</title>
+<link rel="icon" href="../../../source/brand/Linas_Favicon.jpg">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<div class="prototype-banner" role="note">PROTOTYPE V2 — Direction D, provisional. Not yet approved by Tebogo.</div>
+
+<header class="site-header">
+  <a class="site-header__mark" href="index.html">
+    <img src="../../../source/brand/Linas_Favicon.jpg" alt="Lina's mark" width="28" height="28">
+    <span>Lina's</span>
+  </a>
+  <div class="site-header__right">
+    <button class="nav-toggle" id="navToggle" aria-haspopup="true" aria-controls="siteNav" aria-label="Open menu"><span></span><span></span><span></span></button>
+  </div>
+</header>
+
+<div class="nav-backdrop" id="navBackdrop" hidden></div>
+<nav class="site-nav" id="siteNav" hidden aria-label="Site navigation">
+  <button class="site-nav__close" id="navClose" aria-label="Close menu">Close ✕</button>
+  <a href="catering.html" aria-current="page">Catering</a>
+  <a href="menu.html">Menu</a>
+  <a href="chef-lina.html">Chef Lina</a>
+  <a href="mobile-kitchen.html">Mobile Kitchen</a>
+  <a href="gallery.html">Gallery</a>
+  <a href="contact.html" class="site-nav__cta">Request a Quote</a>
+</nav>
+
+<main>
+  <section class="gateway" style="height:80vh;" aria-label="Private catering">
+    <video class="gateway__media" data-autoplay-hero
+      poster="../media/lina-gallery-frame-02-working-v1-20260728.jpg" muted loop playsinline preload="metadata">
+      <source src="../media/lina-catering-preview-working-v1-20260728.mp4" type="video/mp4">
+    </video>
+    <div class="gateway__scrim"></div>
+    <div class="gateway__content">
+      <p class="gateway__eyebrow">Private Catering</p>
+      <h1 class="gateway__title">Real plates, prepared for real events.</h1>
+      <p class="gateway__sub">Weddings, funerals, corporate functions and private gatherings — catered by Chef Lina herself.</p>
+    </div>
+  </section>
+
+  <section class="section">
+    <h2 class="section-title">Occasions Lina's caters</h2>
+    <ul class="occasions__list">
+      <li><span>Weddings</span><p>Presentation-led plates and packages for the big day.</p></li>
+      <li><span>Funerals</span><p>Reliable, respectful catering at scale.</p></li>
+      <li><span>Corporate events</span><p>Order-ready catering for teams and functions.</p></li>
+      <li><span>Private functions</span><p>Family gatherings, birthdays and get-togethers.</p></li>
+    </ul>
+  </section>
+
+  <section class="section" aria-label="Quotation journey">
+    <h2 class="section-title">Get a quotation</h2>
+    <p class="section-lede">Tell us the occasion, date and guest count — Lina follows up personally with a quote.</p>
+    <a href="contact.html" class="btn btn--primary">Request a Quote →</a>
+  </section>
+</main>
+
+<footer class="site-footer" id="footer-contact">
+  <dl class="contact-list">
+    <div><dt>Address</dt><dd>Confirming — see Client Inputs Register I-013</dd></div>
+    <div><dt>Hours</dt><dd>Confirming — see Client Inputs Register I-007</dd></div>
+    <div><dt>WhatsApp / phone</dt><dd>Confirming — see Client Inputs Register I-006 / I-014</dd></div>
+    <div><dt>Instagram</dt><dd><a href="https://instagram.com/chef_lina_moek" target="_blank" rel="noopener">@chef_lina_moek</a></dd></div>
+  </dl>
+  <p class="placeholder-note">This is a design-review prototype (V2), not the live Lina's site.</p>
+</footer>
+
+<button class="sticky-whatsapp" id="stickyWhatsapp" data-whatsapp-trigger aria-describedby="whatsappNote">💬 WhatsApp</button>
+<p class="whatsapp-note" id="whatsappNote" role="status" aria-live="polite"></p>
+
+<script src="menu-data.js"></script>
+<script src="script.js"></script>
+</body>
+</html>

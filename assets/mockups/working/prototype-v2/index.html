@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lina's — Chef-led catering &amp; mobile kitchen (prototype v2)</title>
+<link rel="icon" href="../../../source/brand/Linas_Favicon.jpg">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<div class="prototype-banner" role="note">PROTOTYPE V2 — Direction D, provisional. Not yet approved by Tebogo. No orders or enquiries are actually sent.</div>
+
+<header class="site-header">
+  <a class="site-header__mark" href="index.html">
+    <img src="../../../source/brand/Linas_Favicon.jpg" alt="Lina's mark" width="28" height="28">
+    <span>Lina's</span>
+  </a>
+  <div class="site-header__right">
+    <button class="nav-toggle" id="navToggle" aria-haspopup="true" aria-controls="siteNav" aria-label="Open menu"><span></span><span></span><span></span></button>
+  </div>
+</header>
+
+<div class="nav-backdrop" id="navBackdrop" hidden></div>
+<nav class="site-nav" id="siteNav" hidden aria-label="Site navigation">
+  <button class="site-nav__close" id="navClose" aria-label="Close menu">Close ✕</button>
+  <a href="catering.html">Catering</a>
+  <a href="menu.html">Menu</a>
+  <a href="chef-lina.html">Chef Lina</a>
+  <a href="mobile-kitchen.html">Mobile Kitchen</a>
+  <a href="gallery.html">Gallery</a>
+  <a href="contact.html" class="site-nav__cta">Request a Quote</a>
+</nav>
+
+<main id="top">
+  <!-- One-screen cinematic gateway. Opens on the confirmed chef still (slow Ken
+       Burns), then crossfades into food-preparation motion once it has settled
+       — see script.js heroSequence(). Reduced-motion users see the still only. -->
+  <section class="gateway gateway--sequence" id="hero" aria-label="Lina's — chef-led catering and mobile kitchen">
+    <img class="gateway__still" id="heroStill" src="../media/lina-hero-poster-working-v1-20260728.jpg" alt="Chef Lina inside her mobile kitchen trailer, presenting a plated meal">
+    <video class="gateway__media" id="heroVideo" data-autoplay-hero
+      poster="../media/lina-hero-poster-working-v1-20260728.jpg" muted loop playsinline preload="metadata">
+      <source src="../media/lina-hero-preview-working-v1-20260728.mp4" type="video/mp4">
+    </video>
+    <div class="gateway__scrim"></div>
+
+    <div class="gateway__content">
+      <p class="gateway__eyebrow gateway__reveal gateway__reveal--1">Chef Lina</p>
+      <h1 class="gateway__title gateway__reveal gateway__reveal--2">Chef-led catering &amp; mobile-kitchen experiences.</h1>
+      <p class="gateway__sub gateway__reveal gateway__reveal--3">Weddings, funerals, corporate events and private catering — plus a real mobile kitchen serving plates to order. Placeholder positioning line, pending Tebogo's approval.</p>
+      <div class="gateway__actions gateway__reveal gateway__reveal--4">
+        <a href="contact.html" class="btn btn--primary">Request a Quote</a>
+        <a href="menu.html" class="btn btn--ghost">Explore the Menu</a>
+      </div>
+    </div>
+  </section>
+</main>
+
+<button class="sticky-whatsapp" id="stickyWhatsapp" data-whatsapp-trigger aria-describedby="whatsappNote">💬 WhatsApp</button>
+<p class="whatsapp-note" id="whatsappNote" role="status" aria-live="polite"></p>
+
+<script src="menu-data.js"></script>
+<script src="script.js"></script>
+</body>
+</html>

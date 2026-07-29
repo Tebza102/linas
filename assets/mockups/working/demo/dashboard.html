@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dashboard — Lina's (working demo)</title>
+<link rel="icon" href="../../../source/brand/Linas_Favicon.jpg">
+<link rel="stylesheet" href="demo.css">
+</head>
+<body>
+<div class="demo-banner" role="note">CLIENT WORKING-MODEL DEMO — figures reflect only enquiries entered during this local demo/testing session.</div>
+<header class="demo-header">
+  <a class="demo-header__mark" href="index.html"><img src="../../../source/brand/Linas_Favicon.jpg" alt="Lina's mark" width="28" height="28"><span>Lina's — Demo</span></a>
+  <nav class="demo-header__nav" aria-label="Demo navigation">
+    <a href="index.html">Hub</a>
+    <a href="admin.html">Admin</a>
+    <a href="dashboard.html" aria-current="page">Dashboard</a>
+  </nav>
+</header>
+
+<main class="demo-main">
+  <h1 class="demo-title">Performance Dashboard</h1>
+  <span class="demo-data-flag" id="dataFlag">Sample / demo data only</span>
+  <p class="demo-lede">Every figure below is computed live from whatever enquiries exist in the local demo database right now — nothing here is historical or fabricated. Submit an enquiry and change its status to see these numbers move.</p>
+
+  <div class="stat-grid" id="statGrid"></div>
+
+  <h2 style="font-family:var(--font-display); font-size:20px;">Enquiries by source</h2>
+  <ul class="breakdown-list" id="bySourceList"></ul>
+
+  <h2 style="font-family:var(--font-display); font-size:20px;">Enquiries by event type</h2>
+  <ul class="breakdown-list" id="byEventTypeList"></ul>
+
+  <h2 style="font-family:var(--font-display); font-size:20px;">Progress toward the R350,000 mobile-kitchen growth goal</h2>
+  <p class="demo-lede" style="margin-bottom:8px;">This demo has no real recorded revenue (no completed, paid bookings exist yet), so progress is honestly shown at 0% rather than estimated. Once real bookings are confirmed with real values in production, this bar reflects actual progress.</p>
+  <div class="goal-bar"><div class="goal-bar__fill" id="goalFill" style="width:0%"></div></div>
+  <p id="goalCaption" style="font-size:13px; color:var(--white-dim);"></p>
+
+  <h2 style="font-family:var(--font-display); font-size:20px; margin-top:32px;">Average response time</h2>
+  <p style="color:var(--white-dim);">Not yet measurable — this demo does not simulate elapsed time between enquiry and first contact. <span class="demo-data-flag">Placeholder — production only</span></p>
+</main>
+
+<script src="demo.js"></script>
+<script>
+(function () {
+  var statGrid = document.getElementById("statGrid");
+  var bySourceList = document.getElementById("bySourceList");
+  var byEventTypeList = document.getElementById("byEventTypeList");
+  var goalFill = document.getElementById("goalFill");
+  var goalCaption = document.getElementById("goalCaption");
+
+  function tile(value, label) {
+    return '<div class="stat-tile"><div class="stat-tile__value">' + value + '</div><div class="stat-tile__label">' + label + "</div></div>";
+  }
+
+  function load() {
+    fetch("/api/dashboard").then(function (r) { return r.json(); }).then(function (data) {
+      var d = data.dashboard;
+      statGrid.innerHTML =
+        tile(d.total, "Total enquiries") +
+        tile(d.byStatus.New, "New") +
+        tile(d.byStatus.Contacted, "Contacted") +
+        tile(d.byStatus.Quoted, "Quotes sent") +
+        tile(d.byStatus.Confirmed, "Confirmed") +
+        tile(d.byStatus.Completed, "Completed") +
+        tile(d.byStatus.Lost, "Lost") +
+        tile(d.conversionRate === null ? "—" : d.conversionRate + "%", "Conversion rate");
+
+      var sourceEntries = Object.keys(d.bySource);
+      bySourceList.innerHTML = sourceEntries.length
+        ? sourceEntries.map(function (k) { return "<li><span>" + k + "</span><span>" + d.bySource[k] + "</span></li>"; }).join("")
+        : "<li>No enquiries yet.</li>";
+
+      var typeEntries = Object.keys(d.byEventType);
+      byEventTypeList.innerHTML = typeEntries.length
+        ? typeEntries.map(function (k) { return "<li><span>" + k + "</span><span>" + d.byEventType[k] + "</span></li>"; }).join("")
+        : "<li>No enquiries yet.</li>";
+
+      // Honest: no real revenue data exists in this demo, so the goal bar
+      // stays at 0% rather than inventing a plausible-looking number.
+      goalFill.style.width = "0%";
+      goalCaption.textContent = "R0 of R350,000 recorded (demo has no real payment/booking-value data).";
+    });
+  }
+
+  load();
+})();
+</script>
+</body>
+</html>

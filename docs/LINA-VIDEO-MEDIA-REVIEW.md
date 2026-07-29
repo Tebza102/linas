@@ -1,0 +1,35 @@
+# Lina Video Media Review — 20260728
+
+Source: 11 phone-recorded clips in `assets/source/social/`, all HEVC, 1080×1920 (portrait/vertical, 9:16), 30fps, 3.4–4.8 Mbps. Contact sheets (3×2 frame grids) generated via ffmpeg at `assets/mockups/working/video-review/*_contactsheet.jpg`. Classification below is based on visually reviewing those contact sheets, not on filename/duration/bitrate alone.
+
+**Authenticity finding:** every clip carries a visible `@CHEF_LINA_MOEK` Instagram watermark, confirming genuine authorship. This is useful corroborating evidence for the earlier Asset Register decision: the 8 rejected fine-dining/wellness images carried **no** such watermark and are further confirmed as unrelated to this account.
+
+**Technical constraint discovered:** all 11 clips are portrait/vertical (1080×1920). None are landscape. A true widescreen `21:9` cinematic desktop hero cannot be cut from this footage without either heavy cropping (losing most of the frame) or letterboxing (looks poor). This changes the hero recommendation — see below.
+
+## Classification
+
+| File | Duration | Subject | Chef visible | Trailer visible | Food visible | Prep visible | Event/customers visible | Lighting | Stability | Relevance to confirmed business | Recommended use | Status |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| `VID_20260728_040646_848.mp4` | 46s | Home kitchen: pouring honey into tea, slicing toast | No (hands only) | No | Yes (tea/toast — off-menu) | Yes | No | Bright, clean | Stable | Low — genuine but off-menu, different kitchen | Personal-brand B-roll only, not menu/trailer | Deferred |
+| `VID_20260728_040704_084.mp4` | 14s | Trailer stovetop: chicken in pan, potato salad, chakalaka-style relish, bread sliced | No (hands only) | Yes (red/white trailer panel, "PARTIES & FUN" text) | Yes — matches Plates ingredients | Yes | No | Adequate, slightly dim | Stable | High | Preparation sequence | **Selected** |
+| `VID_20260728_040731_672.mp4` | 27s | Chef in embroidered "Lina" coat plating chicken + chakalaka + potato salad + bread on wooden board, trailer counter; final frame shows partial phone/email text | **Yes** | **Yes** | Yes — direct Plates match | Yes | No | Good, consistent | Stable | **Highest of all 11** | Hero video / chef-trailer sequence | **Selected — primary** |
+| `VID_20260728_040854_122.mp4` | 92s | Home kitchen: whisking batter, pouring, slicing a baked loaf | No | No | Yes (cake/bread — off-menu) | Yes | No | Warm, well-lit | Stable | Low — different kitchen, off-menu bake | Personal-brand B-roll only | Deferred |
+| `VID_20260728_040857_536.mp4` | 10s | Close-up bowl of grilled chicken drumsticks, trailer edge visible | No | Partial (red stripe only) | Yes — Plates match | No | No | Good first ~5s, **goes dark/underexposed for the last ~5s** | Stable | Medium-high | Food close-up, first half only | Selected (trim required) |
+| `VID_20260728_040903_207.mp4` | 12s | Outdoor catering event: takeaway trays with bread, relish, potato salad, dark meat; checkered tablecloths | No | Blurred vehicle in background only | Yes | No | Yes — event/tables set up | Outdoor, dappled shade, some motion blur | Handheld, some shake | Medium — supports catering side of business | Gallery/event-proof support | Selected |
+| `VID_20260728_040911_609.mp4` | 9s | Top-down: hands packing stew + potato salad + spinach + bread into takeaway tray | No (hands only) | No (dark marble counter, unclear location) | Yes — direct Plates match | Yes | No | Good throughout | Stable | High | Food/menu close-up | **Selected** |
+| `VID_20260728_040923_128.mp4` | 10s | **Trailer exterior, full signage:** "Lina's / CHEF LINA / CATERING / PHONE: +27 64 83 4344 / EMAIL: moeketsimagdalin...@..." at an outdoor catering event; beef stew + samp + spinach plate in foreground | No | **Yes — full exterior branding** | Yes — matches a Plates option | No | Yes | Good, outdoor daylight | Stable | **Highest for gallery/contact-proof** | Catering-occasions / social-proof / contact-info lead (see note below) | **Selected** |
+| `VID_20260728_040939_436.mp4` | 27s | Same scene/sequence as `VID_20260728_040731_672.mp4` (chef plating on trailer counter) | Yes | Yes | Yes | Yes | No | Same as above | Same as above | Same as above | **Near-duplicate take of `040731_672`** (identical size/duration, different checksum — a second take of the same shot, not a byte-identical file) | **Rejected as redundant** — only the stronger/earlier take is used |
+| `VID_20260728_040946_727.mp4` | 17s | Home kitchen: large private-catering-style spread (rice, glazed meat, roasted carrots, mixed salad) | Partial (back of head/shoulder only) | No | Yes — but a different, more elaborate menu than the confirmed R60 kota/chips/plates list | Yes | No | Warm, well-lit | Stable | Medium — plausibly documents the *private catering* service line (distinct from the mobile-kitchen menu), but unconfirmed | Catering-services proof, pending confirmation | Deferred |
+| `VID_20260728_040956_983.mp4` | 37s | Home kitchen: sauce cooked in pan, potato gratin assembled and baked | No (hands only) | No | Yes — off-menu dish | Yes | No | Good | Stable | Low-medium — same open question as above | Personal-brand/catering-capability B-roll, pending confirmation | Deferred |
+
+## Duplicate/near-duplicate finding
+`VID_20260728_040731_672.mp4` and `VID_20260728_040939_436.mp4` share identical file size (15,878,114 bytes) and duration (27.23s) but different MD5 checksums — confirmed (Step 3, prior session) as two separate near-identical takes of the same shot, not one duplicated file. Contact-sheet comparison confirms the visible content is the same sequence. Only `VID_20260728_040731_672.mp4` is used; `040939_436` is rejected as redundant.
+
+## Hero decision
+No single clip meets the full hero standard for a **desktop widescreen** cinematic treatment, because all 11 clips are portrait/vertical with no landscape alternative. Per the brief's own fallback rule ("if no video meets the hero standard, use the confirmed chef-in-trailer image as the hero and reserve video for later"), the decision is a **hybrid, not a forced compromise**:
+- **Mobile hero:** `VID_20260728_040731_672.mp4` (muted, looping) — a vertical clip fills a mobile viewport naturally and mobile is the project's stated primary target.
+- **Desktop hero:** the confirmed still photo `instagram_1785242438335.png` (chef in trailer) — crops more predictably to a wide format than stretching/letterboxing a portrait video.
+- The same clip is also the primary asset for the **chef & trailer story** section on every breakpoint.
+
+## Contact-information lead (not yet confirmed — do not publish as-is)
+`VID_20260728_040923_128.mp4` shows the trailer's own signage with a phone number and email address. This is a strong lead but is **not** treated as confirmed: numbers on physical signage can be outdated, and the brief explicitly instructs not to invent or auto-correct contact details. Recorded as a new Client Inputs Register item for Tebogo to confirm (see `docs/LINA-CLIENT-INPUTS-REGISTER.md` I-014).

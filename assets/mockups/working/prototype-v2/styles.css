@@ -1,0 +1,344 @@
+/* Lina's — Prototype V2 (Direction D). Cinematic, full-bleed, media-first.
+   Rejects V1's card-grid/pale-background composition — see
+   docs/LINA-PROTOTYPE-V2-DESIGN-RATIONALE.md.
+
+   2026-07-30 — structural tightening + disciplined brand-colour pass.
+   Tebogo's feedback: the interface must read as three colours only —
+   solid black, solid red, solid white. The prior pass's near-black
+   (#0A0A0B), bronze accent, muted tan-grey, and ivory/cream form panel
+   were each a small extra shade competing with that system — all removed.
+   Secondary hierarchy now comes from opacity on white/black, not from
+   introducing new hues. Luxury comes from composition, type, photography,
+   spacing, contrast and pacing — not from added colour. */
+
+:root {
+  --black: #000000;
+  --black-soft: #080808;         /* structural separation only (modal/footer panels) — visually reads as black */
+  --white: #FFFFFF;
+  --red: #A43129;                 /* verified — sampled directly from the real Lina logo */
+  --red-deep: #7C241D;            /* hover/active state of --red, not a second colour */
+  --border-on-black: rgba(255,255,255,0.18);
+  --overlay: rgba(0,0,0,0.48);
+  --white-dim: rgba(255,255,255,0.64);    /* secondary text — opacity of white, not a new hue */
+  --white-faint: rgba(255,255,255,0.38);  /* tertiary text / placeholder tiles */
+
+  /* Legacy aliases kept only so nothing silently breaks mid-refactor; every
+     rule below has been rewritten to the tokens above — these are unused. */
+  --ink: var(--black);
+  --ink-2: var(--black-soft);
+  --lina-red: var(--red);
+
+  --font-display: Georgia, "Iowan Old Style", "Palatino Linotype", "Times New Roman", serif;
+  --font-body: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+
+  --space-1: 4px; --space-2: 8px; --space-3: 12px; --space-4: 16px;
+  --space-6: 24px; --space-8: 32px; --space-12: 48px; --space-16: 64px; --space-24: 96px;
+
+  /* One shared side margin, used by the header, every hero, and every section —
+     this is what actually fixes "all over the show": before this pass the hero
+     used --space-24 (96px) while the header/sections used --space-6 (24px), so
+     nothing lined up vertically. Now everything shares one edge. */
+  --edge: var(--space-6);
+}
+@media (min-width: 1280px) {
+  :root { --edge: var(--space-12); }
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  * { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
+}
+
+body {
+  margin: 0;
+  background: var(--black);
+  color: var(--white);
+  font-family: var(--font-body);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+img, video { max-width: 100%; display: block; }
+a { color: inherit; }
+
+.prototype-banner {
+  background: var(--black-soft); color: var(--white-dim); text-align: center;
+  font-size: 12px; padding: var(--space-2) var(--space-4); position: relative; z-index: 300;
+}
+
+/* ---------- Minimal header (every page) ---------- */
+.site-header {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: var(--space-4) var(--edge);
+}
+.site-header__mark {
+  display: flex; align-items: center; gap: var(--space-2);
+  font-family: var(--font-display); font-size: 20px; text-decoration: none; color: var(--white);
+}
+.site-header__mark img { border-radius: 50%; }
+.site-header__right { display: flex; align-items: center; gap: var(--space-3); }
+/* Refined hamburger — three fixed bars, no text label. A text "MENU" button
+   was itself part of the "spread out" feeling; an icon is more controlled. */
+.nav-toggle {
+  background: transparent; border: none; padding: var(--space-2); cursor: pointer;
+  width: 40px; height: 36px; display: flex; flex-direction: column; justify-content: center; gap: 5px;
+}
+.nav-toggle span { display: block; width: 22px; height: 1px; background: var(--white); transition: opacity 150ms ease, transform 150ms ease; }
+.nav-toggle:hover span, .nav-toggle:focus-visible span { background: var(--red); }
+
+/* ---------- Side-reveal navigation drawer (every page) ----------
+   Replaces the earlier full-screen centred overlay: Tebogo's feedback was
+   that navigation "spread across the page" — a controlled drawer anchored
+   to one edge, with left-aligned links at a normal reading size, is the
+   more disciplined pattern. */
+.nav-backdrop {
+  position: fixed; inset: 0; z-index: 190; background: var(--overlay);
+}
+.nav-backdrop[hidden] { display: none; }
+.site-nav {
+  position: fixed; top: 0; right: 0; bottom: 0; z-index: 200;
+  width: min(400px, 86vw); background: var(--black);
+  border-left: 1px solid var(--border-on-black);
+  display: flex; flex-direction: column; justify-content: center;
+  gap: var(--space-2); padding: var(--space-16) var(--space-8);
+  transform: translateX(100%); transition: transform 320ms cubic-bezier(0.16,1,0.3,1);
+}
+.site-nav:not([hidden]) { transform: translateX(0); }
+.site-nav[hidden] { display: flex; visibility: hidden; pointer-events: none; }
+@media (prefers-reduced-motion: reduce) {
+  .site-nav { transition: none; }
+}
+.site-nav__close {
+  position: absolute; top: var(--space-4); right: var(--space-6);
+  background: none; border: none; color: var(--white); font-size: 16px; cursor: pointer;
+}
+.site-nav a {
+  font-family: var(--font-display); font-size: clamp(24px, 3.4vw, 34px); text-decoration: none;
+  color: var(--white); padding: var(--space-2) 0; position: relative; text-align: left;
+}
+.site-nav a[aria-current="page"] { color: var(--red); }
+.site-nav a::after {
+  content: ""; position: absolute; left: 0; right: 100%; bottom: 4px; height: 1px; background: var(--red);
+  transition: right 220ms ease;
+}
+.site-nav a:hover::after, .site-nav a:focus-visible::after { right: 0; }
+.site-nav__cta {
+  margin-top: var(--space-6); font-family: var(--font-body) !important; font-size: 14px !important;
+  color: var(--black) !important; background: var(--red); padding: var(--space-3) var(--space-6) !important;
+  border-radius: 2px; text-transform: uppercase; letter-spacing: 0.05em; text-align: center;
+}
+.site-nav__cta::after { display: none; }
+
+/* ---------- Buttons ---------- */
+.btn {
+  display: inline-block; text-decoration: none; padding: var(--space-3) var(--space-6);
+  border-radius: 2px; font-size: 15px; font-weight: 600; text-align: center; cursor: pointer;
+  border: 1px solid transparent; letter-spacing: 0.02em;
+}
+.btn--primary { background: var(--red); color: var(--white); }
+.btn--primary:hover, .btn--primary:focus-visible { background: var(--red-deep); }
+.btn--ghost { background: transparent; color: var(--white); border-color: rgba(255,255,255,0.6); }
+.btn--ghost:hover, .btn--ghost:focus-visible { background: rgba(255,255,255,0.1); }
+.btn:focus-visible, a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible {
+  outline: 3px solid var(--red); outline-offset: 2px;
+}
+
+/* ---------- Full-bleed hero (landing + every page top) ---------- */
+.gateway {
+  position: relative; width: 100%; height: 100vh; min-height: 560px;
+  display: flex; align-items: flex-end; overflow: hidden; color: var(--white);
+}
+.gateway__media, .gateway__poster, .gateway__still {
+  position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 22%;
+}
+.gateway__poster { display: none; }
+
+/* Landing sequence: still image (slow Ken Burns) crossfades into video once it has settled.
+   Only the landing page uses .gateway--sequence / #heroStill; inner-page heroes keep a single
+   static layer and are unaffected. */
+.gateway__still { z-index: 1; }
+.gateway--sequence .gateway__still { animation: gatewayKenBurns 9s ease-in-out forwards; }
+.gateway--sequence .gateway__media { z-index: 2; opacity: 0; transition: opacity 1.6s ease; }
+.gateway--sequence.gateway--video-active .gateway__still { opacity: 0; transition: opacity 1.6s ease; }
+.gateway--sequence.gateway--video-active .gateway__media { opacity: 1; }
+@keyframes gatewayKenBurns {
+  from { transform: scale(1.0); }
+  to   { transform: scale(1.06); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .gateway--sequence .gateway__still { animation: none; }
+}
+
+/* Layered scrim: a broad gradient for general legibility, plus a tighter radial
+   darkening anchored under the text block specifically — keeps the rest of the
+   photo vivid instead of flattening the whole frame. */
+.gateway__scrim {
+  position: absolute; inset: 0; z-index: 3;
+  background:
+    radial-gradient(72% 65% at 22% 85%, rgba(0,0,0,0.82) 0%, rgba(0,0,0,0) 100%),
+    linear-gradient(to top, rgba(0,0,0,0.86) 0%, rgba(0,0,0,0.3) 42%, rgba(0,0,0,0.02) 68%);
+}
+.gateway__content {
+  position: relative; z-index: 4; width: 100%; padding: 0 var(--edge) var(--space-12);
+}
+.gateway__eyebrow { text-transform: uppercase; letter-spacing: 0.12em; font-size: 12px; margin: 0 0 var(--space-2); color: var(--white-dim); }
+.gateway__title { font-family: var(--font-display); font-size: clamp(38px, 8vw, 76px); line-height: 1.02; margin: 0 0 var(--space-3); max-width: 16ch; }
+.gateway__sub { font-size: 16px; max-width: 46ch; margin: 0 0 var(--space-6); color: var(--white); opacity: 0.92; }
+.gateway__actions { display: flex; flex-wrap: wrap; gap: var(--space-3); margin-bottom: var(--space-6); }
+
+/* Restrained entrance: fade + gentle upward reveal, staggered. Disabled entirely
+   under reduced-motion (global rule already collapses animation-duration to ~0). */
+.gateway__reveal { opacity: 0; transform: translateY(14px); animation: gatewayReveal 800ms cubic-bezier(0.16,1,0.3,1) forwards; }
+.gateway__reveal--1 { animation-delay: 150ms; }
+.gateway__reveal--2 { animation-delay: 320ms; }
+.gateway__reveal--3 { animation-delay: 480ms; }
+.gateway__reveal--4 { animation-delay: 640ms; }
+.gateway__reveal--5 { animation-delay: 800ms; }
+@keyframes gatewayReveal { to { opacity: 1; transform: translateY(0); } }
+@media (prefers-reduced-motion: reduce) {
+  .gateway__reveal { opacity: 1; transform: none; animation: none; }
+}
+
+/* Desktop: bigger type and a taller bottom margin so the hero still reads as
+   intentional at large widths — but the LEFT edge now matches the header logo
+   and every section below (var(--edge)) instead of drifting to its own 96px
+   margin. That single shared edge is the actual fix for the "spread out"
+   complaint, not just larger text. */
+@media (min-width: 1280px) {
+  .gateway__content { padding-bottom: var(--space-24); max-width: 1200px; }
+  .gateway__title { font-size: clamp(56px, 5.4vw, 92px); max-width: 13ch; }
+  .gateway__sub { font-size: 18px; }
+}
+
+
+/* ---------- Placeholder frame (shared) ---------- */
+.placeholder-frame {
+  background: var(--black-soft); color: var(--white-dim); display: flex; align-items: center; justify-content: center;
+  text-align: center; font-size: 13px; padding: var(--space-6); min-height: 160px;
+}
+
+/* ---------- Editorial content sections (inner pages, below the fold) ---------- */
+.section { padding: var(--space-16) var(--edge); max-width: 1200px; }
+.section--wide { max-width: none; padding-left: 0; padding-right: 0; }
+.section-title { font-family: var(--font-display); font-size: clamp(28px, 4vw, 42px); margin: 0 0 var(--space-4); }
+.section-lede { max-width: 60ch; color: var(--white-dim); margin: 0 0 var(--space-8); }
+.placeholder-note { font-size: 13px; color: var(--white-dim); }
+
+/* Split/asymmetrical layout used on inner pages (chef, mobile-kitchen) */
+.split { display: grid; gap: 0; }
+.split__media { position: relative; min-height: 60vh; }
+.split__media img, .split__media video { width: 100%; height: 100%; object-fit: cover; position: absolute; inset: 0; }
+.split__text { padding: var(--space-12) var(--edge); display: flex; flex-direction: column; justify-content: center; }
+@media (min-width: 900px) {
+  .split { grid-template-columns: 1.2fr 1fr; min-height: 80vh; }
+  .split--reverse { grid-template-columns: 1fr 1.2fr; }
+  .split--reverse .split__media { order: 2; }
+  .split--reverse .split__text { order: 1; }
+}
+
+/* Occasions editorial list */
+.occasions__list { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--space-6); }
+.occasions__list li { border-top: 1px solid rgba(255,255,255,0.18); padding-top: var(--space-4); }
+.occasions__list span { font-family: var(--font-display); font-size: 22px; display: block; margin-bottom: var(--space-1); }
+.occasions__list p { margin: 0; color: var(--white-dim); }
+@media (min-width: 768px) { .occasions__list { grid-template-columns: repeat(4, 1fr); } }
+
+/* ---------- Menu (media-first, edge-to-edge on mobile) ---------- */
+.menu__tabs { display: flex; gap: var(--space-2); overflow-x: auto; padding: 0 var(--edge) var(--space-2); }
+.menu__tab {
+  flex: 0 0 auto; padding: var(--space-2) var(--space-4); border-radius: 2px;
+  border: 1px solid rgba(255,255,255,0.35); background: transparent; color: var(--white);
+  font-size: 13px; text-transform: uppercase; letter-spacing: 0.04em; cursor: pointer; white-space: nowrap;
+}
+.menu__tab[aria-selected="true"] { background: var(--red); border-color: var(--red); }
+.menu__grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 2px; padding: 0 var(--edge); }
+@media (min-width: 640px) { .menu__grid { grid-template-columns: repeat(3, 1fr); } }
+@media (min-width: 1024px) { .menu__grid { grid-template-columns: repeat(4, 1fr); } }
+.menu-card { text-align: left; background: var(--black-soft); border: none; overflow: hidden; cursor: pointer; padding: 0; font: inherit; color: inherit; }
+.menu-card__image { aspect-ratio: 1/1; display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative; }
+.menu-card__image img { width: 100%; height: 100%; object-fit: cover; }
+.menu-card__tag {
+  position: absolute; left: 0; bottom: 0; right: 0; background: var(--overlay); color: var(--white);
+  font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em; text-align: center; padding: var(--space-1) var(--space-2);
+}
+/* No photo: confident typography stands in — not a grey "pending" apology. */
+.menu-card__image--type { background: var(--black-soft); border-top: 1px solid var(--red); }
+.menu-card__initial { font-family: var(--font-display); font-size: 40px; color: var(--white-faint); }
+.menu-card__body { padding: var(--space-3); }
+.menu-card__name { font-size: 14px; font-weight: 600; margin: 0 0 var(--space-1); color: var(--white); }
+.menu-card__price { font-size: 13px; color: var(--white-dim); margin: 0; }
+
+.menu-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.85); display: flex; align-items: flex-end; justify-content: center; z-index: 250; }
+.menu-modal[hidden] { display: none; }
+.menu-modal__panel { background: var(--black-soft); color: var(--white); width: 100%; max-width: 480px; padding: var(--space-6); }
+@media (min-width: 768px) { .menu-modal { align-items: center; } }
+.menu-modal__close { float: right; background: none; border: none; color: var(--white); font-size: 16px; cursor: pointer; }
+
+/* ---------- Gallery (cinematic media wall, not a uniform thumbnail grid) ---------- */
+.gallery-grid { display: grid; grid-template-columns: repeat(2, 1fr); grid-auto-rows: 220px; gap: 2px; }
+@media (min-width: 640px) { .gallery-grid { grid-template-columns: repeat(3, 1fr); grid-auto-rows: 260px; } }
+@media (min-width: 1024px) { .gallery-grid { grid-auto-rows: 300px; } }
+.gallery-grid__item { padding: 0; border: none; cursor: pointer; overflow: hidden; background: var(--black-soft); position: relative; }
+.gallery-grid__item--tall { grid-row: span 2; }
+.gallery-grid__item img { width: 100%; height: 100%; object-fit: cover; transition: transform 300ms ease; }
+.gallery-grid__item:hover img, .gallery-grid__item:focus-visible img { transform: scale(1.03); }
+.gallery-grid__item--placeholder { display: flex; align-items: center; justify-content: center; color: var(--white-dim); font-size: 12px; text-align: center; padding: var(--space-4); cursor: default; }
+.gallery-grid__item--video video { width: 100%; height: 100%; object-fit: cover; }
+.gallery-grid__play {
+  position: absolute; inset: 0; margin: auto; width: 56px; height: 56px; border-radius: 50%;
+  background: rgba(0,0,0,0.6); border: 1px solid rgba(255,255,255,0.7); color: var(--white);
+  font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+}
+.gallery-grid__play:hover, .gallery-grid__play:focus-visible { background: var(--red); border-color: var(--red); }
+
+.lightbox { position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 300; display: flex; align-items: center; justify-content: center; }
+.lightbox[hidden] { display: none; }
+.lightbox img { max-width: 92vw; max-height: 82vh; object-fit: contain; }
+.lightbox__close { position: absolute; top: var(--space-4); right: var(--space-4); background: var(--white); color: var(--black); border: none; padding: var(--space-2) var(--space-3); border-radius: 2px; cursor: pointer; }
+.lightbox__caption { position: absolute; bottom: var(--space-6); color: var(--white); font-size: 13px; }
+
+/* ---------- Trust ---------- */
+.trust__list { list-style: none; margin: 0; padding: 0; display: grid; gap: var(--space-3); max-width: 70ch; }
+.trust__list li { padding: var(--space-3) var(--space-4); background: var(--black-soft); border-left: 2px solid var(--red); }
+.trust__list code { background: rgba(255,255,255,0.1); padding: 1px 5px; border-radius: 2px; font-size: 0.9em; }
+
+/* ---------- Forms (contact/quote page — restrained paper zone) ---------- */
+.form-panel { background: var(--white); color: var(--black); padding: var(--space-8) var(--edge); }
+.form-panel .section-title, .form-panel .section-lede { color: var(--black); }
+.form-panel .section-lede { opacity: 0.75; }
+#enquiryForm { display: grid; gap: var(--space-3); margin-top: var(--space-4); max-width: 560px; }
+#enquiryForm label { display: grid; gap: var(--space-1); font-size: 14px; }
+#enquiryForm input, #enquiryForm select, #enquiryForm textarea {
+  font: inherit; padding: var(--space-2) var(--space-3); border: 1px solid rgba(0,0,0,0.3); border-radius: 2px; background: #fff; color: var(--black);
+}
+#enquiryForm .checkbox { display: flex; align-items: flex-start; gap: var(--space-2); font-size: 13px; }
+#enquiryForm .checkbox input { width: auto; }
+.form__status { font-size: 14px; min-height: 1.2em; }
+.form__status[data-state="error"] { color: var(--red); }
+.form__status[data-state="success"] { color: #2f6b3a; }
+
+/* ---------- Sticky WhatsApp (all pages, restrained) ---------- */
+.sticky-whatsapp {
+  position: fixed; right: var(--space-4); bottom: var(--space-4); z-index: 90;
+  background: var(--red); color: var(--white); border: none; border-radius: 2px;
+  padding: var(--space-3) var(--space-4); font-size: 14px; font-weight: 600; cursor: pointer;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.35);
+}
+.whatsapp-note {
+  position: fixed; right: var(--space-4); bottom: 68px; z-index: 90; max-width: 260px;
+  background: var(--black-soft); color: var(--white); font-size: 12px; padding: var(--space-2) var(--space-3);
+  border-radius: 2px; border-left: 2px solid var(--red); display: none;
+}
+.whatsapp-note.is-visible { display: block; }
+
+/* ---------- Footer ---------- */
+.site-footer { background: var(--black-soft); padding: var(--space-12) var(--edge); }
+.site-footer .contact-list { display: grid; gap: var(--space-3); margin: 0 0 var(--space-6); padding: 0; }
+.site-footer .contact-list > div { display: flex; gap: var(--space-2); border-top: 1px solid rgba(255,255,255,0.15); padding-top: var(--space-2); font-size: 14px; }
+.site-footer dt { font-weight: 600; width: 140px; flex: 0 0 auto; }
+.site-footer dd { margin: 0; color: var(--white-dim); }
+
+.visually-hidden { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
