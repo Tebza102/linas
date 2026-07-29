@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Enquiry Inbox — Lina's Admin</title>
+<link rel="icon" href="../assets/source/brand/Linas_Favicon.jpg">
+<link rel="stylesheet" href="css/admin.css">
+</head>
+<body>
+<header class="admin-header">
+  <span class="admin-header__mark">Lina's Admin</span>
+  <nav class="admin-header__nav" aria-label="Admin navigation">
+    <a href="inbox.html" aria-current="page">Inbox</a>
+    <a href="dashboard.html">Dashboard</a>
+    <span class="admin-header__user" id="userLabel"></span>
+    <button type="button" class="btn btn--ghost" id="logoutBtn" style="padding:6px 14px; font-size:12px;">Sign out</button>
+  </nav>
+</header>
+
+<main class="admin-main">
+  <h1 class="admin-title">Enquiry Inbox</h1>
+
+  <div class="admin-toolbar">
+    <input type="search" id="searchBox" placeholder="Search name, phone, email, reference…" aria-label="Search enquiries" style="min-width:220px;">
+    <select id="statusFilter" aria-label="Filter by status">
+      <option value="">All statuses</option>
+    </select>
+    <select id="typeFilter" aria-label="Filter by enquiry type">
+      <option value="">All event types</option>
+    </select>
+    <select id="sourceFilter" aria-label="Filter by source">
+      <option value="">All sources</option>
+    </select>
+    <select id="ownerFilter" aria-label="Filter by owner">
+      <option value="">All owners</option>
+    </select>
+    <label style="display:flex; align-items:center; gap:6px; font-size:13px;">
+      From <input type="date" id="fromDate" aria-label="From date" style="padding:6px;">
+    </label>
+    <label style="display:flex; align-items:center; gap:6px; font-size:13px;">
+      To <input type="date" id="toDate" aria-label="To date" style="padding:6px;">
+    </label>
+  </div>
+
+  <p id="resultSummary" style="font-size:13px; color:var(--white-dim);"></p>
+
+  <div class="admin-table-scroll">
+    <table class="admin-table" id="leadTable">
+      <thead>
+        <tr>
+          <th>Reference</th>
+          <th>Customer</th>
+          <th>Event type</th>
+          <th>Event date</th>
+          <th>Source</th>
+          <th>Owner</th>
+          <th>Next action</th>
+          <th>Submitted</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody id="leadTableBody">
+        <tr><td colspan="9">Loading…</td></tr>
+      </tbody>
+    </table>
+  </div>
+</main>
+
+<div class="detail-panel" id="detailPanel" hidden role="dialog" aria-modal="true" aria-label="Enquiry details"></div>
+
+<script type="module" src="js/inbox.js"></script>
+</body>
+</html>

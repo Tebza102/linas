@@ -2,11 +2,26 @@
   "name": "lina-project-control",
   "version": "1.0.0",
   "private": true,
-  "description": "Lina's project-control repository. Not a deployable application — see docs/LINA-LOCAL-DEVELOPMENT-GUIDE.md for the client-review prototype.",
+  "description": "Lina's project-control repository. The static prototype-v2 site and the /admin platform (api/, admin/) are deployed to Vercel; see docs/LINA-LOCAL-DEVELOPMENT-GUIDE.md for the local-only client-review prototype and demo.",
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "prototype": "node scripts/serve-prototype.js",
     "prototype:check": "node --check scripts/serve-prototype.js && node --check assets/mockups/working/prototype/menu-data.js && node --check assets/mockups/working/prototype/script.js",
     "demo": "node scripts/serve-demo.js",
-    "demo:check": "node --check scripts/serve-demo.js && node --check scripts/lina-demo-db.js && node --check assets/mockups/working/demo/demo.js"
+    "demo:check": "node --check scripts/serve-demo.js && node --check scripts/lina-demo-db.js && node --check assets/mockups/working/demo/demo.js",
+    "admin:check": "node --check api/enquiries/create.js && node --check api/_lib/firebase-admin.js && node --check api/_lib/validate-enquiry.js && node --check scripts/firebase-admin-bootstrap.js && node --check scripts/serve-local-test.js && node --check admin/js/firebase-init.js && node --check admin/js/auth-guard.js && node --check admin/js/inbox.js && node --check admin/js/detail.js && node --check admin/js/dashboard.js",
+    "admin:bootstrap": "node scripts/firebase-admin-bootstrap.js",
+    "emulators": "firebase emulators:start --only firestore,auth",
+    "test:rules": "node --test firebase-tests/firestore.rules.test.js",
+    "test:rules:auto": "node firebase-tests/run-with-emulator.js",
+    "test:unit": "node --test firebase-tests/validate-enquiry.test.js",
+    "firebase:deploy:rules": "firebase deploy --only firestore:rules,firestore:indexes"
+  },
+  "devDependencies": {
+    "@firebase/rules-unit-testing": "^3.0.4",
+    "firebase": "^10.14.1",
+    "firebase-admin": "^12.7.0"
   }
 }

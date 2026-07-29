@@ -12,6 +12,9 @@ Thumbs.db
 desktop.ini
 .DS_Store
 
+# Claude Code's own local session/tool state — not project source.
+.claude/
+
 # Editor/IDE
 .vscode/*
 !.vscode/extensions.json
@@ -27,3 +30,18 @@ data/*.db
 # never shared source content).
 .vercel
 .env*
+!.env.example
+
+# Firebase Admin SDK service-account credentials — never committed. Only
+# ever exist as a local file (for the local bootstrap script) or as a
+# Vercel environment variable (for the deployed serverless function).
+.secrets/
+*serviceaccount*.json
+*service-account*.json
+
+# Firebase CLI local emulator state/logs.
+.firebase/
+firebase-debug.log
+firestore-debug.log
+ui-debug.log
+firebase-export/

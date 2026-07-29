@@ -238,20 +238,8 @@
     lightbox.addEventListener("click", function (e) { if (e.target === lightbox) closeLightbox(); });
   }
 
-  /* ---------- Enquiry form (contact.html — prototype only, no network call) ---------- */
-  var enquiryForm = document.getElementById("enquiryForm");
-  if (enquiryForm) {
-    var formStatus = document.getElementById("formStatus");
-    enquiryForm.addEventListener("submit", function (e) {
-      e.preventDefault();
-      if (!enquiryForm.checkValidity()) {
-        formStatus.textContent = "Please fill in every required field, including consent, before sending.";
-        formStatus.setAttribute("data-state", "error");
-        return;
-      }
-      formStatus.textContent = "Prototype only: this enquiry was not actually sent or stored anywhere.";
-      formStatus.setAttribute("data-state", "success");
-      enquiryForm.reset();
-    });
-  }
+  /* Enquiry form submission (contact.html) is handled by the real,
+     Firestore-backed logic in enquiry-submit.js — loaded as a separate
+     module only on contact.html, not here, since it needs ES module
+     imports for the Firebase client SDK. */
 })();
