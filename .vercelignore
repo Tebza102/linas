@@ -1,24 +1,60 @@
-# Keep the public Vercel deployment limited to what is actually meant to be
-# served over the web (the assets/ site content). Everything below is
-# internal project-control material, local server source, or local-only
-# runtime data that must never be publicly reachable at a guessable URL,
-# even though it stays tracked in Git for the team.
-docs
-scripts
-data
+# Allowlist model: deny everything by default, then re-admit only the exact
+# files the live prototype-v2 site actually loads (confirmed by grepping
+# every src=/href=/url()/data-* reference across its HTML/CSS/JS). This is
+# deliberately stricter than a deny-list of "known bad" folders, because a
+# deny-list only protects against folders we thought to name — an allowlist
+# fails closed if something new and unreviewed is added later.
+#
+# Everything NOT listed below stays out of the public deployment, including
+# (but not limited to): docs/, scripts/, data/, the control-pack zip, the
+# client working-model demo (backend-dependent, not deployable — see prior
+# commit), raw client-source uploads (assets/source/social, assets/source/menu,
+# assets/source/documents), internal design-direction/rationale docs, the
+# rejected V1 prototype, the unlinked "concept-2" landing variant, internal
+# review screenshots and video contact sheets (assets/mockups/working/
+# client-review*, video-review), and unused brand/media files.
 
-# The client working-model demo (enquiry/admin/dashboard) is explicitly a
-# local-only artifact — its own file headers state "not deployed anywhere" —
-# because its backend (node:sqlite + a long-running http server) cannot run
-# on Vercel's serverless/static platform. Shipping its static HTML shell here
-# would present real-looking enquiry/admin forms that silently cannot work.
-assets/mockups/working/demo
-package.json
-package-lock.json
-README.md
-CLAUDE.md
-START-LINA-PROTOTYPE.bat
-Lina-Project-Control-Pack-v1.0.zip
-.gitignore
-.gitattributes
-.vercelignore
+/*
+!/assets
+
+/assets/*
+!/assets/mockups
+!/assets/source
+
+/assets/mockups/*
+!/assets/mockups/working
+
+/assets/mockups/working/*
+!/assets/mockups/working/prototype-v2
+!/assets/mockups/working/media
+
+/assets/mockups/working/prototype-v2/*
+!/assets/mockups/working/prototype-v2/index.html
+!/assets/mockups/working/prototype-v2/catering.html
+!/assets/mockups/working/prototype-v2/menu.html
+!/assets/mockups/working/prototype-v2/chef-lina.html
+!/assets/mockups/working/prototype-v2/mobile-kitchen.html
+!/assets/mockups/working/prototype-v2/gallery.html
+!/assets/mockups/working/prototype-v2/contact.html
+!/assets/mockups/working/prototype-v2/styles.css
+!/assets/mockups/working/prototype-v2/script.js
+!/assets/mockups/working/prototype-v2/menu-data.js
+
+/assets/mockups/working/media/*
+!/assets/mockups/working/media/lina-catering-preview-working-v1-20260728.mp4
+!/assets/mockups/working/media/lina-chef-trailer-frame-working-v1-20260728.jpg
+!/assets/mockups/working/media/lina-gallery-clip-01-working-v1-20260728.mp4
+!/assets/mockups/working/media/lina-gallery-frame-02-working-v1-20260728.jpg
+!/assets/mockups/working/media/lina-gallery-frame-03-working-v1-20260728.jpg
+!/assets/mockups/working/media/lina-gallery-frame-04-working-v1-20260728.jpg
+!/assets/mockups/working/media/lina-gallery-frame-05-signage-working-v1-20260728.jpg
+!/assets/mockups/working/media/lina-hero-poster-working-v1-20260728.jpg
+!/assets/mockups/working/media/lina-hero-preview-working-v1-20260728.mp4
+!/assets/mockups/working/media/lina-mobilekitchen-preview-working-v1-20260728.mp4
+!/assets/mockups/working/media/lina-preparation-frame-working-v1-20260728.jpg
+
+/assets/source/*
+!/assets/source/brand
+
+/assets/source/brand/*
+!/assets/source/brand/Linas_Favicon.jpg
