@@ -1,6 +1,6 @@
 {
-  "rewrites": [
-    { "source": "/", "destination": "/assets/mockups/working/prototype-v2/index.html" },
-    { "source": "/v2", "destination": "/assets/mockups/working/prototype-v2/index.html" }
+  "redirects": [
+    { "source": "/", "destination": "/assets/mockups/working/prototype-v2/index.html", "permanent": false },
+    { "source": "/v2", "destination": "/assets/mockups/working/prototype-v2/index.html", "permanent": false }
   ]
 }
