@@ -1,0 +1,24 @@
+# Keep the public Vercel deployment limited to what is actually meant to be
+# served over the web (the assets/ site content). Everything below is
+# internal project-control material, local server source, or local-only
+# runtime data that must never be publicly reachable at a guessable URL,
+# even though it stays tracked in Git for the team.
+docs
+scripts
+data
+
+# The client working-model demo (enquiry/admin/dashboard) is explicitly a
+# local-only artifact — its own file headers state "not deployed anywhere" —
+# because its backend (node:sqlite + a long-running http server) cannot run
+# on Vercel's serverless/static platform. Shipping its static HTML shell here
+# would present real-looking enquiry/admin forms that silently cannot work.
+assets/mockups/working/demo
+package.json
+package-lock.json
+README.md
+CLAUDE.md
+START-LINA-PROTOTYPE.bat
+Lina-Project-Control-Pack-v1.0.zip
+.gitignore
+.gitattributes
+.vercelignore
