@@ -202,6 +202,7 @@ export async function openDetail(panelEl, enquiry, ctx) {
           return;
         }
         enquiry.notificationStatus = data.notificationStatus;
+        if (data.notificationStatus === "sent") enquiry.notificationSentAt = new Date();
         renderNotificationStatus();
         retryStatusEl.textContent = data.notificationStatus === "sent" ? "Sent successfully." : "Still failed — check Resend configuration.";
         retryStatusEl.setAttribute("data-state", data.notificationStatus === "sent" ? "success" : "error");

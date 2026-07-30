@@ -141,7 +141,19 @@ module.exports = async (req, res) => {
     // A notification failure must never turn this into an error response;
     // the customer already has a valid, persisted enquiry and reference.
     const adminLink = `https://${req.headers.host}/admin/inbox.html?enquiry=${enquiryRef.id}`;
-    const outcome = await sendNotificationEmail(fields, referenceNumber, adminLink);
+    // Test-only failure injection: lets us verify the "email failed but
+    // enquiry still stored" path deterministically, without touching or
+    // exposing the real Resend API key and without depending on sandbox
+    // recipient restrictions (which fail asynchronously, not the way our
+    // code needs to observe a failure). Never available in Production,
+    // and requires an explicit, non-default header no real customer
+    // request would ever send — mirrors the existing ?emulator=1 pattern.
+    const forceNotificationFailure =
+      process.env.VERCEL_ENV !== "production" &&
+      req.headers["x-lina-test-force-notification-failure"] === "1";
+    const outcome = forceNotificationFailure
+      ? { status: "failed", error: "Simulated failure for controlled testing." }
+      : await sendNotificationEmail(fields, referenceNumber, adminLink);
     await enquiryRef.update({
       notificationStatus: outcome.status,
       notificationSentAt: outcome.status === "sent" ? admin.firestore.FieldValue.serverTimestamp() : null,
