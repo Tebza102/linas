@@ -1,7 +1,7 @@
 "use strict";
 
-// Sends Lina's two operational emails via Resend, server-side only —
-// RESEND_API_KEY never reaches browser code:
+// Sends Lina's two operational emails via SMTP (api/_lib/mail.js), server
+// side only:
 //   1. an internal "new enquiry" alert to the business (owner notification)
 //   2. a receipt confirmation to the customer (customer confirmation)
 // Both are independent: a failure in one must never affect the other, and
@@ -9,18 +9,7 @@
 // api/enquiries/create.js — this module is always called AFTER Firestore
 // storage succeeds).
 
-const { Resend } = require("resend");
-
-let resendClient = null;
-function getResendClient() {
-  if (resendClient) return resendClient;
-  const apiKey = process.env.RESEND_API_KEY;
-  if (!apiKey) {
-    throw new Error("RESEND_API_KEY is not configured.");
-  }
-  resendClient = new Resend(apiKey);
-  return resendClient;
-}
+const { sendMail } = require("./mail");
 
 function esc(s) {
   return String(s == null ? "" : s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
@@ -105,40 +94,17 @@ function buildCustomerConfirmationContent(enquiry, referenceNumber) {
   return { subject: `We've received your enquiry (${referenceNumber})`, html, text };
 }
 
-/**
- * Sends one email via Resend. Never throws — always resolves with
- * { status: "accepted", providerId } or { status: "failed", error }, so
- * callers never need their own try/catch around the network call. "accepted"
- * (not "sent") is deliberate: this is only Resend's acceptance of the API
- * call, not proof of inbox delivery — see Part 3 of the notification
- * workflow rework. Delivery/bounce/etc. arrive later via the webhook
- * (api/webhooks/resend.js).
- */
-async function sendEmail(to, from, content) {
-  if (!to || !from) {
-    return { status: "failed", error: "Notification email is not configured (missing recipient/sender)." };
-  }
-  try {
-    const resend = getResendClient();
-    const result = await resend.emails.send({ from, to, subject: content.subject, html: content.html, text: content.text });
-    if (result.error) {
-      return { status: "failed", error: String(result.error.message || result.error).slice(0, 300) };
-    }
-    return { status: "accepted", providerId: result.data && result.data.id ? result.data.id : null };
-  } catch (err) {
-    return { status: "failed", error: String(err && err.message ? err.message : err).slice(0, 300) };
-  }
-}
-
+// sendMail() (api/_lib/mail.js) already never throws — it resolves with
+// { status: "accepted", providerId } or { status: "failed", error } — so
+// these just forward to it with the built content. "accepted" means the
+// SMTP server took the message for relay, not proof of inbox delivery.
 function sendOwnerNotification(enquiry, referenceNumber, adminLink) {
   const to = process.env.ENQUIRY_NOTIFICATION_TO;
-  const from = process.env.ENQUIRY_FROM_EMAIL;
-  return sendEmail(to, from, buildOwnerNotificationContent(enquiry, referenceNumber, adminLink));
+  return sendMail({ to, ...buildOwnerNotificationContent(enquiry, referenceNumber, adminLink) });
 }
 
 function sendCustomerConfirmation(enquiry, referenceNumber) {
-  const from = process.env.ENQUIRY_FROM_EMAIL;
-  return sendEmail(enquiry.email, from, buildCustomerConfirmationContent(enquiry, referenceNumber));
+  return sendMail({ to: enquiry.email, ...buildCustomerConfirmationContent(enquiry, referenceNumber) });
 }
 
 module.exports = {

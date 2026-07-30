@@ -55,8 +55,7 @@ function vercelizeResponse(res) {
 
 const routes = {
   "/api/enquiries/create": require("../api/enquiries/create"),
-  "/api/enquiries/retry-notification": require("../api/enquiries/retry-notification"),
-  "/api/webhooks/resend": require("../api/webhooks/resend")
+  "/api/enquiries/retry-notification": require("../api/enquiries/retry-notification")
 };
 
 const server = http.createServer((req, res) => {
@@ -65,13 +64,7 @@ const server = http.createServer((req, res) => {
       const reqPath = decodeURIComponent(req.url.split("?")[0]);
 
       if (routes[reqPath]) {
-        // The Resend webhook verifies a signature over the raw request
-        // body — it must read the stream itself, unparsed, the same way
-        // Vercel's real runtime leaves it (module.exports.config.api.bodyParser
-        // = false in api/webhooks/resend.js).
-        if (reqPath !== "/api/webhooks/resend") {
-          req.body = req.method === "POST" ? await readJsonBody(req) : {};
-        }
+        req.body = req.method === "POST" ? await readJsonBody(req) : {};
         vercelizeResponse(res);
         await routes[reqPath](req, res);
         return;

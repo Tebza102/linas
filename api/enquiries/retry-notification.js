@@ -11,11 +11,8 @@
 const { getFirestore, getAuth, admin } = require("../_lib/firebase-admin");
 const { sendOwnerNotification, sendCustomerConfirmation } = require("../_lib/send-notification-email");
 
-// Retrying only makes sense while the message hasn't already succeeded
-// (accepted/delivered) and hasn't been rejected in a way a retry to the
-// SAME address would just repeat (bounced/suppressed). "pending", "failed"
-// and "delayed" are the only states worth trying again.
-const RETRYABLE_STATUSES = ["pending", "failed", "delayed"];
+// Retrying only makes sense while the message hasn't already succeeded.
+const RETRYABLE_STATUSES = ["pending", "failed"];
 
 async function requireOwner(req) {
   const authHeader = req.headers.authorization || "";

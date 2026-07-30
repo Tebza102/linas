@@ -195,11 +195,9 @@ module.exports = async (req, res) => {
     const adminLink = `https://${req.headers.host}/admin/inbox.html?enquiry=${enquiryRef.id}`;
     // Test-only failure injection: lets us verify the "email failed but
     // enquiry still stored" path deterministically, without touching or
-    // exposing the real Resend API key and without depending on sandbox
-    // recipient restrictions (which fail asynchronously, not the way our
-    // code needs to observe a failure). Never available in Production,
-    // and requires an explicit, non-default header no real customer
-    // request would ever send — mirrors the existing ?emulator=1 pattern.
+    // exposing real SMTP credentials. Never available in Production, and
+    // requires an explicit, non-default header no real customer request
+    // would ever send — mirrors the existing ?emulator=1 pattern.
     const forceNotificationFailure =
       process.env.VERCEL_ENV !== "production" &&
       req.headers["x-lina-test-force-notification-failure"] === "1";

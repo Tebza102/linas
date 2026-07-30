@@ -6,37 +6,34 @@ import {
 
 const STATUSES = ["New", "Contacted", "Quoted", "Confirmed", "In Progress", "Completed", "Lost/Cancelled"];
 
-// Legacy values ("sent") predate the 7-state model (Part 3 of the
-// notification-workflow rework) — old test records keep them, so the
-// display layer maps them forward rather than requiring a data migration.
-const LEGACY_STATUS_MAP = { sent: "accepted" };
+// Legacy values from the earlier Resend/webhook-based model (superseded —
+// see Decision Log) — old test records may still hold them, so the display
+// layer maps them forward to the current 3-state model rather than
+// requiring a data migration.
+const LEGACY_STATUS_MAP = {
+  sent: "accepted",
+  delivered: "accepted",
+  delayed: "pending",
+  bounced: "failed",
+  suppressed: "failed"
+};
 
 const NOTIFICATION_STATUS_LABELS = {
   pending: "Pending",
-  accepted: "Accepted by email provider",
-  delivered: "Delivered",
-  delayed: "Delayed",
-  bounced: "Bounced",
-  failed: "Failed",
-  suppressed: "Suppressed"
+  accepted: "Accepted by mail server",
+  failed: "Failed"
 };
 
-// Plain-language explanations shown as help text — inbox placement can
-// never be promised, only what Resend/the receiving server reported.
+// Plain-language explanations shown as help text — SMTP acceptance is not
+// proof of inbox delivery, only that the mail server took the message.
 const NOTIFICATION_STATUS_HELP = {
   pending: "Not yet attempted.",
-  accepted: "Resend accepted the message for sending. Inbox placement cannot be guaranteed.",
-  delivered: "The recipient's mail server accepted it. Inbox placement still cannot be guaranteed.",
-  delayed: "The receiving server requested more time — Resend will keep trying automatically.",
-  bounced: "The recipient's mail server rejected it — retrying the same address will usually fail again.",
-  failed: "Resend could not submit it.",
-  suppressed: "This address previously marked mail as spam or unsubscribed — Resend will not attempt delivery."
+  accepted: "The mail server accepted the message for sending. Inbox placement cannot be guaranteed.",
+  failed: "The mail server could not accept it — see the reason below."
 };
 
-// Retrying only makes sense while nothing has succeeded yet (accepted/
-// delivered) and it wasn't rejected in a way a retry to the SAME address
-// would just repeat (bounced/suppressed).
-const RETRYABLE_STATUSES = ["pending", "failed", "delayed"];
+// Retrying only makes sense while nothing has succeeded yet.
+const RETRYABLE_STATUSES = ["pending", "failed"];
 
 let unsubscribeLive = null;
 
@@ -234,11 +231,9 @@ export async function openDetail(panelEl, enquiry, ctx) {
     const lastEventAt = enquiry[`${prefix}LastEventAt`];
     meta.textContent = lastEventAt ? `Last event: ${fmtDate(lastEventAt)}` : "";
 
-    const isNegative = status === "failed" || status === "bounced" || status === "suppressed";
-    // Never shows the raw provider error text to non-owners or beyond a
-    // short safe category — see api/_lib/send-notification-email.js and
-    // api/webhooks/resend.js, which only ever store short safe strings here.
-    reasonText.textContent = isNegative && enquiry[`${prefix}LastError`]
+    // Never shows more than a short safe error string — see
+    // api/_lib/mail.js, which only ever stores a truncated SMTP error here.
+    reasonText.textContent = status === "failed" && enquiry[`${prefix}LastError`]
       ? `Reason: ${enquiry[`${prefix}LastError`]}`
       : "";
 
@@ -276,7 +271,7 @@ export async function openDetail(panelEl, enquiry, ctx) {
         enquiry[`${prefix}Status`] = data.status;
         if (data.status === "accepted") enquiry[`${prefix}LastEventAt`] = new Date();
         renderNotificationBlock(prefix);
-        retryStatusEl.textContent = data.status === "accepted" ? "Accepted by email provider." : "Still not accepted — check Resend configuration.";
+        retryStatusEl.textContent = data.status === "accepted" ? "Accepted by mail server." : "Still not accepted — check SMTP configuration.";
         retryStatusEl.setAttribute("data-state", data.status === "accepted" ? "success" : "error");
       } catch (err) {
         console.error(err);
@@ -289,10 +284,9 @@ export async function openDetail(panelEl, enquiry, ctx) {
   wireRetry("ownerNotification", "owner");
   wireRetry("customerConfirmation", "customer");
 
-  // Live updates while the panel is open: webhook-driven status changes
-  // (delivered/delayed/bounced/etc., written server-side via the Admin SDK)
-  // appear here without needing to close and reopen the panel or reload
-  // the page (Part 8 of the notification-workflow rework).
+  // Live updates while the panel is open: a Retry action from another open
+  // tab/session appears here without needing to close and reopen the panel
+  // or reload the page.
   unsubscribeLive = onSnapshot(doc(db, "enquiries", enquiry.id), (snap) => {
     if (!snap.exists()) return;
     const fresh = snap.data();

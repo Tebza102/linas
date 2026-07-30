@@ -11,7 +11,7 @@
     "prototype:check": "node --check scripts/serve-prototype.js && node --check assets/mockups/working/prototype/menu-data.js && node --check assets/mockups/working/prototype/script.js",
     "demo": "node scripts/serve-demo.js",
     "demo:check": "node --check scripts/serve-demo.js && node --check scripts/lina-demo-db.js && node --check assets/mockups/working/demo/demo.js",
-    "admin:check": "node --check api/enquiries/create.js && node --check api/enquiries/retry-notification.js && node --check api/webhooks/resend.js && node --check api/_lib/firebase-admin.js && node --check api/_lib/validate-enquiry.js && node --check api/_lib/send-notification-email.js && node --check scripts/firebase-admin-bootstrap.js && node --check scripts/serve-local-test.js && node --check admin/js/firebase-init.js && node --check admin/js/auth-guard.js && node --check admin/js/inbox.js && node --check admin/js/detail.js && node --check admin/js/dashboard.js",
+    "admin:check": "node --check api/enquiries/create.js && node --check api/enquiries/retry-notification.js && node --check api/_lib/firebase-admin.js && node --check api/_lib/validate-enquiry.js && node --check api/_lib/send-notification-email.js && node --check api/_lib/mail.js && node --check scripts/firebase-admin-bootstrap.js && node --check scripts/serve-local-test.js && node --check admin/js/firebase-init.js && node --check admin/js/auth-guard.js && node --check admin/js/inbox.js && node --check admin/js/detail.js && node --check admin/js/dashboard.js",
     "admin:bootstrap": "node scripts/firebase-admin-bootstrap.js",
     "emulators": "firebase emulators:start --only firestore,auth",
     "test:rules": "node --test firebase-tests/firestore.rules.test.js",
@@ -23,8 +23,9 @@
     "@firebase/rules-unit-testing": "^3.0.4",
     "dotenv": "^17.4.2",
     "firebase": "^10.14.1",
-    "firebase-admin": "^12.7.0",
-    "resend": "^6.18.1",
-    "svix": "^1.99.1"
+    "firebase-admin": "^12.7.0"
+  },
+  "dependencies": {
+    "nodemailer": "^9.0.3"
   }
 }
