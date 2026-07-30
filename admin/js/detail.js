@@ -1,10 +1,44 @@
 // Lina's admin portal — enquiry detail slide-in panel.
 import { db } from "./firebase-init.js";
 import {
-  doc, updateDoc, collection, addDoc, query, where, orderBy, getDocs, serverTimestamp
+  doc, updateDoc, collection, addDoc, query, where, orderBy, getDocs, serverTimestamp, onSnapshot
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 
 const STATUSES = ["New", "Contacted", "Quoted", "Confirmed", "In Progress", "Completed", "Lost/Cancelled"];
+
+// Legacy values ("sent") predate the 7-state model (Part 3 of the
+// notification-workflow rework) — old test records keep them, so the
+// display layer maps them forward rather than requiring a data migration.
+const LEGACY_STATUS_MAP = { sent: "accepted" };
+
+const NOTIFICATION_STATUS_LABELS = {
+  pending: "Pending",
+  accepted: "Accepted by email provider",
+  delivered: "Delivered",
+  delayed: "Delayed",
+  bounced: "Bounced",
+  failed: "Failed",
+  suppressed: "Suppressed"
+};
+
+// Plain-language explanations shown as help text — inbox placement can
+// never be promised, only what Resend/the receiving server reported.
+const NOTIFICATION_STATUS_HELP = {
+  pending: "Not yet attempted.",
+  accepted: "Resend accepted the message for sending. Inbox placement cannot be guaranteed.",
+  delivered: "The recipient's mail server accepted it. Inbox placement still cannot be guaranteed.",
+  delayed: "The receiving server requested more time — Resend will keep trying automatically.",
+  bounced: "The recipient's mail server rejected it — retrying the same address will usually fail again.",
+  failed: "Resend could not submit it.",
+  suppressed: "This address previously marked mail as spam or unsubscribed — Resend will not attempt delivery."
+};
+
+// Retrying only makes sense while nothing has succeeded yet (accepted/
+// delivered) and it wasn't rejected in a way a retry to the SAME address
+// would just repeat (bounced/suppressed).
+const RETRYABLE_STATUSES = ["pending", "failed", "delayed"];
+
+let unsubscribeLive = null;
 
 function fmtDate(ts) {
   if (!ts) return "—";
@@ -16,6 +50,7 @@ function esc(s) {
   return String(s == null ? "" : s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 }
 function digitsOnly(phone) { return String(phone || "").replace(/\D/g, ""); }
+function normalizeStatus(s) { return LEGACY_STATUS_MAP[s] || s || "pending"; }
 
 async function loadActivities(enquiryId) {
   const q = query(collection(db, "enquiryActivities"), where("enquiryId", "==", enquiryId), orderBy("createdAt", "desc"));
@@ -36,9 +71,29 @@ async function logActivity(enquiryId, uid, entries) {
   await Promise.all(writes);
 }
 
+function notificationBlockHtml(prefix, label, isOwner) {
+  return `
+    <div class="detail-field notification-block">
+      <dt>${esc(label)}</dt>
+      <dd>
+        <span class="status-badge" id="${prefix}StatusBadge" data-status=""></span>
+        <span class="help-tip" tabindex="0" id="${prefix}HelpTip">?<span class="help-tip__bubble" id="${prefix}HelpBubble"></span></span>
+      </dd>
+      <dd style="font-size:12px; color:var(--white-faint);" id="${prefix}Meta"></dd>
+      <dd style="font-size:13px;" id="${prefix}ReasonText"></dd>
+      ${isOwner ? `<button type="button" class="btn btn--ghost" id="${prefix}RetryBtn" style="margin-top:6px; padding:6px 14px; font-size:13px;">Retry</button>` : ""}
+      <p class="form-status" id="${prefix}RetryStatus" role="status" aria-live="polite"></p>
+    </div>
+  `;
+}
+
 export async function openDetail(panelEl, enquiry, ctx) {
   const { user, role, adminUsersMap, onSaved } = ctx;
   const isOwner = role === "owner";
+
+  // A previously open panel's live listener must be torn down before we
+  // attach a new one for a different (or the same) enquiry.
+  if (unsubscribeLive) { unsubscribeLive(); unsubscribeLive = null; }
 
   const ownerOptions = ['<option value="">Unassigned</option>']
     .concat(Object.entries(adminUsersMap).map(([uid, u]) =>
@@ -123,11 +178,12 @@ export async function openDetail(panelEl, enquiry, ctx) {
       </div>
 
       <div class="detail-field">
-        <dt>Email notification</dt>
-        <dd id="notificationStatusText"></dd>
-        ${isOwner ? '<button type="button" class="btn btn--ghost" id="retryNotificationBtn" style="margin-top:6px; padding:6px 14px; font-size:13px;">Retry notification</button>' : ""}
-        <p class="form-status" id="retryStatus" role="status" aria-live="polite"></p>
+        <dt>Enquiry storage</dt>
+        <dd>Stored successfully</dd>
       </div>
+
+      ${notificationBlockHtml("ownerNotification", "Owner notification", isOwner)}
+      ${notificationBlockHtml("customerConfirmation", "Customer confirmation", isOwner)}
 
       <div class="detail-field">
         <dt>Activity history</dt>
@@ -162,29 +218,45 @@ export async function openDetail(panelEl, enquiry, ctx) {
   panelEl.querySelector("#detailFields").innerHTML = fieldPairs
     .map(([k, v]) => `<div class="detail-field"><dt>${esc(k)}</dt><dd>${esc(v)}</dd></div>`).join("");
 
-  function renderNotificationStatus() {
-    const el = panelEl.querySelector("#notificationStatusText");
-    const retryBtn = panelEl.querySelector("#retryNotificationBtn");
-    const status = enquiry.notificationStatus || "pending";
-    if (status === "sent") {
-      el.textContent = `Sent — ${fmtDate(enquiry.notificationSentAt)}`;
-    } else if (status === "failed") {
-      // Never shows enquiry.notificationLastError's raw provider text — the
-      // customer/staff need to know delivery failed and that it can be
-      // retried, not a technical reason that could leak provider internals.
-      el.textContent = "Delivery failed. The enquiry itself is safely stored — only the email notification did not go through.";
-    } else {
-      el.textContent = "Pending.";
-    }
-    if (retryBtn) retryBtn.disabled = status === "sent";
-  }
-  renderNotificationStatus();
+  function renderNotificationBlock(prefix) {
+    const status = normalizeStatus(enquiry[`${prefix}Status`]);
+    const badge = panelEl.querySelector(`#${prefix}StatusBadge`);
+    const helpBubble = panelEl.querySelector(`#${prefix}HelpBubble`);
+    const meta = panelEl.querySelector(`#${prefix}Meta`);
+    const reasonText = panelEl.querySelector(`#${prefix}ReasonText`);
+    const retryBtn = panelEl.querySelector(`#${prefix}RetryBtn`);
+    if (!badge) return;
 
-  if (isOwner) {
-    panelEl.querySelector("#retryNotificationBtn").addEventListener("click", async () => {
-      const btn = panelEl.querySelector("#retryNotificationBtn");
-      const retryStatusEl = panelEl.querySelector("#retryStatus");
-      btn.disabled = true;
+    badge.textContent = NOTIFICATION_STATUS_LABELS[status] || status;
+    badge.setAttribute("data-status", status);
+    helpBubble.textContent = NOTIFICATION_STATUS_HELP[status] || "";
+
+    const lastEventAt = enquiry[`${prefix}LastEventAt`];
+    meta.textContent = lastEventAt ? `Last event: ${fmtDate(lastEventAt)}` : "";
+
+    const isNegative = status === "failed" || status === "bounced" || status === "suppressed";
+    // Never shows the raw provider error text to non-owners or beyond a
+    // short safe category — see api/_lib/send-notification-email.js and
+    // api/webhooks/resend.js, which only ever store short safe strings here.
+    reasonText.textContent = isNegative && enquiry[`${prefix}LastError`]
+      ? `Reason: ${enquiry[`${prefix}LastError`]}`
+      : "";
+
+    if (retryBtn) {
+      const retryable = RETRYABLE_STATUSES.includes(status);
+      retryBtn.disabled = !retryable;
+      retryBtn.title = retryable ? "" : "Retry isn't offered for this status — see the status explanation above.";
+    }
+  }
+  renderNotificationBlock("ownerNotification");
+  renderNotificationBlock("customerConfirmation");
+
+  function wireRetry(prefix, target) {
+    const retryBtn = panelEl.querySelector(`#${prefix}RetryBtn`);
+    if (!retryBtn) return;
+    retryBtn.addEventListener("click", async () => {
+      const retryStatusEl = panelEl.querySelector(`#${prefix}RetryStatus`);
+      retryBtn.disabled = true;
       retryStatusEl.textContent = "Retrying...";
       retryStatusEl.removeAttribute("data-state");
       try {
@@ -192,28 +264,44 @@ export async function openDetail(panelEl, enquiry, ctx) {
         const resp = await fetch("/api/enquiries/retry-notification", {
           method: "POST",
           headers: { "Content-Type": "application/json", Authorization: `Bearer ${idToken}` },
-          body: JSON.stringify({ enquiryId: enquiry.id })
+          body: JSON.stringify({ enquiryId: enquiry.id, target })
         });
         const data = await resp.json();
         if (!resp.ok || !data.ok) {
           retryStatusEl.textContent = data.error || "Could not retry. Please try again.";
           retryStatusEl.setAttribute("data-state", "error");
-          btn.disabled = false;
+          retryBtn.disabled = false;
           return;
         }
-        enquiry.notificationStatus = data.notificationStatus;
-        if (data.notificationStatus === "sent") enquiry.notificationSentAt = new Date();
-        renderNotificationStatus();
-        retryStatusEl.textContent = data.notificationStatus === "sent" ? "Sent successfully." : "Still failed — check Resend configuration.";
-        retryStatusEl.setAttribute("data-state", data.notificationStatus === "sent" ? "success" : "error");
+        enquiry[`${prefix}Status`] = data.status;
+        if (data.status === "accepted") enquiry[`${prefix}LastEventAt`] = new Date();
+        renderNotificationBlock(prefix);
+        retryStatusEl.textContent = data.status === "accepted" ? "Accepted by email provider." : "Still not accepted — check Resend configuration.";
+        retryStatusEl.setAttribute("data-state", data.status === "accepted" ? "success" : "error");
       } catch (err) {
         console.error(err);
         retryStatusEl.textContent = "Could not retry. Please try again.";
         retryStatusEl.setAttribute("data-state", "error");
-        btn.disabled = false;
+        retryBtn.disabled = false;
       }
     });
   }
+  wireRetry("ownerNotification", "owner");
+  wireRetry("customerConfirmation", "customer");
+
+  // Live updates while the panel is open: webhook-driven status changes
+  // (delivered/delayed/bounced/etc., written server-side via the Admin SDK)
+  // appear here without needing to close and reopen the panel or reload
+  // the page (Part 8 of the notification-workflow rework).
+  unsubscribeLive = onSnapshot(doc(db, "enquiries", enquiry.id), (snap) => {
+    if (!snap.exists()) return;
+    const fresh = snap.data();
+    ["ownerNotificationStatus", "ownerNotificationLastEventAt", "ownerNotificationLastError",
+     "customerConfirmationStatus", "customerConfirmationLastEventAt", "customerConfirmationLastError"]
+      .forEach((k) => { enquiry[k] = fresh[k]; });
+    renderNotificationBlock("ownerNotification");
+    renderNotificationBlock("customerConfirmation");
+  }, (err) => console.error("Live enquiry listener error:", err));
 
   // Mark as viewed — a separate, one-way flag from the sales-status
   // workflow (see firestore.rules' isViewOnlyUpdate). Only fires once per
@@ -256,8 +344,12 @@ export async function openDetail(panelEl, enquiry, ctx) {
     console.error(err);
   });
 
-  panelEl.querySelector("#detailClose").addEventListener("click", () => { panelEl.hidden = true; });
-  panelEl.addEventListener("click", (e) => { if (e.target === panelEl) panelEl.hidden = true; });
+  function closePanel() {
+    if (unsubscribeLive) { unsubscribeLive(); unsubscribeLive = null; }
+    panelEl.hidden = true;
+  }
+  panelEl.querySelector("#detailClose").addEventListener("click", closePanel);
+  panelEl.addEventListener("click", (e) => { if (e.target === panelEl) closePanel(); });
 
   panelEl.querySelector("#saveDetailBtn").addEventListener("click", async () => {
     const statusEl = panelEl.querySelector("#detailStatus");

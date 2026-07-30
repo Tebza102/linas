@@ -44,7 +44,8 @@ async function seedEnquiry(id, data) {
       assignedOwnerId: null,
       popiaConsent: true,
       viewedAt: null,
-      notificationStatus: "sent",
+      ownerNotificationStatus: "accepted",
+      customerConfirmationStatus: "accepted",
       createdAt: new Date(),
       updatedAt: new Date(),
       ...data
@@ -202,14 +203,28 @@ test("staff can mark an enquiry as viewed once, but not twice, and not alongside
 });
 
 test("notification fields cannot be set directly by an authenticated client, even an owner", async () => {
-  // Seeded as "pending" (not the default "sent") so the attempted change to
-  // "sent" below is a genuine value change — Firestore rules' diff() only
+  // Seeded as "pending" (not the default "accepted") so the attempted
+  // change below is a genuine value change — Firestore rules' diff() only
   // reports keys whose VALUE actually changes, so writing the same value
   // the field already holds would not exercise this check at all.
-  await seedEnquiry("e13", { notificationStatus: "pending" });
+  await seedEnquiry("e13", { ownerNotificationStatus: "pending", customerConfirmationStatus: "pending" });
   const owner = testEnv.authenticatedContext("owner-uid", { role: "owner" });
-  await assertFails(updateDoc(doc(owner.firestore(), "enquiries", "e13"), {
-    notificationStatus: "sent",
+  const ownerDb = owner.firestore();
+  await assertFails(updateDoc(doc(ownerDb, "enquiries", "e13"), {
+    ownerNotificationStatus: "delivered",
+    updatedAt: serverTimestamp()
+  }));
+  await assertFails(updateDoc(doc(ownerDb, "enquiries", "e13"), {
+    customerConfirmationStatus: "delivered",
+    updatedAt: serverTimestamp()
+  }));
+});
+
+test("submissionId cannot be set or altered by a client update", async () => {
+  await seedEnquiry("e14", { submissionId: "server-generated-id" });
+  const owner = testEnv.authenticatedContext("owner-uid", { role: "owner" });
+  await assertFails(updateDoc(doc(owner.firestore(), "enquiries", "e14"), {
+    submissionId: "hacker-supplied-id",
     updatedAt: serverTimestamp()
   }));
 });

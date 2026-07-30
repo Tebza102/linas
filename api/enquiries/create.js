@@ -8,10 +8,16 @@
 
 const { getFirestore, admin } = require("../_lib/firebase-admin");
 const { validateEnquirySubmission, ValidationError } = require("../_lib/validate-enquiry");
-const { sendNotificationEmail } = require("../_lib/send-notification-email");
+const { sendOwnerNotification, sendCustomerConfirmation } = require("../_lib/send-notification-email");
 
 const RATE_LIMIT_MAX_PER_MINUTE = 5;
-const DUPLICATE_WINDOW_MS = 5 * 60 * 1000; // 5 minutes
+// Fallback dedup window for rapid identical payloads (e.g. a double-click on
+// an older cached page without a submissionId). Deliberately short and
+// deliberately requires several fields to match — NOT just the phone number
+// — so a genuinely new enquiry from a repeat customer is never suppressed.
+// See Part 2 of the notification-workflow rework: the previous rule
+// (any two enquiries sharing a phone within 5 minutes) was too broad.
+const FALLBACK_DUPLICATE_WINDOW_MS = 30 * 1000;
 
 function getClientIp(req) {
   const fwd = req.headers["x-forwarded-for"];
@@ -47,15 +53,42 @@ class ValidationErrorRateLimited extends Error {
   }
 }
 
-async function findRecentDuplicate(db, phone) {
-  const cutoff = admin.firestore.Timestamp.fromMillis(Date.now() - DUPLICATE_WINDOW_MS);
+/**
+ * Primary idempotency check: an exact client-generated submissionId match.
+ * This is the strong signal — a genuine duplicate click/resubmit of the
+ * SAME form-fill will always carry the same submissionId (generated once
+ * per form load), regardless of how much time has passed.
+ */
+async function findBySubmissionId(db, submissionId) {
+  if (!submissionId) return null;
+  const snap = await db.collection("enquiries").where("submissionId", "==", submissionId).limit(1).get();
+  return snap.empty ? null : snap.docs[0];
+}
+
+/**
+ * Secondary, narrower fallback for clients that didn't send a submissionId
+ * (an older cached page) or a network-level retry that regenerated one:
+ * only treated as a duplicate if customerName, phone, enquiryType, eventDate
+ * AND message all match another enquiry from within the last 30 seconds.
+ * This deliberately does NOT match on phone alone, so a repeat customer
+ * enquiring again — even minutes later — always gets a new record.
+ */
+async function findRecentIdenticalPayload(db, fields) {
+  const cutoff = admin.firestore.Timestamp.fromMillis(Date.now() - FALLBACK_DUPLICATE_WINDOW_MS);
   const snap = await db.collection("enquiries")
-    .where("phone", "==", phone)
+    .where("phone", "==", fields.phone)
     .where("createdAt", ">=", cutoff)
     .orderBy("createdAt", "desc")
-    .limit(1)
+    .limit(5)
     .get();
-  return snap.empty ? null : snap.docs[0];
+  const match = snap.docs.find((d) => {
+    const e = d.data();
+    return e.customerName === fields.customerName
+      && e.enquiryType === fields.enquiryType
+      && (e.eventDate || null) === (fields.eventDate || null)
+      && (e.message || null) === (fields.message || null);
+  });
+  return match || null;
 }
 
 async function generateReferenceNumber(db, tx) {
@@ -94,15 +127,16 @@ module.exports = async (req, res) => {
 
     const fields = validateEnquirySubmission(req.body);
 
-    const existing = await findRecentDuplicate(db, fields.phone);
+    const bySubmissionId = await findBySubmissionId(db, fields.submissionId);
+    const existing = bySubmissionId || await findRecentIdenticalPayload(db, fields);
     if (existing) {
-      // Idempotent behaviour: a genuine duplicate click/resubmit within the
-      // window returns the SAME reference rather than creating a second
-      // record, without pretending the click did nothing.
+      const reason = bySubmissionId ? "submissionId" : "rapid-identical-payload";
+      // Safe to log: reference number and a reason code, never full PII.
+      console.log("Duplicate submission detected", { referenceNumber: existing.data().referenceNumber, reason });
       res.status(200).json({
         ok: true,
         enquiry: { id: existing.id, referenceNumber: existing.data().referenceNumber },
-        duplicate: true
+        duplicateDetected: true
       });
       return;
     }
@@ -126,11 +160,27 @@ module.exports = async (req, res) => {
         viewedAt: null,
         popiaConsentTimestamp: now,
         privacyNoticeVersion: process.env.PRIVACY_NOTICE_VERSION || "v1-draft",
-        notificationStatus: "pending",
-        notificationSentAt: null,
-        notificationProviderId: null,
-        notificationLastError: null,
-        notificationAttempts: 0,
+        // Owner (internal) notification and customer confirmation are
+        // tracked entirely independently — one failing must never affect
+        // the other, and neither ever affects the stored enquiry itself.
+        ownerNotificationStatus: "pending",
+        ownerNotificationProviderId: null,
+        ownerNotificationLastError: null,
+        ownerNotificationAttempts: 0,
+        ownerNotificationAcceptedAt: null,
+        ownerNotificationDeliveredAt: null,
+        ownerNotificationDelayedAt: null,
+        ownerNotificationFailedAt: null,
+        ownerNotificationLastEventAt: null,
+        customerConfirmationStatus: "pending",
+        customerConfirmationProviderId: null,
+        customerConfirmationLastError: null,
+        customerConfirmationAttempts: 0,
+        customerConfirmationAcceptedAt: null,
+        customerConfirmationDeliveredAt: null,
+        customerConfirmationDelayedAt: null,
+        customerConfirmationFailedAt: null,
+        customerConfirmationLastEventAt: null,
         createdAt: now,
         updatedAt: now
       });
@@ -138,8 +188,10 @@ module.exports = async (req, res) => {
     });
 
     // The enquiry is now safely stored — everything below is best-effort.
-    // A notification failure must never turn this into an error response;
-    // the customer already has a valid, persisted enquiry and reference.
+    // Neither notification's failure can turn this into an error response
+    // or roll back the stored enquiry; the customer already has a valid
+    // reference. Both sends run in parallel so a customer waiting on this
+    // response only pays for one round trip's worth of latency, not two.
     const adminLink = `https://${req.headers.host}/admin/inbox.html?enquiry=${enquiryRef.id}`;
     // Test-only failure injection: lets us verify the "email failed but
     // enquiry still stored" path deterministically, without touching or
@@ -151,15 +203,29 @@ module.exports = async (req, res) => {
     const forceNotificationFailure =
       process.env.VERCEL_ENV !== "production" &&
       req.headers["x-lina-test-force-notification-failure"] === "1";
-    const outcome = forceNotificationFailure
-      ? { status: "failed", error: "Simulated failure for controlled testing." }
-      : await sendNotificationEmail(fields, referenceNumber, adminLink);
+    const simulatedFailure = { status: "failed", error: "Simulated failure for controlled testing." };
+
+    const [ownerOutcome, customerOutcome] = await Promise.all([
+      forceNotificationFailure ? Promise.resolve(simulatedFailure) : sendOwnerNotification(fields, referenceNumber, adminLink),
+      forceNotificationFailure ? Promise.resolve(simulatedFailure) : sendCustomerConfirmation(fields, referenceNumber)
+    ]);
+
+    const now = admin.firestore.FieldValue.serverTimestamp();
     await enquiryRef.update({
-      notificationStatus: outcome.status,
-      notificationSentAt: outcome.status === "sent" ? admin.firestore.FieldValue.serverTimestamp() : null,
-      notificationProviderId: outcome.providerId || null,
-      notificationLastError: outcome.error || null,
-      notificationAttempts: admin.firestore.FieldValue.increment(1)
+      ownerNotificationStatus: ownerOutcome.status,
+      ownerNotificationProviderId: ownerOutcome.providerId || null,
+      ownerNotificationLastError: ownerOutcome.error || null,
+      ownerNotificationAttempts: admin.firestore.FieldValue.increment(1),
+      ownerNotificationAcceptedAt: ownerOutcome.status === "accepted" ? now : null,
+      ownerNotificationFailedAt: ownerOutcome.status === "failed" ? now : null,
+      ownerNotificationLastEventAt: now,
+      customerConfirmationStatus: customerOutcome.status,
+      customerConfirmationProviderId: customerOutcome.providerId || null,
+      customerConfirmationLastError: customerOutcome.error || null,
+      customerConfirmationAttempts: admin.firestore.FieldValue.increment(1),
+      customerConfirmationAcceptedAt: customerOutcome.status === "accepted" ? now : null,
+      customerConfirmationFailedAt: customerOutcome.status === "failed" ? now : null,
+      customerConfirmationLastEventAt: now
     }).catch((err) => {
       // Even recording the outcome is best-effort — the enquiry itself is
       // already safely stored regardless of what happens here.

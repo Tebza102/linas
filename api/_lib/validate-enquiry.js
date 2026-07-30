@@ -17,7 +17,7 @@ const ALLOWED_INPUT_FIELDS = [
   "occasion", "eventDate", "eventTime", "location", "guestCount",
   "serviceRequirements", "menuRequirements", "dietaryRequirements",
   "deliveryOrCollection", "equipmentOrStaffing", "budgetGuidance", "message",
-  "source", "campaign", "popiaConsent"
+  "source", "campaign", "popiaConsent", "submissionId"
 ];
 
 class ValidationError extends Error {
@@ -87,9 +87,28 @@ function validateEnquirySubmission(body) {
     );
   }
 
+  // Email is required as of Phase 1's customer-confirmation feature: the
+  // enquiry reference is meaningless to the customer without a channel to
+  // also receive written confirmation of it.
   const email = normalizeEmail(body.email);
-  if (email && !isValidEmail(email)) {
+  if (!email) {
+    throw new ValidationError("Email address is required.", "email");
+  }
+  if (!isValidEmail(email)) {
     throw new ValidationError("Email address is not valid.", "email");
+  }
+
+  // A client-generated idempotency key. Optional for backward compatibility
+  // (an older cached page without this field still works, just falls back
+  // to the short-window payload check below) but always validated if
+  // present so it can't be abused to store arbitrary junk.
+  let submissionId = null;
+  if (body.submissionId != null) {
+    const s = String(body.submissionId).trim();
+    if (s.length < 8 || s.length > 100) {
+      throw new ValidationError("Invalid submission identifier.", "submissionId");
+    }
+    submissionId = s;
   }
 
   const preferredContactMethod = CONTACT_METHODS.includes(body.preferredContactMethod)
@@ -134,7 +153,8 @@ function validateEnquirySubmission(body) {
     message: optionalString("message", 2000),
     source,
     campaign: optionalString("campaign", 100),
-    popiaConsent: true
+    popiaConsent: true,
+    submissionId
   };
 }
 

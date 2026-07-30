@@ -10,8 +10,31 @@
   var status = document.getElementById("formStatus");
   var submitBtn = document.getElementById("enquirySubmitBtn");
   var refBox = document.getElementById("referenceBox");
+  var refLede = document.getElementById("referenceBoxLede");
   var refNumber = document.getElementById("referenceNumber");
+  var whatsappBtn = document.getElementById("whatsappSaveBtn");
   var submitting = false;
+
+  // Generated once per form load/session, kept only in memory (never
+  // localStorage) — its only purpose is letting the server recognise a
+  // repeated click of THIS SAME submission as the same one, without
+  // treating every enquiry from this phone number as a duplicate.
+  var submissionId = (window.crypto && window.crypto.randomUUID)
+    ? window.crypto.randomUUID()
+    : "sid-" + Date.now() + "-" + Math.random().toString(36).slice(2);
+
+  if (whatsappBtn) {
+    whatsappBtn.addEventListener("click", function () {
+      var ref = refNumber.textContent;
+      var message = "My Lina's enquiry reference is " + ref + ". This confirms receipt only, not a booking.";
+      // No destination number: opens WhatsApp's own contact picker so the
+      // customer chooses who (if anyone) to send it to, including
+      // themselves — Lina's WhatsApp number isn't confirmed yet (see
+      // Client Inputs Register I-006/I-014), so this deliberately never
+      // targets a business number.
+      window.open("https://wa.me/?text=" + encodeURIComponent(message), "_blank", "noopener");
+    });
+  }
 
   form.addEventListener("submit", function (e) {
     e.preventDefault();
@@ -31,7 +54,7 @@
     var payload = {
       customerName: form.name.value.trim(),
       phone: form.phone.value.trim(),
-      email: form.email.value.trim() || undefined,
+      email: form.email.value.trim(),
       enquiryType: form.occasion.value,
       eventDate: form.date.value || undefined,
       location: form.location.value.trim() || undefined,
@@ -40,7 +63,8 @@
       message: form.notes.value.trim() || undefined,
       source: form.source.value || "Website",
       popiaConsent: form.consent.checked,
-      company: form.company.value // honeypot — real visitors never fill this
+      company: form.company.value, // honeypot — real visitors never fill this
+      submissionId: submissionId
     };
 
     fetch("/api/enquiries/create", {
@@ -55,7 +79,13 @@
         submitting = false;
         submitBtn.disabled = false;
         if (result.ok && result.data.ok) {
-          status.textContent = "Enquiry received — thank you. Lina will follow up personally.";
+          if (result.data.duplicateDetected) {
+            status.textContent = "You already sent this enquiry — here's your existing reference.";
+            refLede.textContent = "Your existing enquiry reference:";
+          } else {
+            status.textContent = "Enquiry received — thank you. Lina will follow up personally.";
+            refLede.textContent = "Your enquiry has been received. Enquiry reference:";
+          }
           status.setAttribute("data-state", "success");
           refNumber.textContent = result.data.enquiry.referenceNumber;
           refBox.hidden = false;

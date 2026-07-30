@@ -2,7 +2,7 @@
 import { requireAuth, logout } from "./auth-guard.js";
 import { db } from "./firebase-init.js";
 import {
-  collection, query, where, orderBy, getDocs
+  collection, query, where, orderBy, getDocs, onSnapshot
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 import { openDetail } from "./detail.js";
 
@@ -10,6 +10,14 @@ const STATUSES = ["New", "Contacted", "Quoted", "Confirmed", "In Progress", "Com
 const ENQUIRY_TYPES = ["Wedding", "Funeral", "Corporate event", "Private function", "Mobile-kitchen order"];
 const SOURCES = ["Website", "Instagram", "WhatsApp", "Referral", "Other"];
 const TERMINAL_STATUSES = ["Completed", "Lost/Cancelled"];
+// If no server-confirmed snapshot has arrived in this long, the connection
+// indicator downgrades from Live to Reconnecting — this is also the
+// practical implementation of "warn if a newly stored enquiry doesn't
+// become visible within 10 seconds": a live listener in good health
+// reflects new documents in well under this window, so a listener that's
+// gone quiet for longer than this is the honest, checkable signal that
+// something (not "nothing new happened") may be wrong.
+const STALE_AFTER_MS = 10 * 1000;
 
 function fmtDate(ts) {
   if (!ts) return "—";
@@ -49,31 +57,66 @@ async function main() {
   const detailPanel = document.getElementById("detailPanel");
   const resultSummary = document.getElementById("resultSummary");
   const unreadCount = document.getElementById("unreadCount");
+  const connectionState = document.getElementById("connectionState");
+  const lastSyncEl = document.getElementById("lastSyncText");
+  const refreshBtn = document.getElementById("manualRefreshBtn");
   let allEnquiries = [];
   let deepLinkOpened = false;
+  let lastServerSyncAt = null;
+  let unsubscribeEnquiries = null;
 
-  async function loadEnquiries() {
+  function setConnectionState(state) {
+    connectionState.textContent = state;
+    connectionState.setAttribute("data-state", state.toLowerCase());
+  }
+
+  function subscribe() {
+    if (unsubscribeEnquiries) unsubscribeEnquiries();
     tbody.innerHTML = '<tr><td colspan="9">Loading…</td></tr>';
     // Scope the base query by role. Staff only ever fetch enquiries that
     // are assigned to them or unassigned — matches firestore.rules exactly,
     // so this query never gets a permission-denied on a matching read.
-    let q;
-    if (role === "owner") {
-      q = query(collection(db, "enquiries"), orderBy("createdAt", "desc"));
-    } else {
-      q = query(collection(db, "enquiries"), where("assignedOwnerId", "in", [user.uid, null]), orderBy("createdAt", "desc"));
-    }
-    const snap = await getDocs(q);
-    allEnquiries = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
-    // Unread is deliberately independent of sales status: an enquiry can
-    // move to "Contacted" and beyond while still never having been opened
-    // by anyone, and conversely a "New" enquiry someone already opened is
-    // no longer unread. viewedAt is the single source of truth for this.
-    const unread = allEnquiries.filter((e) => !e.viewedAt).length;
-    unreadCount.textContent = unread === 1 ? "1 unread" : `${unread} unread`;
-    render();
-    maybeOpenDeepLink();
+    const q = role === "owner"
+      ? query(collection(db, "enquiries"), orderBy("createdAt", "desc"))
+      : query(collection(db, "enquiries"), where("assignedOwnerId", "in", [user.uid, null]), orderBy("createdAt", "desc"));
+
+    unsubscribeEnquiries = onSnapshot(q, (snap) => {
+      allEnquiries = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+      if (!snap.metadata.fromCache) {
+        lastServerSyncAt = Date.now();
+        setConnectionState("Live");
+      }
+      lastSyncEl.textContent = lastServerSyncAt ? `Last sync: ${new Date(lastServerSyncAt).toLocaleTimeString("en-ZA")}` : "Last sync: —";
+
+      // Unread is deliberately independent of sales status: an enquiry can
+      // move to "Contacted" and beyond while still never having been
+      // opened by anyone, and conversely a "New" enquiry someone already
+      // opened is no longer unread. viewedAt is the single source of truth.
+      const unread = allEnquiries.filter((e) => !e.viewedAt).length;
+      unreadCount.textContent = unread === 1 ? "1 unread" : `${unread} unread`;
+      render();
+      maybeOpenDeepLink();
+    }, (err) => {
+      console.error("Enquiries listener error:", err);
+      setConnectionState("Offline");
+    });
   }
+
+  // No page-reload / polling needed for changes: this same listener also
+  // picks up webhook-driven notification-status updates and detail-panel
+  // saves automatically, since they're all just Firestore writes.
+  subscribe();
+
+  setInterval(() => {
+    if (lastServerSyncAt && Date.now() - lastServerSyncAt > STALE_AFTER_MS && connectionState.getAttribute("data-state") === "live") {
+      setConnectionState("Reconnecting");
+    }
+  }, 3000);
+
+  refreshBtn.addEventListener("click", () => {
+    setConnectionState("Reconnecting");
+    subscribe();
+  });
 
   function maybeOpenDeepLink() {
     if (deepLinkOpened) return;
@@ -82,7 +125,7 @@ async function main() {
     const target = allEnquiries.find((e) => e.id === targetId);
     if (!target) return;
     deepLinkOpened = true;
-    openDetail(detailPanel, target, { user, role, adminUsersMap, onSaved: loadEnquiries });
+    openDetail(detailPanel, target, { user, role, adminUsersMap });
   }
 
   function isOverdue(e) {
@@ -144,7 +187,7 @@ async function main() {
         <td>${fmtDate(e.createdAt)}</td>
         <td><span class="status-badge" data-status="${esc(e.status)}">${esc(e.status)}</span></td>
       `;
-      const openThis = () => openDetail(detailPanel, e, { user, role, adminUsersMap, onSaved: loadEnquiries });
+      const openThis = () => openDetail(detailPanel, e, { user, role, adminUsersMap });
       tr.addEventListener("click", openThis);
       tr.addEventListener("keydown", (ev) => { if (ev.key === "Enter") openThis(); });
       tbody.appendChild(tr);
@@ -157,8 +200,6 @@ async function main() {
   [statusFilter, typeFilter, sourceFilter, ownerFilter].forEach((el) => el.addEventListener("change", render));
   document.getElementById("fromDate").addEventListener("change", render);
   document.getElementById("toDate").addEventListener("change", render);
-
-  await loadEnquiries();
 }
 
 main().catch((err) => {

@@ -58,7 +58,7 @@ test("honeypot field rejects the submission (never a fake success)", () => {
 
 test("unknown/extra fields are silently dropped, not persisted", () => {
   const result = validateEnquirySubmission({
-    customerName: "Test", phone: "0825551234", enquiryType: "Wedding", popiaConsent: true,
+    customerName: "Test", phone: "0825551234", email: "test@example.com", enquiryType: "Wedding", popiaConsent: true,
     assignedOwnerId: "hacker-uid", quotedAmount: 999999, status: "Confirmed"
   });
   assert.equal("assignedOwnerId" in result, false);
@@ -68,6 +68,27 @@ test("unknown/extra fields are silently dropped, not persisted", () => {
 
 test("rejects an out-of-range guest count", () => {
   assert.throws(() => validateEnquirySubmission({
-    customerName: "Test", phone: "0825551234", enquiryType: "Wedding", popiaConsent: true, guestCount: "-5"
+    customerName: "Test", phone: "0825551234", email: "test@example.com", enquiryType: "Wedding", popiaConsent: true, guestCount: "-5"
+  }), ValidationError);
+});
+
+test("rejects a submission with no email (required as of Phase 1 customer confirmation)", () => {
+  assert.throws(() => validateEnquirySubmission({
+    customerName: "Test", phone: "0825551234", enquiryType: "Wedding", popiaConsent: true
+  }), ValidationError);
+});
+
+test("accepts and passes through a valid submissionId", () => {
+  const result = validateEnquirySubmission({
+    customerName: "Test", phone: "0825551234", email: "test@example.com", enquiryType: "Wedding", popiaConsent: true,
+    submissionId: "client-generated-uuid-1234"
+  });
+  assert.equal(result.submissionId, "client-generated-uuid-1234");
+});
+
+test("rejects a malformed submissionId", () => {
+  assert.throws(() => validateEnquirySubmission({
+    customerName: "Test", phone: "0825551234", email: "test@example.com", enquiryType: "Wedding", popiaConsent: true,
+    submissionId: "short"
   }), ValidationError);
 });
