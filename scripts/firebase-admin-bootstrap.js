@@ -21,27 +21,13 @@
  *   node scripts/firebase-admin-bootstrap.js --email tebogo@example.com --role owner --name "Tebogo" --confirm
  */
 
-loadLocalEnv();
+// Uses the real `dotenv` package rather than a hand-rolled parser: a
+// private key can legitimately span multiple physical lines (a PEM key
+// pasted as-is, with real line breaks, rather than escaped "\n"
+// sequences) and a minimal line-by-line parser silently mangles that —
+// dotenv's quoted-value handling gets it right either way.
+require("dotenv").config({ path: require("path").resolve(__dirname, "..", ".env.local") });
 const { getAuth, getFirestore, admin } = require("../api/_lib/firebase-admin");
-
-// Minimal .env.local loader (no dotenv dependency needed for one script).
-function loadLocalEnv() {
-  const fs = require("fs");
-  const path = require("path");
-  const envPath = path.resolve(__dirname, "..", ".env.local");
-  if (!fs.existsSync(envPath)) return;
-  const lines = fs.readFileSync(envPath, "utf8").split("\n");
-  for (const line of lines) {
-    const trimmed = line.trim();
-    if (!trimmed || trimmed.startsWith("#")) continue;
-    const eq = trimmed.indexOf("=");
-    if (eq === -1) continue;
-    const key = trimmed.slice(0, eq).trim();
-    let value = trimmed.slice(eq + 1).trim();
-    if (value.startsWith('"') && value.endsWith('"')) value = value.slice(1, -1);
-    if (!(key in process.env)) process.env[key] = value;
-  }
-}
 
 function parseArgs(argv) {
   const out = { confirm: false };

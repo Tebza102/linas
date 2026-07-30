@@ -31,12 +31,24 @@ function getAdminApp() {
     );
   }
 
+  // Handles both forms: a single-line value with literal "\n" escape
+  // sequences (how Vercel/most .env tooling store it), or a value that
+  // already contains real newlines (a PEM key pasted as-is). The regex is
+  // a no-op on real newlines, so applying it unconditionally is safe.
+  const normalizedKey = privateKey.trim().replace(/\\n/g, "\n");
+  if (!normalizedKey.includes("BEGIN PRIVATE KEY")) {
+    throw new Error(
+      "FIREBASE_PRIVATE_KEY does not look like a valid PEM private key " +
+      "(missing 'BEGIN PRIVATE KEY'). Check it was copied in full from the " +
+      "service-account JSON's \"private_key\" field."
+    );
+  }
+
   return admin.initializeApp({
     credential: admin.credential.cert({
       projectId,
       clientEmail,
-      // Vercel env vars store literal "\n" sequences, not real newlines.
-      privateKey: privateKey.replace(/\\n/g, "\n")
+      privateKey: normalizedKey
     })
   });
 }
