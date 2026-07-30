@@ -123,6 +123,13 @@ export async function openDetail(panelEl, enquiry, ctx) {
       </div>
 
       <div class="detail-field">
+        <dt>Email notification</dt>
+        <dd id="notificationStatusText"></dd>
+        ${isOwner ? '<button type="button" class="btn btn--ghost" id="retryNotificationBtn" style="margin-top:6px; padding:6px 14px; font-size:13px;">Retry notification</button>' : ""}
+        <p class="form-status" id="retryStatus" role="status" aria-live="polite"></p>
+      </div>
+
+      <div class="detail-field">
         <dt>Activity history</dt>
         <dd><ul class="activity-log" id="activityLog"><li>Loading…</li></ul></dd>
       </div>
@@ -154,6 +161,70 @@ export async function openDetail(panelEl, enquiry, ctx) {
   ];
   panelEl.querySelector("#detailFields").innerHTML = fieldPairs
     .map(([k, v]) => `<div class="detail-field"><dt>${esc(k)}</dt><dd>${esc(v)}</dd></div>`).join("");
+
+  function renderNotificationStatus() {
+    const el = panelEl.querySelector("#notificationStatusText");
+    const retryBtn = panelEl.querySelector("#retryNotificationBtn");
+    const status = enquiry.notificationStatus || "pending";
+    if (status === "sent") {
+      el.textContent = `Sent — ${fmtDate(enquiry.notificationSentAt)}`;
+    } else if (status === "failed") {
+      // Never shows enquiry.notificationLastError's raw provider text — the
+      // customer/staff need to know delivery failed and that it can be
+      // retried, not a technical reason that could leak provider internals.
+      el.textContent = "Delivery failed. The enquiry itself is safely stored — only the email notification did not go through.";
+    } else {
+      el.textContent = "Pending.";
+    }
+    if (retryBtn) retryBtn.disabled = status === "sent";
+  }
+  renderNotificationStatus();
+
+  if (isOwner) {
+    panelEl.querySelector("#retryNotificationBtn").addEventListener("click", async () => {
+      const btn = panelEl.querySelector("#retryNotificationBtn");
+      const retryStatusEl = panelEl.querySelector("#retryStatus");
+      btn.disabled = true;
+      retryStatusEl.textContent = "Retrying...";
+      retryStatusEl.removeAttribute("data-state");
+      try {
+        const idToken = await user.getIdToken();
+        const resp = await fetch("/api/enquiries/retry-notification", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${idToken}` },
+          body: JSON.stringify({ enquiryId: enquiry.id })
+        });
+        const data = await resp.json();
+        if (!resp.ok || !data.ok) {
+          retryStatusEl.textContent = data.error || "Could not retry. Please try again.";
+          retryStatusEl.setAttribute("data-state", "error");
+          btn.disabled = false;
+          return;
+        }
+        enquiry.notificationStatus = data.notificationStatus;
+        renderNotificationStatus();
+        retryStatusEl.textContent = data.notificationStatus === "sent" ? "Sent successfully." : "Still failed — check Resend configuration.";
+        retryStatusEl.setAttribute("data-state", data.notificationStatus === "sent" ? "success" : "error");
+      } catch (err) {
+        console.error(err);
+        retryStatusEl.textContent = "Could not retry. Please try again.";
+        retryStatusEl.setAttribute("data-state", "error");
+        btn.disabled = false;
+      }
+    });
+  }
+
+  // Mark as viewed — a separate, one-way flag from the sales-status
+  // workflow (see firestore.rules' isViewOnlyUpdate). Only fires once per
+  // enquiry; opening it again does nothing further.
+  if (!enquiry.viewedAt) {
+    updateDoc(doc(db, "enquiries", enquiry.id), { viewedAt: serverTimestamp() })
+      .then(() => {
+        enquiry.viewedAt = new Date();
+        if (onSaved) onSaved();
+      })
+      .catch((err) => console.error("Failed to mark enquiry as viewed:", err));
+  }
 
   const statusSelect = panelEl.querySelector("#statusSelect");
   const quoteBlock = panelEl.querySelector("#quoteBlock");

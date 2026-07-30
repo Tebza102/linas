@@ -48,7 +48,9 @@ async function main() {
   const tbody = document.getElementById("leadTableBody");
   const detailPanel = document.getElementById("detailPanel");
   const resultSummary = document.getElementById("resultSummary");
+  const unreadCount = document.getElementById("unreadCount");
   let allEnquiries = [];
+  let deepLinkOpened = false;
 
   async function loadEnquiries() {
     tbody.innerHTML = '<tr><td colspan="9">Loading…</td></tr>';
@@ -63,7 +65,24 @@ async function main() {
     }
     const snap = await getDocs(q);
     allEnquiries = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+    // Unread is deliberately independent of sales status: an enquiry can
+    // move to "Contacted" and beyond while still never having been opened
+    // by anyone, and conversely a "New" enquiry someone already opened is
+    // no longer unread. viewedAt is the single source of truth for this.
+    const unread = allEnquiries.filter((e) => !e.viewedAt).length;
+    unreadCount.textContent = unread === 1 ? "1 unread" : `${unread} unread`;
     render();
+    maybeOpenDeepLink();
+  }
+
+  function maybeOpenDeepLink() {
+    if (deepLinkOpened) return;
+    const targetId = new URLSearchParams(location.search).get("enquiry");
+    if (!targetId) return;
+    const target = allEnquiries.find((e) => e.id === targetId);
+    if (!target) return;
+    deepLinkOpened = true;
+    openDetail(detailPanel, target, { user, role, adminUsersMap, onSaved: loadEnquiries });
   }
 
   function isOverdue(e) {
@@ -110,7 +129,7 @@ async function main() {
     tbody.innerHTML = "";
     rows.forEach((e) => {
       const tr = document.createElement("tr");
-      tr.className = "row" + (e.status === "New" ? " row--new" : "") + (isOverdue(e) ? " row--overdue" : "");
+      tr.className = "row" + (e.status === "New" ? " row--new" : "") + (isOverdue(e) ? " row--overdue" : "") + (!e.viewedAt ? " row--unread" : "");
       tr.tabIndex = 0;
       tr.setAttribute("role", "button");
       const ownerName = e.assignedOwnerId && adminUsersMap[e.assignedOwnerId] ? adminUsersMap[e.assignedOwnerId].displayName : "Unassigned";

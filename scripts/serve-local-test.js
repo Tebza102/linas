@@ -54,7 +54,8 @@ function vercelizeResponse(res) {
 }
 
 const routes = {
-  "/api/enquiries/create": require("../api/enquiries/create")
+  "/api/enquiries/create": require("../api/enquiries/create"),
+  "/api/enquiries/retry-notification": require("../api/enquiries/retry-notification")
 };
 
 const server = http.createServer((req, res) => {

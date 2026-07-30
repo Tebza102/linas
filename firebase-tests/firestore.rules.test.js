@@ -43,6 +43,8 @@ async function seedEnquiry(id, data) {
       status: "New",
       assignedOwnerId: null,
       popiaConsent: true,
+      viewedAt: null,
+      notificationStatus: "sent",
       createdAt: new Date(),
       updatedAt: new Date(),
       ...data
@@ -182,4 +184,32 @@ test("enquiries can never be deleted from the client", async () => {
   await seedEnquiry("e10", {});
   const owner = testEnv.authenticatedContext("owner-uid", { role: "owner" });
   await assertFails(deleteDoc(doc(owner.firestore(), "enquiries", "e10")));
+});
+
+test("staff can mark an enquiry as viewed once, but not twice, and not alongside another field", async () => {
+  await seedEnquiry("e11", {});
+  const staff = testEnv.authenticatedContext("staff-uid", { role: "staff" });
+  const staffDb = staff.firestore();
+  await assertSucceeds(updateDoc(doc(staffDb, "enquiries", "e11"), { viewedAt: serverTimestamp() }));
+  // Second attempt: resource.data.viewedAt is no longer null, so this fails.
+  await assertFails(updateDoc(doc(staffDb, "enquiries", "e11"), { viewedAt: serverTimestamp() }));
+
+  await seedEnquiry("e12", {});
+  await assertFails(updateDoc(doc(staffDb, "enquiries", "e12"), {
+    viewedAt: serverTimestamp(),
+    status: "Contacted"
+  }));
+});
+
+test("notification fields cannot be set directly by an authenticated client, even an owner", async () => {
+  // Seeded as "pending" (not the default "sent") so the attempted change to
+  // "sent" below is a genuine value change — Firestore rules' diff() only
+  // reports keys whose VALUE actually changes, so writing the same value
+  // the field already holds would not exercise this check at all.
+  await seedEnquiry("e13", { notificationStatus: "pending" });
+  const owner = testEnv.authenticatedContext("owner-uid", { role: "owner" });
+  await assertFails(updateDoc(doc(owner.firestore(), "enquiries", "e13"), {
+    notificationStatus: "sent",
+    updatedAt: serverTimestamp()
+  }));
 });

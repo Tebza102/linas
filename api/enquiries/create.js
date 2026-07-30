@@ -8,6 +8,7 @@
 
 const { getFirestore, admin } = require("../_lib/firebase-admin");
 const { validateEnquirySubmission, ValidationError } = require("../_lib/validate-enquiry");
+const { sendNotificationEmail } = require("../_lib/send-notification-email");
 
 const RATE_LIMIT_MAX_PER_MINUTE = 5;
 const DUPLICATE_WINDOW_MS = 5 * 60 * 1000; // 5 minutes
@@ -122,12 +123,35 @@ module.exports = async (req, res) => {
         confirmedAt: null,
         lostReason: null,
         completedAt: null,
+        viewedAt: null,
         popiaConsentTimestamp: now,
         privacyNoticeVersion: process.env.PRIVACY_NOTICE_VERSION || "v1-draft",
+        notificationStatus: "pending",
+        notificationSentAt: null,
+        notificationProviderId: null,
+        notificationLastError: null,
+        notificationAttempts: 0,
         createdAt: now,
         updatedAt: now
       });
       return ref;
+    });
+
+    // The enquiry is now safely stored — everything below is best-effort.
+    // A notification failure must never turn this into an error response;
+    // the customer already has a valid, persisted enquiry and reference.
+    const adminLink = `https://${req.headers.host}/admin/inbox.html?enquiry=${enquiryRef.id}`;
+    const outcome = await sendNotificationEmail(fields, referenceNumber, adminLink);
+    await enquiryRef.update({
+      notificationStatus: outcome.status,
+      notificationSentAt: outcome.status === "sent" ? admin.firestore.FieldValue.serverTimestamp() : null,
+      notificationProviderId: outcome.providerId || null,
+      notificationLastError: outcome.error || null,
+      notificationAttempts: admin.firestore.FieldValue.increment(1)
+    }).catch((err) => {
+      // Even recording the outcome is best-effort — the enquiry itself is
+      // already safely stored regardless of what happens here.
+      console.error("Failed to record notification outcome:", err.message);
     });
 
     res.status(201).json({
