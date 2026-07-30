@@ -1,0 +1,154 @@
+rules_version = '2';
+
+// Lina's Digital Business Platform — Firestore Security Rules (Phase 1)
+//
+// Architecture: public enquiry submission goes through a validated Vercel
+// serverless function (/api/enquiries/create) using the Firebase Admin SDK,
+// which bypasses these rules entirely. That is a deliberate choice over
+// direct client-side creation: rules cannot rate-limit, cannot run a
+// honeypot check, and cannot see request history, so a scripted attacker
+// with the (inherently public) client config could otherwise spam the
+// collection and generate billed writes with nothing in front of it.
+//
+// Because of that, `enquiries` and `enquiryActivities` deny ALL direct
+// client creates, from both unauthenticated visitors and authenticated
+// admin/staff users — the server endpoint is the only writer for new
+// enquiries and activity records. Admin/staff use the client SDK only for
+// authorised reads and the specific update fields listed below.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    function role() {
+      return request.auth.token.role;
+    }
+    function isOwner() {
+      return isSignedIn() && role() == 'owner';
+    }
+    // "Staff" check also accepts an owner, since an owner has every staff
+    // permission plus more.
+    function isStaff() {
+      return isSignedIn() && (role() == 'owner' || role() == 'staff');
+    }
+
+    match /enquiries/{enquiryId} {
+      // Staff can only read enquiries assigned to them or unassigned ones
+      // (so they can see new leads to pick up); owners can read everything.
+      allow read: if isOwner()
+        || (isStaff()
+            && (resource.data.assignedOwnerId == request.auth.uid
+                || resource.data.assignedOwnerId == null));
+
+      // No client — public or authenticated — creates enquiry documents
+      // directly. Only the server endpoint (Admin SDK, bypasses rules).
+      allow create: if false;
+
+      // Marking an enquiry as viewed is deliberately kept separate from the
+      // sales-status workflow below: it is a single one-way flag (unset ->
+      // now), touches no other field, and cannot be used to smuggle a
+      // status/money-field change past the stricter checks further down.
+      function isViewOnlyUpdate() {
+        return request.resource.data.diff(resource.data).affectedKeys().hasOnly(['viewedAt'])
+          && resource.data.viewedAt == null
+          && request.resource.data.viewedAt == request.time;
+      }
+
+      // Notification fields (notificationStatus, notificationSentAt,
+      // notificationProviderId, notificationLastError, notificationAttempts)
+      // are deliberately absent from every allowed-fields list below — they
+      // are written only by the server via the Admin SDK, which bypasses
+      // these rules entirely. No client, including an owner, can set them
+      // through updateDoc.
+      function isStandardUpdate() {
+        return request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+             'status', 'assignedOwnerId', 'nextAction', 'followUpDate',
+             'quotedAmount', 'confirmedAmount', 'confirmedAt', 'lostReason',
+             'completedAt', 'updatedAt'
+           ])
+        && request.resource.data.updatedAt == request.time
+        && request.resource.data.status in [
+             'New', 'Contacted', 'Quoted', 'Confirmed', 'In Progress',
+             'Completed', 'Lost/Cancelled'
+           ]
+        // Quoted requires either a numeric value or the explicit
+        // pending-value marker — never a silent/blank state.
+        && (request.resource.data.status != 'Quoted'
+            || request.resource.data.quotedAmount is number
+            || request.resource.data.quotedAmount == 'pending')
+        // Confirmed requires a numeric confirmed amount and a confirmation
+        // timestamp set to server time.
+        && (request.resource.data.status != 'Confirmed'
+            || (request.resource.data.confirmedAmount is number
+                && request.resource.data.confirmedAt == request.time))
+        // Completed requires a completion timestamp set to server time.
+        && (request.resource.data.status != 'Completed'
+            || request.resource.data.completedAt == request.time)
+        // Lost/Cancelled requires a non-empty reason.
+        && (request.resource.data.status != 'Lost/Cancelled'
+            || (request.resource.data.lostReason is string
+                && request.resource.data.lostReason.size() > 0))
+        // Recording a quoted/confirmed value is an owner-only action —
+        // staff can move status forward, but cannot themselves set the
+        // money fields (matches the Owner/Admin-only "record quotation and
+        // confirmed values" capability).
+        && (
+             !('quotedAmount' in request.resource.data.diff(resource.data).affectedKeys())
+             && !('confirmedAmount' in request.resource.data.diff(resource.data).affectedKeys())
+             || isOwner()
+           );
+      }
+
+      allow update: if isStaff() && (isViewOnlyUpdate() || isStandardUpdate());
+
+      // Enquiries are never permanently deleted from the normal interface.
+      allow delete: if false;
+    }
+
+    match /enquiryActivities/{activityId} {
+      allow read: if isStaff();
+      // Only the server or an authenticated staff/owner action can log an
+      // activity record, and only as themselves. Activity history is
+      // immutable once written — no update, no delete.
+      allow create: if isStaff()
+        && request.resource.data.createdBy == request.auth.uid
+        && request.resource.data.createdAt == request.time;
+      allow update: if false;
+      allow delete: if false;
+    }
+
+    match /adminUsers/{uid} {
+      // Any authenticated admin/staff can read the directory (needed to
+      // show "assigned to" names and an assignment picker).
+      allow read: if isStaff();
+      // Admin user records are created only by the controlled bootstrap
+      // script (Admin SDK, bypasses rules) — never by a client.
+      allow create: if false;
+      // Owners manage other users' role/active state, but nobody — not
+      // even an owner — can change their OWN role or active field. This
+      // blocks self role-escalation and self-reactivation.
+      allow update: if isOwner()
+        && request.auth.uid != uid
+        && request.resource.data.uid == resource.data.uid
+        && request.resource.data.email == resource.data.email;
+      allow delete: if false;
+    }
+
+    match /settings/{docId} {
+      allow read: if isStaff();
+      allow write: if isOwner();
+    }
+
+    // Per-day reference-number counters are written only by the server
+    // endpoint via the Admin SDK. No client ever needs to touch them.
+    match /counters/{counterId} {
+      allow read, write: if false;
+    }
+
+    // Deny everything else by default.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

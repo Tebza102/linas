@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Admin Login — Lina's</title>
+<link rel="icon" href="../assets/source/brand/Linas_Favicon.jpg">
+<link rel="stylesheet" href="css/admin.css">
+</head>
+<body>
+<div class="login-wrap">
+  <div class="login-card">
+    <h1>Lina's Admin</h1>
+    <p class="lede">Sign in to manage enquiries. There is no public registration — accounts are created by an administrator.</p>
+    <form class="stack" id="loginForm" novalidate>
+      <label>Email
+        <input type="email" name="email" autocomplete="username" required>
+      </label>
+      <label>Password
+        <input type="password" name="password" autocomplete="current-password" required>
+      </label>
+      <button type="submit" class="btn btn--primary" id="loginBtn">Sign in</button>
+      <p class="form-status" id="loginStatus" role="status" aria-live="polite"></p>
+    </form>
+    <div class="login-links">
+      <button type="button" id="forgotBtn">Forgot password</button>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+  import { auth } from "./js/firebase-init.js";
+  import { signInWithEmailAndPassword, sendPasswordResetEmail, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js";
+
+  // If already signed in with a valid admin/staff role, skip straight to
+  // the inbox instead of showing the login form again.
+  onAuthStateChanged(auth, async (user) => {
+    if (!user) return;
+    try {
+      const tokenResult = await user.getIdTokenResult();
+      if (tokenResult.claims.role === "owner" || tokenResult.claims.role === "staff") {
+        location.href = "inbox.html";
+      }
+    } catch (err) { /* stay on login if this check fails */ }
+  });
+
+  const form = document.getElementById("loginForm");
+  const status = document.getElementById("loginStatus");
+  const loginBtn = document.getElementById("loginBtn");
+  const forgotBtn = document.getElementById("forgotBtn");
+  let submitting = false;
+
+  const params = new URLSearchParams(location.search);
+  if (params.get("reason") === "no-role") {
+    status.textContent = "This account is not set up as an admin/staff user. Contact an administrator.";
+    status.setAttribute("data-state", "error");
+  }
+
+  function friendlyError(code) {
+    switch (code) {
+      case "auth/invalid-email": return "That email address doesn't look right.";
+      case "auth/user-not-found":
+      case "auth/wrong-password":
+      case "auth/invalid-credential":
+        return "Email or password is incorrect.";
+      case "auth/too-many-requests":
+        return "Too many attempts. Please wait a few minutes and try again.";
+      default: return "Could not sign in. Please try again.";
+    }
+  }
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    if (submitting) return;
+    const email = form.email.value.trim();
+    const password = form.password.value;
+    if (!email || !password) {
+      status.textContent = "Enter your email and password.";
+      status.setAttribute("data-state", "error");
+      return;
+    }
+    submitting = true;
+    loginBtn.disabled = true;
+    status.textContent = "Signing in...";
+    status.removeAttribute("data-state");
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+      status.textContent = "Signed in. Redirecting...";
+      status.setAttribute("data-state", "success");
+      location.href = "inbox.html";
+    } catch (err) {
+      status.textContent = friendlyError(err.code);
+      status.setAttribute("data-state", "error");
+      submitting = false;
+      loginBtn.disabled = false;
+    }
+  });
+
+  forgotBtn.addEventListener("click", async () => {
+    const email = form.email.value.trim();
+    if (!email) {
+      status.textContent = "Enter your email above first, then click \"Forgot password\".";
+      status.setAttribute("data-state", "error");
+      return;
+    }
+    try {
+      await sendPasswordResetEmail(auth, email);
+      status.textContent = "If that account exists, a password-reset email has been sent.";
+      status.setAttribute("data-state", "success");
+    } catch (err) {
+      status.textContent = "If that account exists, a password-reset email has been sent.";
+      status.setAttribute("data-state", "success");
+    }
+  });
+</script>
+</body>
+</html>

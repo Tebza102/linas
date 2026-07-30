@@ -1,21 +1,25 @@
 # Allowlist model: deny everything by default, then re-admit only the exact
-# files the live prototype-v2 site actually loads (confirmed by grepping
-# every src=/href=/url()/data-* reference across its HTML/CSS/JS). This is
-# deliberately stricter than a deny-list of "known bad" folders, because a
-# deny-list only protects against folders we thought to name — an allowlist
-# fails closed if something new and unreviewed is added later.
+# files the live site needs. A deny-list only protects against folders we
+# thought to name — this fails closed if something new and unreviewed is
+# added later.
 #
 # Everything NOT listed below stays out of the public deployment, including
-# (but not limited to): docs/, scripts/, data/, the control-pack zip, the
-# client working-model demo (backend-dependent, not deployable — see prior
-# commit), raw client-source uploads (assets/source/social, assets/source/menu,
-# assets/source/documents), internal design-direction/rationale docs, the
-# rejected V1 prototype, the unlinked "concept-2" landing variant, internal
-# review screenshots and video contact sheets (assets/mockups/working/
-# client-review*, video-review), and unused brand/media files.
+# (but not limited to): docs/, scripts/ (local dev tooling, not the /api
+# functions), data/, the control-pack zip, the client working-model demo
+# (backend-dependent, not deployable), raw client-source uploads
+# (assets/source/social, assets/source/menu, assets/source/documents),
+# internal design-direction/rationale docs, the rejected V1 prototype, the
+# unlinked "concept-2" landing variant, internal review screenshots/video
+# contact sheets, unused brand/media files, and all Firebase project/rules
+# config (firebase.json, firestore.rules, .firebaserc, firestore.indexes.json
+# — deployed separately via `firebase deploy`, not part of the Vercel site).
 
 /*
 !/assets
+!/api
+!/admin
+!/package.json
+!/package-lock.json
 
 /assets/*
 !/assets/mockups
@@ -39,6 +43,7 @@
 !/assets/mockups/working/prototype-v2/styles.css
 !/assets/mockups/working/prototype-v2/script.js
 !/assets/mockups/working/prototype-v2/menu-data.js
+!/assets/mockups/working/prototype-v2/enquiry-submit.js
 
 /assets/mockups/working/media/*
 !/assets/mockups/working/media/lina-catering-preview-working-v1-20260728.mp4
@@ -58,3 +63,10 @@
 
 /assets/source/brand/*
 !/assets/source/brand/Linas_Favicon.jpg
+
+# Inside /api and /admin everything is legitimate application source (no
+# unrelated sibling content the way assets/ has), so no further per-file
+# restriction is needed once the directory itself is admitted above. Local
+# secrets can never leak here regardless, since .env*/.secrets/service
+# account files are excluded by .gitignore before they'd ever reach Git,
+# let alone a Vercel upload.

@@ -9,7 +9,7 @@
 </head>
 <body>
 
-<div class="prototype-banner" role="note">PROTOTYPE V2 — Direction D, provisional. Form is prototype-only — nothing is sent or stored.</div>
+<div class="prototype-banner" role="note">PROTOTYPE V2 — Direction D, provisional visual design, not yet finally approved by Tebogo. This form is connected to production storage: submitting it does send and store a real enquiry.</div>
 
 <header class="site-header">
   <a class="site-header__mark" href="index.html">
@@ -44,7 +44,7 @@
 
   <section class="form-panel">
     <h2 class="section-title" style="color:var(--ink);">Request a quotation</h2>
-    <p class="section-lede">This form is a working prototype: submitting it shows you what the confirmation looks like, but nothing is actually sent, emailed or stored anywhere yet. A real quotation flow with lead storage is part of the full platform build, not this design-review prototype.</p>
+    <p class="section-lede">Lina reviews every enquiry personally. Fill this in and you'll receive a reference number once it's confirmed stored — she'll follow up by phone or email with a quote.</p>
 
     <form id="enquiryForm" novalidate>
       <label>Event type
@@ -75,6 +75,18 @@
       <label>Contact number
         <input type="tel" name="phone" required>
       </label>
+      <label>Email address
+        <input type="email" name="email" required>
+      </label>
+      <label>How did you hear about Lina's? (optional)
+        <select name="source">
+          <option value="Website">Website</option>
+          <option>Instagram</option>
+          <option>WhatsApp</option>
+          <option>Referral</option>
+          <option>Other</option>
+        </select>
+      </label>
       <label>Additional notes
         <textarea name="notes" rows="2"></textarea>
       </label>
@@ -82,8 +94,19 @@
         <input type="checkbox" name="consent" required>
         <span>I consent to Lina's storing my details to respond to this enquiry (POPIA).</span>
       </label>
-      <button type="submit" class="btn btn--primary">Send enquiry (prototype)</button>
+      <!-- Honeypot spam control: real visitors never see or fill this
+           (hidden off-screen, not via display:none which some bots skip). -->
+      <div aria-hidden="true" style="position:absolute; left:-9999px; top:-9999px;">
+        <label>Company<input type="text" name="company" tabindex="-1" autocomplete="off"></label>
+      </div>
+      <button type="submit" class="btn btn--primary" id="enquirySubmitBtn">Send Enquiry</button>
       <p class="form__status" id="formStatus" role="status" aria-live="polite"></p>
+      <div class="reference-box" id="referenceBox" hidden style="margin-top:16px; padding:16px; border-left:3px solid var(--red, #A43129); background:rgba(255,255,255,0.04);">
+        <span id="referenceBoxLede">Your enquiry has been received. Enquiry reference:</span>
+        <strong id="referenceNumber" style="display:block; font-size:20px; margin:4px 0 8px;"></strong>
+        <p style="font-size:13px; margin:0 0 12px;">This reference confirms receipt of your enquiry. It is not an order or booking confirmation. A confirmation has also been emailed to you.</p>
+        <button type="button" class="btn btn--ghost" id="whatsappSaveBtn" style="padding:8px 16px; font-size:13px;">Save reference on WhatsApp</button>
+      </div>
     </form>
   </section>
 
@@ -109,5 +132,6 @@
 
 <script src="menu-data.js"></script>
 <script src="script.js"></script>
+<script src="enquiry-submit.js"></script>
 </body>
 </html>
