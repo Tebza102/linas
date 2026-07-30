@@ -1,6 +1,7 @@
 // Lina's admin portal — enquiry inbox list.
-import { requireAuth, logout } from "./auth-guard.js";
+import { requireAuth } from "./auth-guard.js";
 import { db } from "./firebase-init.js";
+import { initLayout } from "./layout.js";
 import {
   collection, query, where, orderBy, getDocs, onSnapshot
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
@@ -32,8 +33,7 @@ function todayIso() { return new Date().toISOString().slice(0, 10); }
 
 async function main() {
   const { user, role } = await requireAuth();
-  document.getElementById("userLabel").textContent = `${user.email} (${role})`;
-  document.getElementById("logoutBtn").addEventListener("click", logout);
+  initLayout({ user, role, active: "leads" });
 
   // Populate filter dropdowns.
   const statusFilter = document.getElementById("statusFilter");

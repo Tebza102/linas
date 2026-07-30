@@ -23,6 +23,20 @@
     ? window.crypto.randomUUID()
     : "sid-" + Date.now() + "-" + Math.random().toString(36).slice(2);
 
+  // Captured automatically from the URL so staff never have to backfill
+  // campaign/tracking fields by hand on every enquiry.
+  var params = new URLSearchParams(location.search);
+  var tracking = {
+    utmSource: params.get("utm_source") || undefined,
+    utmMedium: params.get("utm_medium") || undefined,
+    utmCampaign: params.get("utm_campaign") || undefined,
+    campaignId: params.get("campaign_id") || undefined,
+    campaignName: params.get("campaign_name") || undefined,
+    campaignCode: params.get("campaign_code") || undefined,
+    referralPartner: params.get("ref") || undefined,
+    landingPage: (location.pathname + location.search).slice(0, 300)
+  };
+
   if (whatsappBtn) {
     whatsappBtn.addEventListener("click", function () {
       var ref = refNumber.textContent;
@@ -64,7 +78,15 @@
       source: form.source.value || "Website",
       popiaConsent: form.consent.checked,
       company: form.company.value, // honeypot — real visitors never fill this
-      submissionId: submissionId
+      submissionId: submissionId,
+      utmSource: tracking.utmSource,
+      utmMedium: tracking.utmMedium,
+      utmCampaign: tracking.utmCampaign,
+      campaignId: tracking.campaignId,
+      campaignName: tracking.campaignName,
+      campaignCode: tracking.campaignCode,
+      referralPartner: tracking.referralPartner,
+      landingPage: tracking.landingPage
     };
 
     fetch("/api/enquiries/create", {

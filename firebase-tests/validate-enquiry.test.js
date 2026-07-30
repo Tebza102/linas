@@ -92,3 +92,31 @@ test("rejects a malformed submissionId", () => {
     submissionId: "short"
   }), ValidationError);
 });
+
+test("accepts the expanded source list and captures UTM/campaign tracking fields", () => {
+  const result = validateEnquirySubmission({
+    customerName: "Test", phone: "0825551234", email: "test@example.com", enquiryType: "Wedding", popiaConsent: true,
+    source: "Facebook",
+    campaignId: "camp-123", campaignName: "Spring Wedding Push", campaignCode: "SPRING26",
+    landingPage: "/campaigns/spring", referralPartner: "Jane's Florist",
+    utmSource: "facebook", utmMedium: "cpc", utmCampaign: "spring_wedding_2026"
+  });
+  assert.equal(result.source, "Facebook");
+  assert.equal(result.campaignId, "camp-123");
+  assert.equal(result.campaignName, "Spring Wedding Push");
+  assert.equal(result.campaignCode, "SPRING26");
+  assert.equal(result.landingPage, "/campaigns/spring");
+  assert.equal(result.referralPartner, "Jane's Florist");
+  assert.equal(result.utmSource, "facebook");
+  assert.equal(result.utmMedium, "cpc");
+  assert.equal(result.utmCampaign, "spring_wedding_2026");
+});
+
+test("falls back to Website source and null tracking fields when none are supplied", () => {
+  const result = validateEnquirySubmission({
+    customerName: "Test", phone: "0825551234", email: "test@example.com", enquiryType: "Wedding", popiaConsent: true
+  });
+  assert.equal(result.source, "Website");
+  assert.equal(result.campaignId, null);
+  assert.equal(result.utmSource, null);
+});

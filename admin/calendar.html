@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Calendar — Lina's Admin</title>
+<link rel="icon" href="../assets/source/brand/Linas_Favicon.jpg">
+<link rel="stylesheet" href="css/admin.css">
+</head>
+<body>
+<div class="mobile-topbar">
+  <button type="button" class="mobile-menu-toggle" id="mobileMenuToggle" aria-label="Open menu">☰</button>
+  <span class="mobile-topbar__title">Calendar</span>
+</div>
+
+<main class="admin-main">
+  <h1 class="admin-title">Calendar</h1>
+
+  <div class="calendar-toolbar">
+    <div class="calendar-view-toggle" role="group" aria-label="Calendar view">
+      <button type="button" id="viewMonthBtn" aria-pressed="false">Month</button>
+      <button type="button" id="viewWeekBtn" aria-pressed="false">Week</button>
+      <button type="button" id="viewAgendaBtn" aria-pressed="false">Agenda</button>
+    </div>
+    <button type="button" class="btn btn--ghost" id="prevBtn" style="padding:6px 14px; font-size:13px;">← Prev</button>
+    <button type="button" class="btn btn--ghost" id="todayBtn" style="padding:6px 14px; font-size:13px;">Today</button>
+    <button type="button" class="btn btn--ghost" id="nextBtn" style="padding:6px 14px; font-size:13px;">Next →</button>
+    <span id="rangeLabel" style="font-family:var(--font-display); font-size:16px;"></span>
+    <select id="categoryFilter" aria-label="Filter calendar">
+      <option value="All">All</option>
+      <option value="Social Media">Social Media</option>
+      <option value="Sales Follow-ups">Sales Follow-ups</option>
+      <option value="Quotations">Quotations</option>
+      <option value="Confirmed Bookings / Events">Confirmed Bookings / Events</option>
+      <option value="General Tasks">General Tasks</option>
+    </select>
+  </div>
+
+  <div id="calendarBody"></div>
+</main>
+
+<div class="detail-panel" id="detailPanel" hidden role="dialog" aria-modal="true" aria-label="Calendar item details"></div>
+
+<script type="module" src="js/calendar.js"></script>
+</body>
+</html>

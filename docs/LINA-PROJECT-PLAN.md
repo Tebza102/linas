@@ -67,6 +67,8 @@
 
 **Status (30 Jul):** The real Firebase-backed platform superseding the demo is built and verified on a Vercel preview against real production Firebase (see Decision Log D-015): Firestore persistence, role-based `/admin` portal, security rules, and a controlled admin-bootstrap process (first owner account created). The enquiry-notification workflow was then reworked after manual testing surfaced ambiguity — safer duplicate handling, honest email-delivery status (pending/accepted/delivered/delayed/bounced/failed/suppressed), independent owner/customer email tracking, and a signature-verified Resend webhook (see Decision Log D-016). **Remaining before this milestone is fully closed:** (1) Tebogo verifies a real sending domain in Resend — customer confirmation emails currently only work when sent to the Resend account's own address; (2) the Resend webhook needs to be registered in the Resend dashboard (steps given separately); (3) PR still unmerged and production still untouched pending final review and explicit go-ahead.
 
+**Status (30 Jul, later):** PR #2 was merged and Production deployed (real Firebase, SMTP notification workflow, `linas.co.za` domain added pending DNS). Immediately after, the admin-panel priority was revised: away from kitchen-operations planning toward sales-and-marketing, since that is the platform's actual immediate business need. The admin panel was rebuilt accordingly — see Decision Log D-018 for the full account — into an Overview command centre, Sales Pipeline, one master Calendar, Marketing Centre (content planner + campaign tracker), Quotations, Invoices, and Reports, all behind a shared sidebar, with lead source/campaign/UTM tracking added to the enquiry record. This work is on `feat/firebase-admin-platform`, verified on a fresh preview, **not yet merged or deployed to Production**.
+
 ## Milestone 6 — QA, release and handover
 **Target:** 31 July
 - Run full checklist.
@@ -77,6 +79,19 @@
 - Prepare training/support handover.
 
 **Done when:** Build passes quality gates and the client can review a stable release.
+
+## Phase 2 backlog (recorded 30 Jul, per Decision Log D-018)
+Deferred in full, not started:
+- Inventory/stock management and stock calculations
+- Supplier records and ingredient planning
+- Equipment checklists
+- Staff scheduling
+- Transport/logistics workflows
+- Detailed kitchen-production planning
+- Automated event-preparation checklists
+- A general-purpose task-management module (a narrow, source-derived follow-up view — enquiry/quotation/invoice/content dates — covers Phase 1's needs instead)
+- Real API integrations for Instagram/Facebook/Google Business Profile (currently honest "Setup required"/"Connected" status only, no follower/engagement metrics)
+- A genuine Resend (or equivalent) delivery-status webhook, if a future round reintroduces a provider that supports one
 
 ## Daily status template
 **Date:**  

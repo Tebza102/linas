@@ -3,6 +3,7 @@ import { db } from "./firebase-init.js";
 import {
   doc, updateDoc, collection, addDoc, query, where, orderBy, getDocs, serverTimestamp, onSnapshot
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+import { findBookingForEnquiry, createBookingFromEnquiry } from "./create-booking.js";
 
 const STATUSES = ["New", "Contacted", "Quoted", "Confirmed", "In Progress", "Completed", "Lost/Cancelled"];
 
@@ -179,6 +180,14 @@ export async function openDetail(panelEl, enquiry, ctx) {
         <dd>Stored successfully</dd>
       </div>
 
+      ${isOwner && enquiry.status === "Confirmed" ? `
+        <div class="detail-field" id="bookingActionField">
+          <dt>Booking</dt>
+          <dd id="bookingActionText">Checking…</dd>
+          <button type="button" class="btn btn--ghost" id="createBookingBtn" style="margin-top:6px; padding:6px 14px; font-size:13px;" hidden>Create booking from enquiry</button>
+        </div>
+      ` : ""}
+
       ${notificationBlockHtml("ownerNotification", "Owner notification", isOwner)}
       ${notificationBlockHtml("customerConfirmation", "Customer confirmation", isOwner)}
 
@@ -283,6 +292,38 @@ export async function openDetail(panelEl, enquiry, ctx) {
   }
   wireRetry("ownerNotification", "owner");
   wireRetry("customerConfirmation", "customer");
+
+  // Converting a Confirmed enquiry into a booking is owner-only and never
+  // automatic — check first so we never offer to create a second booking
+  // for the same enquiry.
+  if (isOwner && enquiry.status === "Confirmed") {
+    const bookingText = panelEl.querySelector("#bookingActionText");
+    const bookingBtn = panelEl.querySelector("#createBookingBtn");
+    findBookingForEnquiry(enquiry.id).then((existing) => {
+      if (existing) {
+        bookingText.textContent = "Booking already created — see the Calendar.";
+      } else {
+        bookingText.textContent = "No booking created yet for this confirmed enquiry.";
+        bookingBtn.hidden = false;
+        bookingBtn.addEventListener("click", async () => {
+          bookingBtn.disabled = true;
+          bookingText.textContent = "Creating booking…";
+          try {
+            await createBookingFromEnquiry(enquiry, user.uid);
+            bookingText.textContent = "Booking created — see the Calendar.";
+            bookingBtn.hidden = true;
+          } catch (err) {
+            console.error(err);
+            bookingText.textContent = "Could not create the booking. Please try again.";
+            bookingBtn.disabled = false;
+          }
+        });
+      }
+    }).catch((err) => {
+      console.error("Failed to check for an existing booking:", err);
+      bookingText.textContent = "Could not check booking status.";
+    });
+  }
 
   // Live updates while the panel is open: a Retry action from another open
   // tab/session appears here without needing to close and reopen the panel

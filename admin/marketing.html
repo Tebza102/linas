@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Marketing — Lina's Admin</title>
+<link rel="icon" href="../assets/source/brand/Linas_Favicon.jpg">
+<link rel="stylesheet" href="css/admin.css">
+</head>
+<body>
+<div class="mobile-topbar">
+  <button type="button" class="mobile-menu-toggle" id="mobileMenuToggle" aria-label="Open menu">☰</button>
+  <span class="mobile-topbar__title">Marketing</span>
+</div>
+
+<main class="admin-main">
+  <h1 class="admin-title">Marketing Centre</h1>
+
+  <div class="calendar-view-toggle" role="group" aria-label="Marketing section" style="margin-bottom:var(--space-6);">
+    <button type="button" id="tabContentBtn" aria-pressed="true">Content Planner</button>
+    <button type="button" id="tabCampaignsBtn" aria-pressed="false">Campaign Tracker</button>
+    <button type="button" id="tabChannelsBtn" aria-pressed="false">Channel Status</button>
+  </div>
+
+  <section id="contentSection">
+    <div class="admin-toolbar">
+      <button type="button" class="btn btn--primary" id="newContentBtn" style="padding:8px 16px; font-size:13px;">+ New content item</button>
+      <select id="platformFilter" aria-label="Filter by platform"><option value="">All platforms</option></select>
+      <select id="contentStatusFilter" aria-label="Filter by status"><option value="">All statuses</option></select>
+    </div>
+    <div id="contentList"></div>
+  </section>
+
+  <section id="campaignsSection" hidden>
+    <div class="admin-toolbar">
+      <button type="button" class="btn btn--primary" id="newCampaignBtn" style="padding:8px 16px; font-size:13px;">+ New campaign</button>
+    </div>
+    <div id="campaignsList"></div>
+  </section>
+
+  <section id="channelsSection" hidden>
+    <p style="color:var(--white-dim); font-size:14px; margin-bottom:var(--space-4);">Honest connection states only — no follower counts, reach or engagement figures are shown until a real integration exists.</p>
+    <div class="panel-grid" id="channelsList"></div>
+  </section>
+</main>
+
+<div class="detail-panel" id="detailPanel" hidden role="dialog" aria-modal="true" aria-label="Marketing item details"></div>
+
+<script type="module" src="js/marketing.js"></script>
+</body>
+</html>

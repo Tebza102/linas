@@ -1,230 +1,182 @@
-// Lina's admin portal — live Firestore-backed dashboard. Owner/Admin only
-// (per the Phase 1 role spec — Staff do not have dashboard access).
-import { requireAuth, logout } from "./auth-guard.js";
+// Lina's admin portal — Overview: a sales-and-marketing command centre.
+// Every figure here is computed from real Firestore data, live, with
+// test records excluded (see isTestRecord below) — no invented or
+// estimated marketing/platform figures are ever shown.
+import { requireAuth } from "./auth-guard.js";
 import { db } from "./firebase-init.js";
-import { collection, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+import { initLayout } from "./layout.js";
+import {
+  collection, query, where, onSnapshot, doc
+} from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 
-const STATUSES = ["New", "Contacted", "Quoted", "Confirmed", "In Progress", "Completed", "Lost/Cancelled"];
-const ENQUIRY_TYPES = ["Wedding", "Funeral", "Corporate event", "Private function", "Mobile-kitchen order"];
-const SOURCES = ["Website", "Instagram", "WhatsApp", "Referral", "Other"];
-const GOAL = 350000;
-const TERMINAL_STATUSES = ["Completed", "Lost/Cancelled"];
+// ---- Metric definitions (kept here in code, per the approved spec) ----
+const QUALIFIED_STATUSES = ["Contacted", "Quoted", "Confirmed", "In Progress", "Completed"];
+const CONFIRMED_STATUSES = ["Confirmed", "In Progress", "Completed"];
+const OPEN_STATUSES = ["New", "Contacted", "Quoted", "In Progress"];
+const CLOSED_STATUSES = ["Confirmed", "Completed", "Lost/Cancelled"];
+const GOAL_FALLBACK = 350000;
 
 function esc(s) {
   return String(s == null ? "" : s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 }
 function todayIso() { return new Date().toISOString().slice(0, 10); }
 function tile(value, label) {
-  return `<div class="stat-tile"><div class="stat-tile__value">${esc(value)}</div><div class="stat-tile__label">${esc(label)}</div></div>`;
+  return `<div class="kpi-tile"><div class="kpi-tile__value">${esc(value)}</div><div class="kpi-tile__label">${esc(label)}</div></div>`;
 }
-function toDate(ts) {
-  if (!ts) return null;
-  return ts.toDate ? ts.toDate() : new Date(ts);
+function fmtRand(n) { return "R" + Number(n || 0).toLocaleString("en-ZA"); }
+function renderList(el, items, emptyText) {
+  el.innerHTML = items.length
+    ? items.map((i) => `<li>${i}</li>`).join("")
+    : `<li class="empty-state">${esc(emptyText)}</li>`;
 }
 
 async function main() {
   const { user, role } = await requireAuth();
-  document.getElementById("userLabel").textContent = `${user.email} (${role})`;
-  document.getElementById("logoutBtn").addEventListener("click", logout);
+  initLayout({ user, role, active: "overview" });
 
-  if (role !== "owner") {
-    document.getElementById("accessDenied").hidden = false;
-    return;
-  }
-  document.getElementById("dashboardBody").hidden = false;
+  let enquiries = [];
+  let quotations = []; // stays empty for staff — see below
+  let campaigns = [];
+  let bookings = [];
 
-  const typeFilter = document.getElementById("typeFilter");
-  ENQUIRY_TYPES.forEach((t) => typeFilter.insertAdjacentHTML("beforeend", `<option value="${esc(t)}">${esc(t)}</option>`));
-  const sourceFilter = document.getElementById("sourceFilter");
-  SOURCES.forEach((s) => sourceFilter.insertAdjacentHTML("beforeend", `<option value="${esc(s)}">${esc(s)}</option>`));
-
-  const adminUsersMap = {};
-  const usersSnap = await getDocs(collection(db, "adminUsers"));
-  usersSnap.forEach((d) => { adminUsersMap[d.id] = d.data(); });
-  const ownerFilter = document.getElementById("ownerFilter");
-  Object.entries(adminUsersMap).forEach(([uid, u]) => {
-    ownerFilter.insertAdjacentHTML("beforeend", `<option value="${esc(uid)}">${esc(u.displayName)}</option>`);
-  });
-
-  const enquiriesSnap = await getDocs(collection(db, "enquiries"));
-  const allEnquiries = enquiriesSnap.docs.map((d) => ({ id: d.id, ...d.data() }));
-
-  // Average response time: earliest status_change activity per enquiry
-  // where the transition left "New", compared against that enquiry's
-  // createdAt. Enquiries never touched yet simply don't contribute.
-  const activitiesSnap = await getDocs(query(collection(db, "enquiryActivities"), where("actionType", "==", "status_change")));
-  const firstResponseByEnquiry = {};
-  activitiesSnap.forEach((d) => {
-    const a = d.data();
-    if (a.previousValue !== "New") return;
-    const t = toDate(a.createdAt);
-    if (!t) return;
-    if (!firstResponseByEnquiry[a.enquiryId] || t < firstResponseByEnquiry[a.enquiryId]) {
-      firstResponseByEnquiry[a.enquiryId] = t;
-    }
-  });
-
-  const rangePreset = document.getElementById("rangePreset");
-  const customFromWrap = document.getElementById("customFromWrap");
-  const customToWrap = document.getElementById("customToWrap");
-  rangePreset.addEventListener("change", () => {
-    const isCustom = rangePreset.value === "custom";
-    customFromWrap.hidden = !isCustom;
-    customToWrap.hidden = !isCustom;
-    render();
-  });
-  [document.getElementById("customFrom"), document.getElementById("customTo"), sourceFilter, typeFilter, ownerFilter]
-    .forEach((el) => el.addEventListener("change", render));
-
-  function currentRange() {
-    const preset = rangePreset.value;
-    const now = new Date();
-    if (preset === "week") {
-      const start = new Date(now);
-      start.setDate(now.getDate() - now.getDay());
-      start.setHours(0, 0, 0, 0);
-      return { from: start, to: null };
-    }
-    if (preset === "month") {
-      return { from: new Date(now.getFullYear(), now.getMonth(), 1), to: null };
-    }
-    if (preset === "custom") {
-      const fromVal = document.getElementById("customFrom").value;
-      const toVal = document.getElementById("customTo").value;
-      return { from: fromVal ? new Date(fromVal) : null, to: toVal ? new Date(toVal + "T23:59:59") : null };
-    }
-    return { from: null, to: null };
-  }
-
-  let filtered = [];
+  function isTest(e) { return e.isTestRecord === true; }
 
   function render() {
-    const { from, to } = currentRange();
-    const sourceQ = sourceFilter.value;
-    const typeQ = typeFilter.value;
-    const ownerQ = ownerFilter.value;
+    const real = enquiries.filter((e) => !isTest(e));
 
-    filtered = allEnquiries.filter((e) => {
-      const created = toDate(e.createdAt);
-      if (from && created && created < from) return false;
-      if (to && created && created > to) return false;
-      if (sourceQ && e.source !== sourceQ) return false;
-      if (typeQ && e.enquiryType !== typeQ) return false;
-      if (ownerQ && e.assignedOwnerId !== ownerQ) return false;
-      return true;
-    });
-
-    const byStatus = {};
-    STATUSES.forEach((s) => { byStatus[s] = 0; });
-    filtered.forEach((e) => { byStatus[e.status] = (byStatus[e.status] || 0) + 1; });
-
-    const won = byStatus["Confirmed"] + byStatus["In Progress"] + byStatus["Completed"];
-    const lost = byStatus["Lost/Cancelled"];
-    const closed = won + lost;
-    const conversionRate = closed > 0 ? Math.round((won / closed) * 100) : null;
-
-    const pipelineValue = filtered
-      .filter((e) => e.status === "Quoted" && typeof e.quotedAmount === "number")
-      .reduce((sum, e) => sum + e.quotedAmount, 0);
-
-    const confirmedRevenue = filtered
-      .filter((e) => ["Confirmed", "In Progress", "Completed"].includes(e.status) && typeof e.confirmedAmount === "number")
+    const newEnquiries = real.filter((e) => e.status === "New");
+    const qualified = real.filter((e) => QUALIFIED_STATUSES.includes(e.status));
+    // Quotations sent: enquiry status Quoted, OR (owner view only, since
+    // staff cannot read quotations) a linked quotation already Sent/
+    // Accepted/Revised — covers a quotation created before the enquiry's
+    // own status caught up.
+    const quotedEnquiryIds = new Set(
+      quotations.filter((q) => ["Sent", "Accepted", "Revised"].includes(q.status)).map((q) => q.enquiryId)
+    );
+    const quotationsSent = real.filter((e) => e.status === "Quoted" || quotedEnquiryIds.has(e.id));
+    const confirmedSales = real.filter((e) => CONFIRMED_STATUSES.includes(e.status));
+    const revenueWon = confirmedSales
+      .filter((e) => typeof e.confirmedAmount === "number")
       .reduce((sum, e) => sum + e.confirmedAmount, 0);
+    const pipelineValue = real
+      .filter((e) => OPEN_STATUSES.includes(e.status))
+      .reduce((sum, e) => {
+        const v = typeof e.quotedAmount === "number" ? e.quotedAmount : (typeof e.estimatedValue === "number" ? e.estimatedValue : 0);
+        return sum + v;
+      }, 0);
+    const closedCount = real.filter((e) => CLOSED_STATUSES.includes(e.status)).length;
+    const conversionRate = closedCount > 0 ? Math.round((confirmedSales.length / closedCount) * 100) : null;
+    const outstandingFollowUps = real.filter((e) =>
+      e.followUpDate && !["Completed", "Lost/Cancelled"].includes(e.status) && e.followUpDate <= todayIso()
+    );
 
-    document.getElementById("statGrid").innerHTML =
-      tile(filtered.length, "Total enquiries") +
-      tile(byStatus["New"], "New") +
-      tile(byStatus["Contacted"], "Contacted") +
-      tile(byStatus["Quoted"], "Quotations sent") +
-      tile(byStatus["Confirmed"], "Confirmed") +
-      tile(byStatus["Completed"], "Completed") +
-      tile(byStatus["Lost/Cancelled"], "Lost/cancelled") +
+    document.getElementById("kpiGrid").innerHTML =
+      tile(newEnquiries.length, "New enquiries") +
+      tile(qualified.length, "Qualified leads") +
+      tile(quotationsSent.length, "Quotations sent") +
+      tile(confirmedSales.length, "Confirmed sales/bookings") +
+      tile(fmtRand(revenueWon), "Revenue won") +
+      tile(fmtRand(pipelineValue), "Estimated pipeline value") +
       tile(conversionRate === null ? "—" : conversionRate + "%", "Conversion rate") +
-      tile("R" + pipelineValue.toLocaleString("en-ZA"), "Quoted pipeline value") +
-      tile("R" + confirmedRevenue.toLocaleString("en-ZA"), "Confirmed revenue");
+      tile(outstandingFollowUps.length, "Outstanding follow-ups");
 
-    function breakdown(el, counter) {
-      const entries = Object.entries(counter).filter(([, n]) => n > 0);
-      el.innerHTML = entries.length
-        ? entries.map(([k, n]) => `<li><span>${esc(k)}</span><span>${n}</span></li>`).join("")
-        : '<li class="empty-state">No enquiries yet.</li>';
-    }
-    const bySource = {}; SOURCES.forEach((s) => { bySource[s] = 0; });
-    filtered.forEach((e) => { bySource[e.source || "Unknown"] = (bySource[e.source || "Unknown"] || 0) + 1; });
-    breakdown(document.getElementById("bySourceList"), bySource);
+    renderList(
+      document.getElementById("leadsAttentionList"),
+      newEnquiries.slice(0, 8).map((e) => `<span>${esc(e.customerName)} — ${esc(e.referenceNumber)}</span><span>${esc(e.enquiryType)}</span>`),
+      "No new leads waiting right now."
+    );
 
-    const byType = {}; ENQUIRY_TYPES.forEach((t) => { byType[t] = 0; });
-    filtered.forEach((e) => { byType[e.enquiryType || "Unknown"] = (byType[e.enquiryType || "Unknown"] || 0) + 1; });
-    breakdown(document.getElementById("byTypeList"), byType);
+    renderList(
+      document.getElementById("quotesFollowUpList"),
+      quotations.filter((q) => q.status === "Sent" && q.followUpDate && q.followUpDate <= todayIso())
+        .map((q) => `<span>${esc(q.quoteNumber)} — ${esc(q.customerName || "")}</span><span class="overdue-text">${esc(q.followUpDate)}</span>`),
+      role === "owner" ? "No quotations waiting on follow-up." : "Owner-only data."
+    );
 
-    breakdown(document.getElementById("byStatusList"), byStatus);
+    renderList(
+      document.getElementById("overdueList"),
+      outstandingFollowUps.slice(0, 8).map((e) =>
+        `<span>${esc(e.customerName)} — ${esc(e.referenceNumber)}</span><span class="overdue-text">${esc(e.followUpDate)}</span>`),
+      "No overdue follow-ups."
+    );
 
-    const overdue = filtered.filter((e) => e.followUpDate && !TERMINAL_STATUSES.includes(e.status) && e.followUpDate < todayIso());
-    const overdueEl = document.getElementById("overdueList");
-    overdueEl.innerHTML = overdue.length
-      ? overdue.map((e) => `<li><span>${esc(e.referenceNumber)} — ${esc(e.customerName)}</span><span>${esc(e.followUpDate)}</span></li>`).join("")
-      : '<li class="empty-state">No overdue follow-ups.</li>';
+    const recent = real.slice().sort((a, b) => (b.createdAt?.toMillis?.() || 0) - (a.createdAt?.toMillis?.() || 0)).slice(0, 6);
+    renderList(
+      document.getElementById("recentEnquiriesList"),
+      recent.map((e) => `<span>${esc(e.customerName)} — ${esc(e.referenceNumber)}</span><span>${esc(e.status)}</span>`),
+      "No enquiries yet. Once someone submits the public form, it will appear here."
+    );
 
-    const upcoming = filtered
-      .filter((e) => e.eventDate && !TERMINAL_STATUSES.includes(e.status) && e.eventDate >= todayIso())
+    const byStage = {};
+    ["New", "Contacted", "Quoted", "Confirmed", "In Progress", "Completed", "Lost/Cancelled"].forEach((s) => { byStage[s] = 0; });
+    real.forEach((e) => { byStage[e.status] = (byStage[e.status] || 0) + 1; });
+    renderList(
+      document.getElementById("pipelineSummaryList"),
+      Object.entries(byStage).filter(([, n]) => n > 0).map(([s, n]) => `<span>${esc(s)}</span><span>${n}</span>`),
+      "No enquiries yet."
+    );
+
+    const bySource = {};
+    real.forEach((e) => { bySource[e.source || "Unknown"] = (bySource[e.source || "Unknown"] || 0) + 1; });
+    renderList(
+      document.getElementById("bySourceList"),
+      Object.entries(bySource).sort((a, b) => b[1] - a[1]).map(([s, n]) => `<span>${esc(s)}</span><span>${n}</span>`),
+      "No enquiries yet."
+    );
+
+    renderList(
+      document.getElementById("campaignsList"),
+      campaigns.filter((c) => c.status === "Active").map((c) => `<span>${esc(c.campaignName)}</span><span>${esc(c.channel || "")}</span>`),
+      "No active campaigns. Connect account to view performance once one is running."
+    );
+
+    const upcomingBookings = bookings
+      .filter((b) => b.eventDate && b.eventDate >= todayIso() && b.bookingStatus !== "Cancelled")
       .sort((a, b) => a.eventDate.localeCompare(b.eventDate))
-      .slice(0, 10);
-    const upcomingEl = document.getElementById("upcomingList");
-    upcomingEl.innerHTML = upcoming.length
-      ? upcoming.map((e) => `<li><span>${esc(e.referenceNumber)} — ${esc(e.customerName)} (${esc(e.enquiryType)})</span><span>${esc(e.eventDate)}</span></li>`).join("")
-      : '<li class="empty-state">No upcoming events on record.</li>';
-
-    const goalPct = Math.min(100, Math.round((confirmedRevenue / GOAL) * 100));
-    document.getElementById("goalFill").style.width = goalPct + "%";
-    document.getElementById("goalNote").textContent = confirmedRevenue > 0
-      ? "Calculated from confirmedAmount on Confirmed/In Progress/Completed enquiries in the current filter."
-      : "No confirmed revenue recorded yet in the current filter — shown honestly as 0%, not estimated.";
-    document.getElementById("goalCaption").textContent =
-      `R${confirmedRevenue.toLocaleString("en-ZA")} of R${GOAL.toLocaleString("en-ZA")} recorded (${goalPct}%).`;
-
-    const responseTimes = filtered
-      .map((e) => {
-        const created = toDate(e.createdAt);
-        const responded = firstResponseByEnquiry[e.id];
-        if (!created || !responded) return null;
-        return (responded.getTime() - created.getTime()) / (1000 * 60 * 60);
-      })
-      .filter((h) => h != null && h >= 0);
-    const responseNote = document.getElementById("responseTimeNote");
-    if (responseTimes.length) {
-      const avgHours = responseTimes.reduce((a, b) => a + b, 0) / responseTimes.length;
-      responseNote.textContent = `Average ${avgHours < 1 ? Math.round(avgHours * 60) + " minutes" : avgHours.toFixed(1) + " hours"} to first status change, based on ${responseTimes.length} enquiries with a recorded response in this filter.`;
-    } else {
-      responseNote.textContent = "Not yet measurable in this filter — no enquiries here have had their status changed away from \"New\" yet.";
-    }
+      .slice(0, 5);
+    renderList(
+      document.getElementById("upcomingCalendarList"),
+      upcomingBookings.map((b) => `<span>${esc(b.customerName || b.title)} — ${esc(b.eventType)}</span><span>${esc(b.eventDate)}</span>`),
+      "No upcoming confirmed events yet."
+    );
   }
 
-  document.getElementById("exportCsvBtn").addEventListener("click", () => {
-    const cols = [
-      "referenceNumber", "customerName", "phone", "email", "enquiryType", "eventDate",
-      "location", "guestCount", "source", "status", "quotedAmount", "confirmedAmount",
-      "lostReason", "assignedOwnerId", "nextAction", "followUpDate"
-    ];
-    const lines = [cols.join(",")];
-    filtered.forEach((e) => {
-      lines.push(cols.map((c) => {
-        const v = e[c];
-        const s = v == null ? "" : String(v);
-        return `"${s.replace(/"/g, '""')}"`;
-      }).join(","));
-    });
-    const blob = new Blob([lines.join("\n")], { type: "text/csv;charset=utf-8;" });
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = `lina-enquiries-export-${todayIso()}.csv`;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-  });
+  onSnapshot(
+    role === "owner" ? collection(db, "enquiries") : query(collection(db, "enquiries"), where("assignedOwnerId", "in", [user.uid, null])),
+    (snap) => { enquiries = snap.docs.map((d) => ({ id: d.id, ...d.data() })); render(); },
+    (err) => console.error("Overview enquiries listener error:", err)
+  );
 
-  render();
+  if (role === "owner") {
+    onSnapshot(collection(db, "quotations"), (snap) => { quotations = snap.docs.map((d) => ({ id: d.id, ...d.data() })); render(); },
+      (err) => console.error("Overview quotations listener error:", err));
+  }
+  onSnapshot(collection(db, "campaigns"), (snap) => { campaigns = snap.docs.map((d) => ({ id: d.id, ...d.data() })); render(); },
+    (err) => console.error("Overview campaigns listener error:", err));
+  onSnapshot(
+    role === "owner" ? collection(db, "bookings") : query(collection(db, "bookings"), where("assignedPerson", "in", [user.uid, null])),
+    (snap) => { bookings = snap.docs.map((d) => ({ id: d.id, ...d.data() })); render(); },
+    (err) => console.error("Overview bookings listener error:", err)
+  );
+
+  // Growth-goal progress — read live from settings/business.dashboardGoal,
+  // honestly falling back to the known R350,000 target if that document
+  // doesn't exist yet (never inventing a different number).
+  onSnapshot(doc(db, "settings", "business"), (snap) => {
+    const goal = (snap.exists() && typeof snap.data().dashboardGoal === "number") ? snap.data().dashboardGoal : GOAL_FALLBACK;
+    const real = enquiries.filter((e) => !isTest(e));
+    const revenueWon = real
+      .filter((e) => CONFIRMED_STATUSES.includes(e.status) && typeof e.confirmedAmount === "number")
+      .reduce((sum, e) => sum + e.confirmedAmount, 0);
+    const pct = Math.min(100, Math.round((revenueWon / goal) * 100));
+    document.getElementById("goalFill").style.width = pct + "%";
+    document.getElementById("goalNote").textContent = revenueWon > 0
+      ? "Calculated from confirmedAmount on Confirmed/In Progress/Completed enquiries, excluding test records."
+      : "No confirmed revenue recorded yet — shown honestly as 0%, not estimated.";
+    document.getElementById("goalCaption").textContent = `${fmtRand(revenueWon)} of ${fmtRand(goal)} recorded (${pct}%).`;
+  }, (err) => console.error("Overview goal listener error:", err));
 }
 
 main().catch((err) => {
-  console.error("Dashboard failed to load:", err);
+  console.error("Overview failed to load:", err);
 });

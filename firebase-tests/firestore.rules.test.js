@@ -5,7 +5,7 @@
  * terminal, then `npm run test:rules` in another (or see
  * firebase-tests/run-with-emulator.js for a one-command version).
  */
-const { test, before, after } = require("node:test");
+const { test, before, after, beforeEach } = require("node:test");
 const assert = require("node:assert/strict");
 const {
   initializeTestEnvironment, assertFails, assertSucceeds
@@ -31,6 +31,20 @@ before(async () => {
 
 after(async () => {
   if (testEnv) await testEnv.cleanup();
+});
+
+// The real root cause of the earlier intermittent "create becomes an
+// update" failures: without this, documents written by an EARLIER test
+// (including from a previous npm run, if the emulator process wasn't
+// fully torn down — see run-with-emulator.js) can still exist when a
+// LATER test writes to the same id, turning what the test believes is a
+// `create` into an `update` against already-existing data, which then
+// gets evaluated against — and correctly denied by — the update rule
+// instead. clearFirestore() before every single test removes this
+// possibility entirely, which is why the arbitrary settle-delay this
+// replaced was never a real fix, just a way of statistically avoiding it.
+beforeEach(async () => {
+  await testEnv.clearFirestore();
 });
 
 async function seedEnquiry(id, data) {
@@ -226,5 +240,205 @@ test("submissionId cannot be set or altered by a client update", async () => {
   await assertFails(updateDoc(doc(owner.firestore(), "enquiries", "e14"), {
     submissionId: "hacker-supplied-id",
     updatedAt: serverTimestamp()
+  }));
+});
+
+// --- Bookings / calendar (Digital Business Platform improvement) ---
+
+async function seedBooking(id, data) {
+  await testEnv.withSecurityRulesDisabled(async (ctx) => {
+    await setDoc(doc(ctx.firestore(), "bookings", id), {
+      title: "Test Wedding",
+      eventType: "Wedding",
+      linkedEnquiryId: null,
+      customerName: "Test Customer",
+      phone: "0825551234",
+      email: "test@example.com",
+      eventDate: "2026-12-01",
+      bookingStatus: "Confirmed",
+      assignedPerson: null,
+      internalNotes: null,
+      createdBy: "owner-uid",
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      ...data
+    });
+  });
+}
+
+test("unauthenticated user cannot read or create a booking", async () => {
+  await seedBooking("b1", {});
+  const unauth = testEnv.unauthenticatedContext();
+  const unauthDb = unauth.firestore();
+  await assertFails(getDoc(doc(unauthDb, "bookings", "b1")));
+  await assertFails(setDoc(doc(unauthDb, "bookings", "hacker-booking"), {
+    title: "Hacker", eventType: "Wedding", createdBy: "x", createdAt: new Date(), updatedAt: new Date()
+  }));
+});
+
+test("staff can read an unassigned booking but not one assigned to someone else", async () => {
+  await seedBooking("b2", { assignedPerson: null });
+  await seedBooking("b3", { assignedPerson: "other-staff-uid" });
+  const staff = testEnv.authenticatedContext("staff-uid", { role: "staff" });
+  const staffDb = staff.firestore();
+  await assertSucceeds(getDoc(doc(staffDb, "bookings", "b2")));
+  await assertFails(getDoc(doc(staffDb, "bookings", "b3")));
+});
+
+test("staff cannot create a booking — converting an enquiry is owner-only", async () => {
+  const staff = testEnv.authenticatedContext("staff-uid", { role: "staff" });
+  await assertFails(setDoc(doc(staff.firestore(), "bookings", "staff-created"), {
+    title: "Staff Attempt", eventType: "Wedding", bookingStatus: "Tentative", createdBy: "staff-uid",
+    createdAt: new Date(), updatedAt: new Date()
+  }));
+});
+
+test("owner can create a booking", async () => {
+  const owner = testEnv.authenticatedContext("owner-uid", { role: "owner" });
+  await assertSucceeds(setDoc(doc(owner.firestore(), "bookings", "owner-created"), {
+    title: "Owner Created", eventType: "Wedding", linkedEnquiryId: null,
+    bookingStatus: "Tentative",
+    createdBy: "owner-uid", createdAt: serverTimestamp(), updatedAt: serverTimestamp()
+  }));
+});
+
+test("staff can add internalNotes only, not bookingStatus or customer details", async () => {
+  await seedBooking("b4", {});
+  const staff = testEnv.authenticatedContext("staff-uid", { role: "staff" });
+  const staffDb = staff.firestore();
+  await assertSucceeds(updateDoc(doc(staffDb, "bookings", "b4"), {
+    internalNotes: "Customer called to confirm venue access.",
+    updatedAt: serverTimestamp()
+  }));
+  await assertFails(updateDoc(doc(staffDb, "bookings", "b4"), {
+    bookingStatus: "Cancelled",
+    updatedAt: serverTimestamp()
+  }));
+  await assertFails(updateDoc(doc(staffDb, "bookings", "b4"), {
+    customerName: "Renamed Customer",
+    updatedAt: serverTimestamp()
+  }));
+});
+
+test("owner can update bookingStatus; staff cannot delete a booking", async () => {
+  await seedBooking("b5", {});
+  const owner = testEnv.authenticatedContext("owner-uid", { role: "owner" });
+  await assertSucceeds(updateDoc(doc(owner.firestore(), "bookings", "b5"), {
+    bookingStatus: "Completed",
+    updatedAt: serverTimestamp()
+  }));
+
+  await seedBooking("b6", {});
+  const staff = testEnv.authenticatedContext("staff-uid", { role: "staff" });
+  await assertFails(deleteDoc(doc(staff.firestore(), "bookings", "b6")));
+});
+
+// --- Marketing: content planner ---
+
+async function seedContentItem(id, data) {
+  await testEnv.withSecurityRulesDisabled(async (ctx) => {
+    await setDoc(doc(ctx.firestore(), "contentItems", id), {
+      contentTitle: "Test post",
+      platform: "Instagram",
+      status: "Draft",
+      assignedPerson: null,
+      createdBy: "owner-uid",
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      ...data
+    });
+  });
+}
+
+test("unauthenticated cannot read content; staff cannot create content", async () => {
+  await seedContentItem("c1", {});
+  const unauth = testEnv.unauthenticatedContext();
+  await assertFails(getDoc(doc(unauth.firestore(), "contentItems", "c1")));
+
+  const staff = testEnv.authenticatedContext("staff-uid", { role: "staff" });
+  await assertFails(setDoc(doc(staff.firestore(), "contentItems", "staff-created-content"), {
+    contentTitle: "Staff Attempt", platform: "Instagram", status: "Draft",
+    createdBy: "staff-uid", createdAt: new Date(), updatedAt: new Date()
+  }));
+});
+
+test("staff assigned to a content item can update only its status, not owner", async () => {
+  await seedContentItem("c2", { assignedPerson: "staff-uid" });
+  const staff = testEnv.authenticatedContext("staff-uid", { role: "staff" });
+  const staffDb = staff.firestore();
+  await assertSucceeds(updateDoc(doc(staffDb, "contentItems", "c2"), {
+    status: "Ready", updatedAt: serverTimestamp()
+  }));
+  await assertFails(updateDoc(doc(staffDb, "contentItems", "c2"), {
+    contentTitle: "Renamed", updatedAt: serverTimestamp()
+  }));
+
+  await seedContentItem("c3", { assignedPerson: "someone-else" });
+  await assertFails(updateDoc(doc(staffDb, "contentItems", "c3"), {
+    status: "Ready", updatedAt: serverTimestamp()
+  }));
+});
+
+// --- Marketing: campaigns ---
+
+test("staff can read but not write campaigns; owner can manage them", async () => {
+  const owner = testEnv.authenticatedContext("owner-uid", { role: "owner" });
+  await assertSucceeds(setDoc(doc(owner.firestore(), "campaigns", "camp1"), {
+    campaignName: "Spring Wedding Push", status: "Active",
+    createdBy: "owner-uid", createdAt: serverTimestamp(), updatedAt: serverTimestamp()
+  }));
+
+  const staff = testEnv.authenticatedContext("staff-uid", { role: "staff" });
+  const staffDb = staff.firestore();
+  await assertSucceeds(getDoc(doc(staffDb, "campaigns", "camp1")));
+  await assertFails(updateDoc(doc(staffDb, "campaigns", "camp1"), { status: "Paused", updatedAt: serverTimestamp() }));
+});
+
+// --- Quotations / invoices: owner-only financial records ---
+
+async function seedQuotation(id, data) {
+  await testEnv.withSecurityRulesDisabled(async (ctx) => {
+    await setDoc(doc(ctx.firestore(), "quotations", id), {
+      quoteNumber: "Q-0001", enquiryId: "e1", amount: 5000, status: "Draft",
+      createdBy: "owner-uid", createdAt: new Date(), updatedAt: new Date(),
+      ...data
+    });
+  });
+}
+
+test("staff cannot read, create or update quotations; unauthenticated is denied", async () => {
+  await seedQuotation("q1", {});
+  const unauth = testEnv.unauthenticatedContext();
+  await assertFails(getDoc(doc(unauth.firestore(), "quotations", "q1")));
+
+  const staff = testEnv.authenticatedContext("staff-uid", { role: "staff" });
+  const staffDb = staff.firestore();
+  await assertFails(getDoc(doc(staffDb, "quotations", "q1")));
+  await assertFails(updateDoc(doc(staffDb, "quotations", "q1"), { status: "Sent", updatedAt: serverTimestamp() }));
+});
+
+test("owner can create and update a quotation", async () => {
+  const owner = testEnv.authenticatedContext("owner-uid", { role: "owner" });
+  const ownerDb = owner.firestore();
+  await assertSucceeds(setDoc(doc(ownerDb, "quotations", "q2"), {
+    quoteNumber: "Q-0002", enquiryId: "e1", amount: 7500, status: "Draft",
+    createdBy: "owner-uid", createdAt: serverTimestamp(), updatedAt: serverTimestamp()
+  }));
+  await assertSucceeds(updateDoc(doc(ownerDb, "quotations", "q2"), { status: "Sent", updatedAt: serverTimestamp() }));
+});
+
+test("staff cannot read or write invoices; owner can", async () => {
+  await testEnv.withSecurityRulesDisabled(async (ctx) => {
+    await setDoc(doc(ctx.firestore(), "invoices", "inv1"), {
+      invoiceNumber: "INV-0001", enquiryId: "e1", total: 7500, amountPaid: 0, status: "Draft",
+      createdBy: "owner-uid", createdAt: new Date(), updatedAt: new Date()
+    });
+  });
+  const staff = testEnv.authenticatedContext("staff-uid", { role: "staff" });
+  await assertFails(getDoc(doc(staff.firestore(), "invoices", "inv1")));
+
+  const owner = testEnv.authenticatedContext("owner-uid", { role: "owner" });
+  await assertSucceeds(updateDoc(doc(owner.firestore(), "invoices", "inv1"), {
+    status: "Sent", updatedAt: serverTimestamp()
   }));
 });

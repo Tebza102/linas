@@ -3,72 +3,64 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Dashboard — Lina's Admin</title>
+<title>Overview — Lina's Admin</title>
 <link rel="icon" href="../assets/source/brand/Linas_Favicon.jpg">
 <link rel="stylesheet" href="css/admin.css">
 </head>
 <body>
-<header class="admin-header">
-  <span class="admin-header__mark">Lina's Admin</span>
-  <nav class="admin-header__nav" aria-label="Admin navigation">
-    <a href="inbox.html">Inbox</a>
-    <a href="dashboard.html" aria-current="page">Dashboard</a>
-    <span class="admin-header__user" id="userLabel"></span>
-    <button type="button" class="btn btn--ghost" id="logoutBtn" style="padding:6px 14px; font-size:12px;">Sign out</button>
-  </nav>
-</header>
+<div class="mobile-topbar">
+  <button type="button" class="mobile-menu-toggle" id="mobileMenuToggle" aria-label="Open menu">☰</button>
+  <span class="mobile-topbar__title">Overview</span>
+</div>
 
-<main class="admin-main" id="dashboardMain">
-  <h1 class="admin-title">Performance Dashboard</h1>
-  <div id="accessDenied" hidden class="empty-state">
-    Dashboard access is limited to owner/admin accounts.
-  </div>
+<main class="admin-main">
+  <h1 class="admin-title">Overview</h1>
 
-  <div id="dashboardBody" hidden>
-    <div class="admin-toolbar">
-      <select id="rangePreset" aria-label="Date range">
-        <option value="all">All time</option>
-        <option value="week">This week</option>
-        <option value="month">This month</option>
-        <option value="custom">Custom range</option>
-      </select>
-      <label style="display:flex; align-items:center; gap:6px; font-size:13px;" id="customFromWrap" hidden>
-        From <input type="date" id="customFrom">
-      </label>
-      <label style="display:flex; align-items:center; gap:6px; font-size:13px;" id="customToWrap" hidden>
-        To <input type="date" id="customTo">
-      </label>
-      <select id="sourceFilter" aria-label="Filter by source"><option value="">All sources</option></select>
-      <select id="typeFilter" aria-label="Filter by service type"><option value="">All service types</option></select>
-      <select id="ownerFilter" aria-label="Filter by owner"><option value="">All owners</option></select>
-      <button type="button" class="btn btn--ghost" id="exportCsvBtn" style="padding:6px 14px; font-size:13px;">Export CSV</button>
+  <div class="kpi-grid" id="kpiGrid"></div>
+
+  <div class="panel-grid">
+    <div class="panel-card">
+      <h2>Leads requiring attention</h2>
+      <ul class="panel-list" id="leadsAttentionList"><li class="empty-state">Loading…</li></ul>
     </div>
-
-    <div class="stat-grid" id="statGrid"></div>
-
-    <h2 style="font-family:var(--font-display); font-size:20px;">Enquiries by source</h2>
-    <ul class="breakdown-list" id="bySourceList"></ul>
-
-    <h2 style="font-family:var(--font-display); font-size:20px;">Enquiries by service type</h2>
-    <ul class="breakdown-list" id="byTypeList"></ul>
-
-    <h2 style="font-family:var(--font-display); font-size:20px;">Enquiries by status</h2>
-    <ul class="breakdown-list" id="byStatusList"></ul>
-
-    <h2 style="font-family:var(--font-display); font-size:20px; margin-top:32px;">Overdue follow-ups</h2>
-    <ul class="breakdown-list" id="overdueList"></ul>
-
-    <h2 style="font-family:var(--font-display); font-size:20px; margin-top:32px;">Upcoming events</h2>
-    <ul class="breakdown-list" id="upcomingList"></ul>
-
-    <h2 style="font-family:var(--font-display); font-size:20px; margin-top:32px;">Progress toward the R350,000 mobile-kitchen growth goal</h2>
-    <p id="goalNote" style="font-size:13px; color:var(--white-dim); margin-bottom:8px;"></p>
-    <div class="goal-bar"><div class="goal-bar__fill" id="goalFill" style="width:0%"></div></div>
-    <p id="goalCaption" style="font-size:13px; color:var(--white-dim);"></p>
-
-    <h2 style="font-family:var(--font-display); font-size:20px; margin-top:32px;">Average response time</h2>
-    <p id="responseTimeNote" style="color:var(--white-dim);"></p>
+    <div class="panel-card">
+      <h2>Quotations awaiting follow-up</h2>
+      <ul class="panel-list" id="quotesFollowUpList"><li class="empty-state">Loading…</li></ul>
+    </div>
+    <div class="panel-card">
+      <h2>Overdue next actions</h2>
+      <ul class="panel-list" id="overdueList"><li class="empty-state">Loading…</li></ul>
+    </div>
+    <div class="panel-card">
+      <h2>Recent enquiries</h2>
+      <ul class="panel-list" id="recentEnquiriesList"><li class="empty-state">Loading…</li></ul>
+      <p style="margin-top:var(--space-3);"><a href="inbox.html" class="btn btn--ghost" style="padding:6px 14px; font-size:13px;">Open full inbox →</a></p>
+    </div>
+    <div class="panel-card">
+      <h2>Sales pipeline summary</h2>
+      <ul class="panel-list" id="pipelineSummaryList"><li class="empty-state">Loading…</li></ul>
+      <p style="margin-top:var(--space-3);"><a href="pipeline.html" class="btn btn--ghost" style="padding:6px 14px; font-size:13px;">Open pipeline →</a></p>
+    </div>
+    <div class="panel-card">
+      <h2>Leads by source</h2>
+      <ul class="panel-list" id="bySourceList"><li class="empty-state">Loading…</li></ul>
+    </div>
+    <div class="panel-card">
+      <h2>Current campaigns</h2>
+      <ul class="panel-list" id="campaignsList"><li class="empty-state">Loading…</li></ul>
+      <p style="margin-top:var(--space-3);"><a href="marketing.html" class="btn btn--ghost" style="padding:6px 14px; font-size:13px;">Open marketing centre →</a></p>
+    </div>
+    <div class="panel-card">
+      <h2>Upcoming marketing &amp; sales calendar</h2>
+      <ul class="panel-list" id="upcomingCalendarList"><li class="empty-state">Loading…</li></ul>
+      <p style="margin-top:var(--space-3);"><a href="calendar.html" class="btn btn--ghost" style="padding:6px 14px; font-size:13px;">Open calendar →</a></p>
+    </div>
   </div>
+
+  <h2 style="font-family:var(--font-display); font-size:20px;">Progress toward the R350,000 goal</h2>
+  <p id="goalNote" style="font-size:13px; color:var(--white-dim); margin-bottom:8px;"></p>
+  <div class="goal-bar"><div class="goal-bar__fill" id="goalFill" style="width:0%"></div></div>
+  <p id="goalCaption" style="font-size:13px; color:var(--white-dim);"></p>
 </main>
 
 <script type="module" src="js/dashboard.js"></script>

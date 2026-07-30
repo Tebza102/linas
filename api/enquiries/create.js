@@ -158,6 +158,17 @@ module.exports = async (req, res) => {
         lostReason: null,
         completedAt: null,
         viewedAt: null,
+        // Real customer submissions are never test records. Only a
+        // controlled script (Admin SDK, bypasses rules) or the owner ever
+        // sets this true, for known QA/demo data that must not count
+        // toward real dashboard/report figures.
+        isTestRecord: false,
+        // Sales-pipeline fields (Digital Business Platform sales priority).
+        // estimatedValue is an early owner-set estimate before a formal
+        // quotation exists; quotationDate is set when the first quotation
+        // is created against this enquiry (see admin/js/quotations.js).
+        estimatedValue: null,
+        quotationDate: null,
         popiaConsentTimestamp: now,
         privacyNoticeVersion: process.env.PRIVACY_NOTICE_VERSION || "v1-draft",
         // Owner (internal) notification and customer confirmation are

@@ -65,7 +65,7 @@ service cloud.firestore {
         return request.resource.data.diff(resource.data).affectedKeys().hasOnly([
              'status', 'assignedOwnerId', 'nextAction', 'followUpDate',
              'quotedAmount', 'confirmedAmount', 'confirmedAt', 'lostReason',
-             'completedAt', 'updatedAt'
+             'completedAt', 'updatedAt', 'estimatedValue', 'quotationDate'
            ])
         && request.resource.data.updatedAt == request.time
         && request.resource.data.status in [
@@ -89,13 +89,15 @@ service cloud.firestore {
         && (request.resource.data.status != 'Lost/Cancelled'
             || (request.resource.data.lostReason is string
                 && request.resource.data.lostReason.size() > 0))
-        // Recording a quoted/confirmed value is an owner-only action —
-        // staff can move status forward, but cannot themselves set the
-        // money fields (matches the Owner/Admin-only "record quotation and
-        // confirmed values" capability).
+        // Recording a quoted/confirmed/estimated value is an owner-only
+        // action — staff can move status forward, but cannot themselves
+        // set money fields (matches the Owner-only "update sales values"
+        // capability).
         && (
              !('quotedAmount' in request.resource.data.diff(resource.data).affectedKeys())
              && !('confirmedAmount' in request.resource.data.diff(resource.data).affectedKeys())
+             && !('estimatedValue' in request.resource.data.diff(resource.data).affectedKeys())
+             && !('quotationDate' in request.resource.data.diff(resource.data).affectedKeys())
              || isOwner()
            );
       }
@@ -138,6 +140,132 @@ service cloud.firestore {
     match /settings/{docId} {
       allow read: if isStaff();
       allow write: if isOwner();
+    }
+
+    // Bookings are ONLY confirmed/tentative customer calendar events —
+    // simplified from an earlier, broader kitchen-operations design (see
+    // Decision Log) to match the sales/marketing priority for this phase.
+    // No preparation/kitchen fields, no non-customer entry types.
+    match /bookings/{bookingId} {
+      allow read: if isOwner()
+        || (isStaff()
+            && (resource.data.assignedPerson == request.auth.uid
+                || resource.data.assignedPerson == null));
+
+      // Converting a Confirmed enquiry into a booking is an owner-only action.
+      allow create: if isOwner()
+        && request.resource.data.createdBy == request.auth.uid
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.updatedAt == request.time
+        && request.resource.data.eventType in [
+             'Wedding', 'Funeral', 'Corporate event', 'Private function',
+             'Mobile kitchen service', 'Food delivery/order', 'Other'
+           ]
+        && request.resource.data.bookingStatus in [
+             'Tentative', 'Awaiting deposit', 'Confirmed', 'Completed', 'Cancelled'
+           ];
+
+      // Staff may add internal notes only — never the booking status,
+      // dates, or customer details.
+      function isStaffBookingUpdate() {
+        return request.resource.data.diff(resource.data).affectedKeys().hasOnly(['internalNotes', 'updatedAt'])
+          && request.resource.data.updatedAt == request.time;
+      }
+      function isOwnerBookingUpdate() {
+        return request.resource.data.updatedAt == request.time
+          && request.resource.data.createdBy == resource.data.createdBy
+          && request.resource.data.createdAt == resource.data.createdAt
+          && request.resource.data.bookingStatus in [
+               'Tentative', 'Awaiting deposit', 'Confirmed', 'Completed', 'Cancelled'
+             ];
+      }
+      allow update: if (isOwner() && isOwnerBookingUpdate()) || (isStaff() && isStaffBookingUpdate());
+
+      allow delete: if isOwner();
+    }
+
+    // Marketing content calendar (Instagram/Facebook/Google Business
+    // Profile/Website/WhatsApp posts). Owner has full control; staff may
+    // only move a piece of content they're assigned through its status —
+    // never edit its actual content, caption or schedule.
+    match /contentItems/{contentId} {
+      allow read: if isStaff();
+
+      allow create: if isOwner()
+        && request.resource.data.createdBy == request.auth.uid
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.updatedAt == request.time
+        && request.resource.data.platform in ['Instagram', 'Facebook', 'Google Business Profile', 'Website', 'WhatsApp']
+        && request.resource.data.status in ['Idea', 'Draft', 'Ready', 'Scheduled', 'Published', 'Cancelled'];
+
+      function isStaffContentUpdate() {
+        return request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'updatedAt', 'publishedDate'])
+          && request.resource.data.updatedAt == request.time
+          && request.resource.data.status in ['Idea', 'Draft', 'Ready', 'Scheduled', 'Published', 'Cancelled']
+          && resource.data.assignedPerson == request.auth.uid;
+      }
+      function isOwnerContentUpdate() {
+        return request.resource.data.updatedAt == request.time
+          && request.resource.data.createdBy == resource.data.createdBy
+          && request.resource.data.createdAt == resource.data.createdAt
+          && request.resource.data.platform in ['Instagram', 'Facebook', 'Google Business Profile', 'Website', 'WhatsApp']
+          && request.resource.data.status in ['Idea', 'Draft', 'Ready', 'Scheduled', 'Published', 'Cancelled'];
+      }
+      allow update: if (isOwner() && isOwnerContentUpdate()) || (isStaff() && isStaffContentUpdate());
+      allow delete: if isOwner();
+    }
+
+    // Campaigns are owner-managed; staff can read them for lead context
+    // (e.g. seeing which campaign a lead came from) but never edit them.
+    match /campaigns/{campaignId} {
+      allow read: if isStaff();
+      allow create: if isOwner()
+        && request.resource.data.createdBy == request.auth.uid
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.updatedAt == request.time
+        && request.resource.data.status in ['Planned', 'Active', 'Paused', 'Completed'];
+      allow update: if isOwner()
+        && request.resource.data.updatedAt == request.time
+        && request.resource.data.createdBy == resource.data.createdBy
+        && request.resource.data.createdAt == resource.data.createdAt
+        && request.resource.data.status in ['Planned', 'Active', 'Paused', 'Completed'];
+      allow delete: if isOwner();
+    }
+
+    // Quotations and invoices are financial records — owner-only end to
+    // end in this phase (matching "staff must not... delete financial
+    // records" and the absence of any explicit staff quotation/invoice
+    // permission in the approved role list).
+    match /quotations/{quoteId} {
+      allow read: if isOwner();
+      allow create: if isOwner()
+        && request.resource.data.createdBy == request.auth.uid
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.updatedAt == request.time
+        && request.resource.data.status in ['Draft', 'Sent', 'Accepted', 'Declined', 'Expired', 'Revised'];
+      allow update: if isOwner()
+        && request.resource.data.updatedAt == request.time
+        && request.resource.data.createdBy == resource.data.createdBy
+        && request.resource.data.createdAt == resource.data.createdAt
+        && request.resource.data.enquiryId == resource.data.enquiryId
+        && request.resource.data.status in ['Draft', 'Sent', 'Accepted', 'Declined', 'Expired', 'Revised'];
+      allow delete: if isOwner();
+    }
+
+    match /invoices/{invoiceId} {
+      allow read: if isOwner();
+      allow create: if isOwner()
+        && request.resource.data.createdBy == request.auth.uid
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.updatedAt == request.time
+        && request.resource.data.status in ['Draft', 'Sent', 'Partially Paid', 'Paid', 'Overdue', 'Cancelled'];
+      allow update: if isOwner()
+        && request.resource.data.updatedAt == request.time
+        && request.resource.data.createdBy == resource.data.createdBy
+        && request.resource.data.createdAt == resource.data.createdAt
+        && request.resource.data.enquiryId == resource.data.enquiryId
+        && request.resource.data.status in ['Draft', 'Sent', 'Partially Paid', 'Paid', 'Overdue', 'Cancelled'];
+      allow delete: if isOwner();
     }
 
     // Per-day reference-number counters are written only by the server
