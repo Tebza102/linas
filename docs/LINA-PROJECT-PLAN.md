@@ -65,6 +65,8 @@
 
 **Status (29 Jul):** Not yet reached as a production milestone, but a **working demo preview** of this exact flow was built and verified ahead of schedule for the client meeting: enquiry → real local-database persistence → admin inbox with statuses and notes → dashboard, all confirmed end-to-end via automated testing (see `docs/LINA-CLIENT-WORKING-MODEL-DEMO.md` and Decision Log D-014). This is explicitly a local, non-production demo (no auth, no hosting, no real historical data) — it proves the flow works, it does not close this milestone. Full production build, real authentication, and deployment remain scheduled as before.
 
+**Status (30 Jul):** The real Firebase-backed platform superseding the demo is built and verified on a Vercel preview against real production Firebase (see Decision Log D-015): Firestore persistence, role-based `/admin` portal, security rules, and a controlled admin-bootstrap process (first owner account created). The enquiry-notification workflow was then reworked after manual testing surfaced ambiguity — safer duplicate handling, honest email-delivery status (pending/accepted/delivered/delayed/bounced/failed/suppressed), independent owner/customer email tracking, and a signature-verified Resend webhook (see Decision Log D-016). **Remaining before this milestone is fully closed:** (1) Tebogo verifies a real sending domain in Resend — customer confirmation emails currently only work when sent to the Resend account's own address; (2) the Resend webhook needs to be registered in the Resend dashboard (steps given separately); (3) PR still unmerged and production still untouched pending final review and explicit go-ahead.
+
 ## Milestone 6 — QA, release and handover
 **Target:** 31 July
 - Run full checklist.
