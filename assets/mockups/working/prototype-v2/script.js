@@ -44,35 +44,45 @@
     siteNav.querySelectorAll("a").forEach(function (a) { a.addEventListener("click", closeNav); });
   }
 
-  /* ---------- Hero/gateway media: only autoplay if motion is welcome ---------- */
+  /* ---------- Hero/gateway media: only autoplay if motion is welcome ----------
+     play() is retried once data arrives, since a play() issued before the
+     first frame exists can be silently dropped by some browsers. */
+  function tryPlay(v) {
+    var p = v.play();
+    if (p && p.catch) p.catch(function () {});
+  }
   document.querySelectorAll("video[data-autoplay-hero]").forEach(function (v) {
-    if (!prefersReducedMotion) {
-      var p = v.play();
-      if (p && p.catch) p.catch(function () {});
-    }
+    if (prefersReducedMotion) return;
+    tryPlay(v);
+    v.addEventListener("loadeddata", function () { if (v.paused) tryPlay(v); });
   });
 
-  /* ---------- Landing hero sequence: still (Ken Burns) -> crossfade to video ----------
-     Reduced-motion users never get the swap — they see the still image only, which is
-     the explicit "graceful fallback" this sequence is required to have. Without JS
-     (progressive enhancement), the still's pure-CSS Ken Burns still plays and the video
-     simply never appears — also a reasonable, still-premium experience. */
-  var sequenceHero = document.querySelector(".gateway--sequence");
-  if (sequenceHero && !prefersReducedMotion) {
-    var heroVideoEl = sequenceHero.querySelector(".gateway__media");
-    var swapToVideo = function () { sequenceHero.classList.add("gateway--video-active"); };
-    if (heroVideoEl) {
-      // Prefer swapping once the video actually has a frame ready, so the crossfade
-      // never reveals a blank/black frame; fall back to a fixed delay if that event
-      // is slow to arrive (e.g. slower connections).
-      var swapped = false;
-      var doSwapOnce = function () { if (!swapped) { swapped = true; swapToVideo(); } };
-      heroVideoEl.addEventListener("loadeddata", function () { setTimeout(doSwapOnce, 3800); });
-      setTimeout(doSwapOnce, 5200);
-    } else {
-      setTimeout(swapToVideo, 3800);
-    }
-  }
+  /* ---------- Hero sequence: still (Ken Burns) -> crossfade to video ----------
+     Applies to every .gateway--sequence hero (Home, Catering, Mobile Kitchen).
+     The crossfade fires only once the video is PROVEN to be playing
+     (readyState >= 2 and not paused) — never onto a paused/blank layer, so
+     no black frame and no fade-to-static-poster is possible. If autoplay is
+     refused outright, the swap simply never happens and the Ken Burns still
+     carries the hero. Still phase ~3s, crossfade 1.6s (CSS).
+     Reduced-motion users never get the swap — they see the strongest still,
+     unanimated, with all text and actions available. */
+  document.querySelectorAll(".gateway--sequence").forEach(function (hero) {
+    if (prefersReducedMotion) return;
+    var video = hero.querySelector(".gateway__media");
+    if (!video) return;
+    var swapped = false;
+    var started = Date.now();
+    var timer = setInterval(function () {
+      var elapsed = Date.now() - started;
+      if (elapsed >= 3000 && video.readyState >= 2 && !video.paused) {
+        swapped = true;
+        hero.classList.add("gateway--video-active");
+      } else if (elapsed >= 3000 && video.paused) {
+        tryPlay(video);
+      }
+      if (swapped || elapsed > 12000) clearInterval(timer);
+    }, 400);
+  });
 
   /* ---------- WhatsApp action (shared across all pages) ---------- */
   var whatsappNote = document.getElementById("whatsappNote");
