@@ -126,8 +126,14 @@
     var cat = LINA_MENU.categories.find(function (c) { return c.id === activeCategory; });
     if (!cat) return;
     cat.items.forEach(function (item) {
-      var card = document.createElement("button");
-      card.type = "button"; card.className = "menu-card";
+      // The card is a DIV holding two sibling buttons — "open details" and
+      // "add". It used to be a single <button>; nesting an Add button inside
+      // that would be invalid HTML with unpredictable click behaviour.
+      var card = document.createElement("div");
+      card.className = "menu-card";
+      var openBtn = document.createElement("button");
+      openBtn.type = "button"; openBtn.className = "menu-card__open";
+      openBtn.setAttribute("aria-label", "View details for " + item.name);
       var imgWrap = document.createElement("div"); imgWrap.className = "menu-card__image";
       var imgSrc = item.image || item.categoryImage || cat.categoryImage;
       if (imgSrc) {
@@ -151,12 +157,27 @@
         initial.textContent = item.name.charAt(0);
         imgWrap.appendChild(initial);
       }
-      card.appendChild(imgWrap);
+      openBtn.appendChild(imgWrap);
       var body = document.createElement("div"); body.className = "menu-card__body";
       var name = document.createElement("p"); name.className = "menu-card__name"; name.textContent = item.name;
       var price = document.createElement("p"); price.className = "menu-card__price"; price.textContent = item.price;
-      body.appendChild(name); body.appendChild(price); card.appendChild(body);
-      card.addEventListener("click", function () { openMenuModal(item, cat); });
+      body.appendChild(name); body.appendChild(price); openBtn.appendChild(body);
+      openBtn.addEventListener("click", function () { openMenuModal(item, cat); });
+      card.appendChild(openBtn);
+
+      // One-tap add is the point of a mobile-kitchen menu — burying it inside
+      // the details modal would defeat it. Only rendered when cart.js is
+      // present (menu page only), so other pages are unaffected.
+      if (window.LINA_CART && item.id) {
+        var addBtn = document.createElement("button");
+        addBtn.type = "button"; addBtn.className = "menu-card__add";
+        addBtn.textContent = "Add";
+        addBtn.setAttribute("aria-label", "Add " + item.name + " to your order");
+        addBtn.addEventListener("click", function () {
+          window.LINA_CART.add(item.id, 1);
+        });
+        card.appendChild(addBtn);
+      }
       menuGridEl.appendChild(card);
     });
   }
@@ -171,7 +192,9 @@
         '<h3>' + escapeHtml(item.name) + '</h3>' +
         '<p class="menu-card__price">' + escapeHtml(item.price) + ' · ' + escapeHtml(cat.label) + '</p>' +
         '<p class="placeholder-note">Ingredient list is exactly as written on Lina’s own menu. No extra description is added.</p>' +
-        '<button class="btn btn--primary" id="modalOrderBtn" type="button">Order this on WhatsApp →</button>' +
+        '<button class="btn btn--primary" id="modalOrderBtn" type="button">' +
+          (window.LINA_CART && item.id ? "Add to order" : "Order this on WhatsApp →") +
+        '</button>' +
       '</div>';
     document.body.appendChild(modal);
     var closeBtn = modal.querySelector(".menu-modal__close");
@@ -192,7 +215,17 @@
     }
     closeBtn.addEventListener("click", close);
     modal.addEventListener("click", function (e) { if (e.target === modal) close(); });
-    orderBtn.addEventListener("click", function () { handleWhatsAppAction(item.name); });
+    orderBtn.addEventListener("click", function () {
+      // With the cart present this adds to the order; without it (any page
+      // that doesn't load cart.js) the original single-item WhatsApp action
+      // is preserved unchanged.
+      if (window.LINA_CART && item.id) {
+        window.LINA_CART.add(item.id, 1);
+        close();
+        return;
+      }
+      handleWhatsAppAction(item.name);
+    });
     document.addEventListener("keydown", onKey);
   }
   if (typeof LINA_MENU !== "undefined" && menuTabsEl && menuGridEl) {

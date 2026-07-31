@@ -74,6 +74,9 @@
 <p class="whatsapp-note" id="whatsappNote" role="status" aria-live="polite"></p>
 
 <script src="/assets/mockups/working/prototype-v2/menu-data.js"></script>
+<!-- cart.js must load BEFORE script.js: script.js checks for window.LINA_CART
+     when it renders the menu grid, and needs it to exist to draw Add buttons. -->
+<script src="/assets/mockups/working/prototype-v2/cart.js"></script>
 <script src="/assets/mockups/working/prototype-v2/script.js"></script>
 <script type="module" src="/assets/mockups/working/prototype-v2/public-admin-link.js"></script>
 </body>
