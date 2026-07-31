@@ -442,3 +442,116 @@ test("staff cannot read or write invoices; owner can", async () => {
     status: "Sent", updatedAt: serverTimestamp()
   }));
 });
+
+// --- Developer role: full system access, equivalent to owner ---
+
+test("developer has owner-equivalent access: money fields, bookings, quotations, invoices, settings, user management", async () => {
+  await seedEnquiry("e15", {});
+  const dev = testEnv.authenticatedContext("dev-uid", { role: "developer" });
+  const devDb = dev.firestore();
+
+  await assertSucceeds(updateDoc(doc(devDb, "enquiries", "e15"), {
+    status: "Quoted", quotedAmount: 12000, updatedAt: serverTimestamp()
+  }));
+
+  await assertSucceeds(setDoc(doc(devDb, "bookings", "dev-booking"), {
+    title: "Dev Created", eventType: "Wedding", linkedEnquiryId: null,
+    bookingStatus: "Tentative", createdBy: "dev-uid", createdAt: serverTimestamp(), updatedAt: serverTimestamp()
+  }));
+
+  await assertSucceeds(setDoc(doc(devDb, "quotations", "dev-quote"), {
+    quoteNumber: "Q-DEV-0001", enquiryId: "e15", amount: 12000, status: "Draft",
+    createdBy: "dev-uid", createdAt: serverTimestamp(), updatedAt: serverTimestamp()
+  }));
+
+  await assertSucceeds(setDoc(doc(devDb, "invoices", "dev-invoice"), {
+    invoiceNumber: "INV-DEV-0001", enquiryId: "e15", total: 12000, amountPaid: 0, status: "Draft",
+    createdBy: "dev-uid", createdAt: serverTimestamp(), updatedAt: serverTimestamp()
+  }));
+
+  await testEnv.withSecurityRulesDisabled(async (ctx) => {
+    const seedDb = ctx.firestore();
+    await setDoc(doc(seedDb, "settings", "business"), { dashboardGoal: 350000 });
+    await setDoc(doc(seedDb, "adminUsers", "staff-to-promote"), {
+      uid: "staff-to-promote", email: "staff2@example.com", displayName: "Staff Two",
+      role: "staff", active: true, createdAt: new Date(), lastLoginAt: null
+    });
+  });
+  await assertSucceeds(updateDoc(doc(devDb, "settings", "business"), { dashboardGoal: 400000 }));
+  await assertSucceeds(updateDoc(doc(devDb, "adminUsers", "staff-to-promote"), { role: "observer" }));
+});
+
+// --- Observer role: read-only everywhere, enforced by rules not just UI ---
+
+test("observer can read business data but every write attempt is denied by rules", async () => {
+  await seedEnquiry("e16", {});
+  await seedBooking("b7", {});
+  await testEnv.withSecurityRulesDisabled(async (ctx) => {
+    const seedDb = ctx.firestore();
+    await setDoc(doc(seedDb, "campaigns", "camp2"), {
+      campaignName: "Observer Read Check", status: "Active",
+      createdBy: "owner-uid", createdAt: new Date(), updatedAt: new Date()
+    });
+    await setDoc(doc(seedDb, "quotations", "q3"), {
+      quoteNumber: "Q-0003", enquiryId: "e16", amount: 5000, status: "Draft",
+      createdBy: "owner-uid", createdAt: new Date(), updatedAt: new Date()
+    });
+    await setDoc(doc(seedDb, "invoices", "inv2"), {
+      invoiceNumber: "INV-0002", enquiryId: "e16", total: 5000, amountPaid: 0, status: "Draft",
+      createdBy: "owner-uid", createdAt: new Date(), updatedAt: new Date()
+    });
+  });
+
+  const observer = testEnv.authenticatedContext("observer-uid", { role: "observer" });
+  const obsDb = observer.firestore();
+
+  // Reads succeed across every business collection an observer is
+  // permitted to view.
+  await assertSucceeds(getDoc(doc(obsDb, "enquiries", "e16")));
+  await assertSucceeds(getDoc(doc(obsDb, "bookings", "b7")));
+  await assertSucceeds(getDoc(doc(obsDb, "campaigns", "camp2")));
+  await assertSucceeds(getDoc(doc(obsDb, "quotations", "q3")));
+  await assertSucceeds(getDoc(doc(obsDb, "invoices", "inv2")));
+
+  // Every write attempt fails — including the single-field "mark as
+  // viewed" update, which is deliberately the least-restrictive write
+  // path on enquiries and still must be denied to a read-only role.
+  await assertFails(updateDoc(doc(obsDb, "enquiries", "e16"), { viewedAt: serverTimestamp() }));
+  await assertFails(updateDoc(doc(obsDb, "bookings", "b7"), { internalNotes: "Observer attempt", updatedAt: serverTimestamp() }));
+  await assertFails(updateDoc(doc(obsDb, "campaigns", "camp2"), { status: "Paused", updatedAt: serverTimestamp() }));
+  await assertFails(updateDoc(doc(obsDb, "quotations", "q3"), { status: "Sent", updatedAt: serverTimestamp() }));
+  await assertFails(updateDoc(doc(obsDb, "invoices", "inv2"), { status: "Sent", updatedAt: serverTimestamp() }));
+  await assertFails(setDoc(doc(obsDb, "quotations", "observer-created"), {
+    quoteNumber: "Q-HACK", enquiryId: "e16", amount: 1, status: "Draft",
+    createdBy: "observer-uid", createdAt: serverTimestamp(), updatedAt: serverTimestamp()
+  }));
+});
+
+test("observer cannot manage settings or users", async () => {
+  await testEnv.withSecurityRulesDisabled(async (ctx) => {
+    const seedDb = ctx.firestore();
+    await setDoc(doc(seedDb, "settings", "business"), { dashboardGoal: 350000 });
+    await setDoc(doc(seedDb, "adminUsers", "staff-uid2"), {
+      uid: "staff-uid2", email: "staff3@example.com", displayName: "Staff Three",
+      role: "staff", active: true, createdAt: new Date(), lastLoginAt: null
+    });
+  });
+  const observer = testEnv.authenticatedContext("observer-uid", { role: "observer" });
+  const obsDb = observer.firestore();
+  await assertFails(updateDoc(doc(obsDb, "settings", "business"), { dashboardGoal: 1 }));
+  await assertFails(updateDoc(doc(obsDb, "adminUsers", "staff-uid2"), { role: "owner" }));
+});
+
+test("a signed-in user can update their own lastLoginAt only, regardless of role", async () => {
+  await testEnv.withSecurityRulesDisabled(async (ctx) => {
+    await setDoc(doc(ctx.firestore(), "adminUsers", "observer-uid"), {
+      uid: "observer-uid", email: "observer@example.com", displayName: "Observer Person",
+      role: "observer", active: true, createdAt: new Date(), lastLoginAt: null
+    });
+  });
+  const observer = testEnv.authenticatedContext("observer-uid", { role: "observer" });
+  const obsDb = observer.firestore();
+  await assertSucceeds(updateDoc(doc(obsDb, "adminUsers", "observer-uid"), { lastLoginAt: serverTimestamp() }));
+  // Still cannot smuggle a role change in alongside it.
+  await assertFails(updateDoc(doc(obsDb, "adminUsers", "observer-uid"), { lastLoginAt: serverTimestamp(), role: "owner" }));
+});

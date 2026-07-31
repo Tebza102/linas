@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Users — Lina's Admin</title>
+<link rel="icon" href="../assets/source/brand/Linas_Favicon.jpg">
+<link rel="stylesheet" href="css/admin.css">
+</head>
+<body>
+<div class="mobile-topbar">
+  <button type="button" class="mobile-menu-toggle" id="mobileMenuToggle" aria-label="Open menu">☰</button>
+  <span class="mobile-topbar__title">Users</span>
+</div>
+
+<main class="admin-main">
+  <h1 class="admin-title">Users</h1>
+  <div id="accessDenied" hidden class="empty-state">Users is limited to owner/developer accounts.</div>
+
+  <div id="usersBody" hidden>
+    <div class="admin-toolbar">
+      <button type="button" class="btn btn--primary" id="inviteUserBtn">Invite user</button>
+    </div>
+
+    <div class="admin-table-scroll">
+      <table class="admin-table">
+        <thead>
+          <tr>
+            <th>Name</th><th>Email</th><th>Role</th><th>Relationship</th><th>Access level</th>
+            <th>Status</th><th>Last login</th><th>Created</th><th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="usersTableBody"><tr><td colspan="9">Loading…</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+</main>
+
+<div class="detail-panel" id="detailPanel" hidden></div>
+
+<script type="module" src="js/users.js"></script>
+</body>
+</html>

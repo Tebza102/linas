@@ -1,6 +1,7 @@
-// Lina's admin portal — Quotations. Owner-only (see firestore.rules).
-// A reliable structured record only — no pricing engine, no "Viewed"
-// status (no genuine open-tracking exists to back it).
+// Lina's admin portal — Quotations. Owner/developer full access, observer
+// read-only, staff denied (see firestore.rules — this mirrors it, not
+// replaces it). A reliable structured record only — no pricing engine, no
+// "Viewed" status (no genuine open-tracking exists to back it).
 import { requireAuth } from "./auth-guard.js";
 import { db } from "./firebase-init.js";
 import { initLayout } from "./layout.js";
@@ -23,11 +24,14 @@ async function main() {
   const { user, role } = await requireAuth();
   initLayout({ user, role, active: "quotations" });
 
-  if (role !== "owner") {
+  const canWrite = role === "owner" || role === "developer";
+  if (!canWrite && role !== "observer") {
     document.getElementById("accessDenied").hidden = false;
     return;
   }
   document.getElementById("quotationsBody").hidden = false;
+  const newQuoteBtn = document.getElementById("newQuoteBtn");
+  if (!canWrite) newQuoteBtn.hidden = true;
 
   const statusFilter = document.getElementById("statusFilter");
   STATUSES.forEach((s) => statusFilter.insertAdjacentHTML("beforeend", `<option value="${esc(s)}">${esc(s)}</option>`));
@@ -130,6 +134,26 @@ async function main() {
   }
 
   function openQuoteDetail(q) {
+    if (!canWrite) {
+      // Observer: read-only summary, no editable fields, no actions.
+      detailPanel.innerHTML = `
+        <div class="detail-panel__inner">
+          <button class="detail-panel__close" id="dpClose" aria-label="Close">Close ✕</button>
+          <h2 style="font-family:var(--font-display);">${esc(q.quoteNumber)}</h2>
+          <div class="detail-field"><dt>Customer</dt><dd>${esc(q.customerName || "—")}</dd></div>
+          <div class="detail-field"><dt>Service/event</dt><dd>${esc(q.serviceOrEvent || "—")}</dd></div>
+          <div class="detail-field"><dt>Amount</dt><dd>${fmtRand(q.amount)}</dd></div>
+          <div class="detail-field"><dt>Status</dt><dd>${esc(q.status)}</dd></div>
+          <div class="detail-field"><dt>Quote date</dt><dd>${esc(q.quoteDate || "—")}</dd></div>
+          <div class="detail-field"><dt>Expiry date</dt><dd>${esc(q.expiryDate || "—")}</dd></div>
+          <div class="detail-field"><dt>Follow-up date</dt><dd>${esc(q.followUpDate || "—")}</dd></div>
+          <div class="detail-field"><dt>Notes</dt><dd>${esc(q.notes || "—")}</dd></div>
+        </div>
+      `;
+      detailPanel.querySelector("#dpClose").addEventListener("click", () => { detailPanel.hidden = true; });
+      detailPanel.hidden = false;
+      return;
+    }
     detailPanel.innerHTML = `
       <div class="detail-panel__inner">
         <button class="detail-panel__close" id="dpClose" aria-label="Close">Close ✕</button>

@@ -1,4 +1,5 @@
-// Lina's admin portal — Settings. Owner-only (see firestore.rules).
+// Lina's admin portal — Settings. Owner/developer only — observer and
+// staff are denied (see firestore.rules — this mirrors it, not replaces it).
 import { requireAuth } from "./auth-guard.js";
 import { db } from "./firebase-init.js";
 import { initLayout } from "./layout.js";
@@ -10,7 +11,7 @@ async function main() {
   const { user, role } = await requireAuth();
   initLayout({ user, role, active: "settings" });
 
-  if (role !== "owner") {
+  if (role !== "owner" && role !== "developer") {
     document.getElementById("accessDenied").hidden = false;
     return;
   }

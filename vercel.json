@@ -1,7 +1,14 @@
 {
+  "rewrites": [
+    { "source": "/", "destination": "/assets/mockups/working/prototype-v2/index.html" },
+    { "source": "/catering", "destination": "/assets/mockups/working/prototype-v2/catering.html" },
+    { "source": "/menu", "destination": "/assets/mockups/working/prototype-v2/menu.html" },
+    { "source": "/chef-lina", "destination": "/assets/mockups/working/prototype-v2/chef-lina.html" },
+    { "source": "/mobile-kitchen", "destination": "/assets/mockups/working/prototype-v2/mobile-kitchen.html" },
+    { "source": "/gallery", "destination": "/assets/mockups/working/prototype-v2/gallery.html" },
+    { "source": "/contact", "destination": "/assets/mockups/working/prototype-v2/contact.html" }
+  ],
   "redirects": [
-    { "source": "/", "destination": "/assets/mockups/working/prototype-v2/index.html", "permanent": false },
-    { "source": "/v2", "destination": "/assets/mockups/working/prototype-v2/index.html", "permanent": false },
     { "source": "/admin", "destination": "/admin/login.html", "permanent": false }
   ]
 }

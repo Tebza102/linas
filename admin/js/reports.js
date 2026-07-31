@@ -114,12 +114,13 @@ async function main() {
     document.body.appendChild(a); a.click(); a.remove();
   });
 
-  const enquiriesQuery = role === "owner"
+  const canReadAll = role === "owner" || role === "developer" || role === "observer";
+  const enquiriesQuery = canReadAll
     ? collection(db, "enquiries")
     : query(collection(db, "enquiries"), where("assignedOwnerId", "in", [user.uid, null]));
   onSnapshot(enquiriesQuery, (snap) => { enquiries = snap.docs.map((d) => ({ id: d.id, ...d.data() })); render(); },
     (err) => console.error("Reports enquiries listener error:", err));
-  if (role === "owner") {
+  if (canReadAll) {
     onSnapshot(collection(db, "quotations"), (snap) => { quotations = snap.docs.map((d) => ({ id: d.id, ...d.data() })); render(); },
       (err) => console.error("Reports quotations listener error:", err));
   }

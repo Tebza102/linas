@@ -82,7 +82,7 @@
       var text = itemName ? "Hi Lina's, I'd like to order: " + itemName : "Hi Lina's, I'd like to place an order.";
       window.open("https://wa.me/" + CONFIG.whatsappNumber + "?text=" + encodeURIComponent(text), "_blank", "noopener");
     } else if (whatsappNote) {
-      whatsappNote.textContent = "WhatsApp ordering isn't wired to a confirmed number yet (see Client Inputs Register I-006 / I-014). Nothing was sent.";
+      whatsappNote.textContent = "WhatsApp ordering isn't connected to a number yet. Nothing was sent — please use the enquiry form instead.";
       whatsappNote.classList.add("is-visible");
     }
   }

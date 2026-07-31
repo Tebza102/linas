@@ -1,5 +1,7 @@
-// Lina's admin portal — Invoices. Owner-only (see firestore.rules).
-// Recording and tracking only — no payment gateway, no reconciliation.
+// Lina's admin portal — Invoices. Owner/developer full access, observer
+// read-only, staff denied (see firestore.rules — this mirrors it, not
+// replaces it). Recording and tracking only — no payment gateway, no
+// reconciliation.
 import { requireAuth } from "./auth-guard.js";
 import { db } from "./firebase-init.js";
 import { initLayout } from "./layout.js";
@@ -23,11 +25,14 @@ async function main() {
   const { user, role } = await requireAuth();
   initLayout({ user, role, active: "invoices" });
 
-  if (role !== "owner") {
+  const canWrite = role === "owner" || role === "developer";
+  if (!canWrite && role !== "observer") {
     document.getElementById("accessDenied").hidden = false;
     return;
   }
   document.getElementById("invoicesBody").hidden = false;
+  const newInvoiceBtn = document.getElementById("newInvoiceBtn");
+  if (!canWrite) newInvoiceBtn.hidden = true;
 
   const statusFilter = document.getElementById("statusFilter");
   STATUSES.forEach((s) => statusFilter.insertAdjacentHTML("beforeend", `<option value="${esc(s)}">${esc(s)}</option>`));
@@ -128,6 +133,24 @@ async function main() {
   }
 
   function openInvoiceDetail(inv) {
+    if (!canWrite) {
+      detailPanel.innerHTML = `
+        <div class="detail-panel__inner">
+          <button class="detail-panel__close" id="dpClose" aria-label="Close">Close ✕</button>
+          <h2 style="font-family:var(--font-display);">${esc(inv.invoiceNumber)}</h2>
+          <div class="detail-field"><dt>Customer</dt><dd>${esc(inv.customerName || "—")}</dd></div>
+          <div class="detail-field"><dt>Total</dt><dd>${fmtRand(inv.total)}</dd></div>
+          <div class="detail-field"><dt>Amount paid</dt><dd>${fmtRand(inv.amountPaid || 0)}</dd></div>
+          <div class="detail-field"><dt>Outstanding</dt><dd>${fmtRand(outstanding(inv))}</dd></div>
+          <div class="detail-field"><dt>Status</dt><dd>${esc(inv.status)}</dd></div>
+          <div class="detail-field"><dt>Due date</dt><dd>${esc(inv.dueDate || "—")}</dd></div>
+          <div class="detail-field"><dt>Notes</dt><dd>${esc(inv.notes || "—")}</dd></div>
+        </div>
+      `;
+      detailPanel.querySelector("#dpClose").addEventListener("click", () => { detailPanel.hidden = true; });
+      detailPanel.hidden = false;
+      return;
+    }
     detailPanel.innerHTML = `
       <div class="detail-panel__inner">
         <button class="detail-panel__close" id="dpClose" aria-label="Close">Close ✕</button>

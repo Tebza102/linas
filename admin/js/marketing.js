@@ -42,7 +42,7 @@ function fmtRand(n) { return "R" + Number(n || 0).toLocaleString("en-ZA"); }
 async function main() {
   const { user, role } = await requireAuth();
   initLayout({ user, role, active: "marketing" });
-  const isOwner = role === "owner";
+  const isOwner = role === "owner" || role === "developer";
 
   const detailPanel = document.getElementById("detailPanel");
   let contentItems = [];
@@ -105,6 +105,24 @@ async function main() {
       scheduledDate: "", scheduledTime: "", status: "Idea", caption: "", callToAction: "",
       relatedOffer: "", publishedDate: "", mediaReference: "", notes: "", assignedPerson: null
     };
+    if (role === "observer" && item) {
+      // Read-only: observer never creates content, so this branch only
+      // needs to cover viewing an existing item.
+      detailPanel.innerHTML = `
+        <div class="detail-panel__inner">
+          <button class="detail-panel__close" id="dpClose" aria-label="Close">Close ✕</button>
+          <h2 style="font-family:var(--font-display);">${esc(data.contentTitle)}</h2>
+          <div class="detail-field"><dt>Platform</dt><dd>${esc(data.platform)}</dd></div>
+          <div class="detail-field"><dt>Status</dt><dd>${esc(data.status)}</dd></div>
+          <div class="detail-field"><dt>Scheduled</dt><dd>${esc(data.scheduledDate || "—")} ${esc(data.scheduledTime || "")}</dd></div>
+          <div class="detail-field"><dt>Caption</dt><dd>${esc(data.caption || "—")}</dd></div>
+          <div class="detail-field"><dt>Notes</dt><dd>${esc(data.notes || "—")}</dd></div>
+        </div>
+      `;
+      detailPanel.querySelector("#dpClose").addEventListener("click", () => { detailPanel.hidden = true; });
+      detailPanel.hidden = false;
+      return;
+    }
     detailPanel.innerHTML = `
       <div class="detail-panel__inner">
         <button class="detail-panel__close" id="dpClose" aria-label="Close">Close ✕</button>
@@ -197,6 +215,7 @@ async function main() {
   }
 
   document.getElementById("newContentBtn").addEventListener("click", () => openContentDetail(null));
+  if (!isOwner) document.getElementById("newContentBtn").hidden = true;
   platformFilter.addEventListener("change", renderContent);
   contentStatusFilter.addEventListener("change", renderContent);
 
@@ -268,6 +287,23 @@ async function main() {
         </div>
       `;
     })() : '<p class="empty-state" style="margin-top:12px;">Metrics appear once this campaign is saved and enquiries reference its campaign code.</p>';
+
+    if (role === "observer" && campaign) {
+      detailPanel.innerHTML = `
+        <div class="detail-panel__inner">
+          <button class="detail-panel__close" id="dpClose" aria-label="Close">Close ✕</button>
+          <h2 style="font-family:var(--font-display);">${esc(data.campaignName)}</h2>
+          <div class="detail-field"><dt>Objective</dt><dd>${esc(data.objective || "—")}</dd></div>
+          <div class="detail-field"><dt>Channel</dt><dd>${esc(data.channel || "—")}</dd></div>
+          <div class="detail-field"><dt>Status</dt><dd>${esc(data.status)}</dd></div>
+          <div class="detail-field"><dt>Dates</dt><dd>${esc(data.startDate || "—")} to ${esc(data.endDate || "—")}</dd></div>
+          ${metricsHtml}
+        </div>
+      `;
+      detailPanel.querySelector("#dpClose").addEventListener("click", () => { detailPanel.hidden = true; });
+      detailPanel.hidden = false;
+      return;
+    }
 
     detailPanel.innerHTML = `
       <div class="detail-panel__inner">
@@ -349,7 +385,10 @@ async function main() {
     renderCampaigns();
   }, (err) => console.error("Campaigns listener error:", err));
 
-  const enquiriesQuery = isOwner
+  // Observer reads everything (per firestore.rules) but never writes —
+  // scoped the same as owner/developer here, distinct from plain staff.
+  const canReadAllEnquiries = isOwner || role === "observer";
+  const enquiriesQuery = canReadAllEnquiries
     ? collection(db, "enquiries")
     : query(collection(db, "enquiries"), where("assignedOwnerId", "in", [user.uid, null]));
   onSnapshot(enquiriesQuery, (snap) => {

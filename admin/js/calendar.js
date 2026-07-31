@@ -214,19 +214,20 @@ async function main() {
   });
   categoryFilter.addEventListener("change", render);
 
-  const enquiriesQuery = role === "owner"
+  const canReadAll = role === "owner" || role === "developer" || role === "observer";
+  const enquiriesQuery = canReadAll
     ? query(collection(db, "enquiries"))
     : query(collection(db, "enquiries"), where("assignedOwnerId", "in", [user.uid, null]));
   onSnapshot(enquiriesQuery, (snap) => { enquiries = snap.docs.map((d) => ({ id: d.id, ...d.data() })); render(); },
     (err) => console.error("Calendar enquiries listener error:", err));
 
-  const bookingsQuery = role === "owner"
+  const bookingsQuery = canReadAll
     ? query(collection(db, "bookings"))
     : query(collection(db, "bookings"), where("assignedPerson", "in", [user.uid, null]));
   onSnapshot(bookingsQuery, (snap) => { bookings = snap.docs.map((d) => ({ id: d.id, ...d.data() })); render(); },
     (err) => console.error("Calendar bookings listener error:", err));
 
-  if (role === "owner") {
+  if (canReadAll) {
     onSnapshot(collection(db, "quotations"), (snap) => { quotations = snap.docs.map((d) => ({ id: d.id, ...d.data() })); render(); },
       (err) => console.error("Calendar quotations listener error:", err));
   }

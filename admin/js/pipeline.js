@@ -102,7 +102,7 @@ async function main() {
     });
   }
 
-  const q = role === "owner"
+  const q = (role === "owner" || role === "developer" || role === "observer")
     ? query(collection(db, "enquiries"))
     : query(collection(db, "enquiries"), where("assignedOwnerId", "in", [user.uid, null]));
   onSnapshot(q, (snap) => {

@@ -26,14 +26,14 @@ const LINA_MENU = {
           price: "R60",
           image: null,
           imageConfidence: "category-plausible",
-          categoryImage: "../media/lina-chef-trailer-frame-working-v1-20260728.jpg"
+          categoryImage: "/assets/mockups/working/media/lina-chef-trailer-frame-working-v1-20260728.jpg"
         },
         {
           name: "Beef stew, potato salad, spinach",
           price: "R60",
           image: null,
           imageConfidence: "category-plausible",
-          categoryImage: "../media/lina-gallery-frame-05-signage-working-v1-20260728.jpg"
+          categoryImage: "/assets/mockups/working/media/lina-gallery-frame-05-signage-working-v1-20260728.jpg"
         }
       ]
     },

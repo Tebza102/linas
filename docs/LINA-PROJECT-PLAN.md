@@ -69,6 +69,8 @@
 
 **Status (30 Jul, later):** PR #2 was merged and Production deployed (real Firebase, SMTP notification workflow, `linas.co.za` domain added pending DNS). Immediately after, the admin-panel priority was revised: away from kitchen-operations planning toward sales-and-marketing, since that is the platform's actual immediate business need. The admin panel was rebuilt accordingly — see Decision Log D-018 for the full account — into an Overview command centre, Sales Pipeline, one master Calendar, Marketing Centre (content planner + campaign tracker), Quotations, Invoices, and Reports, all behind a shared sidebar, with lead source/campaign/UTM tracking added to the enquiry record. This work is on `feat/firebase-admin-platform`, verified on a fresh preview, **not yet merged or deployed to Production**.
 
+**Status (31 Jul):** Client approved Version 2/Direction D as the public site. It is now the site's only public-facing experience at clean URLs (`/`, `/catering`, `/menu`, `/chef-lina`, `/mobile-kitchen`, `/gallery`, `/contact`), with every internal review/approval-status comment removed from public view. The admin panel got the visible redesign the brief called for (branded 280px sidebar, grouped Sales/Marketing/System navigation), a restructured Overview (header, 6 KPIs, 5 real-data charts, 4 compact linking panels), a new Users module with a working (but not yet used) invitation flow, `developer`/`observer` roles, and a session-shared public↔admin "Admin" link. See Decision Log D-020 for the full account, including the one real bug found and fixed (`menu-data.js` relative image paths) and the one open item: the updated Firestore rules (needed for `developer`/`observer` to work against real data) are proven correct against the emulator but not yet deployed to the real `lina-s` project, pending explicit approval. Still on `feat/firebase-admin-platform`, unmerged, Production untouched.
+
 ## Milestone 6 — QA, release and handover
 **Target:** 31 July
 - Run full checklist.
@@ -93,6 +95,14 @@ Deferred in full, not started:
 - Real API integrations for Instagram/Facebook/Google Business Profile (currently honest "Setup required"/"Connected" status only, no follower/engagement metrics)
 - A genuine Resend (or equivalent) delivery-status webhook, if a future round reintroduces a provider that supports one
 - A server-generated provenance marker (e.g. `createdVia: "e2e-test" | "admin-maintenance" | "public-form"`) written at record-creation time, so future test/QA records are distinguishable from real ones without relying on name-pattern matching after the fact — see Decision Log D-019
+
+## Immediate maintenance roadmap (recorded 31 Jul, per Decision Log D-020)
+- **Developer Diagnostics / Platform Observations** — deliberately time-boxed out of this round to protect the public-site consolidation and admin restructure. Brief design sketch for a future lightweight pass:
+  - **Data model:** a single `platformObservations` Firestore collection. Each doc: `{ area: string, severity: "info"|"warning"|"issue", summary: string, detail: string|null, relatedRoute: string|null, createdBy: uid, createdAt, resolvedAt: timestamp|null }`. No new field on any existing collection — kept fully separate so it can never leak into customer-facing data.
+  - **Permissions:** read/write restricted to `isDeveloper()` only in `firestore.rules` (not owner, not observer, not staff — "never appear to Owner, Observer or ordinary Staff unless deliberately shared" per this round's brief). A future `sharedWithOwner: boolean` field could relax this per-item if ever needed.
+  - **UI:** one new sidebar item under System, visible only to `role === "developer"`, reusing the existing `panel-list`/`record-row` primitives already in `admin.css` — no new visual system required.
+  - **Population:** manual entry only at first (a developer types up what they noticed); a future iteration could have build/QA scripts write entries automatically (e.g. a broken-link check, a missing-image check) via the Admin SDK.
+  - **Effort estimate:** roughly the same size as the Settings page (one collection, one rule block, one simple CRUD page) — small, but real work; deferred rather than rushed.
 
 ## Daily status template
 **Date:**  

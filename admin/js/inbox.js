@@ -76,7 +76,7 @@ async function main() {
     // Scope the base query by role. Staff only ever fetch enquiries that
     // are assigned to them or unassigned — matches firestore.rules exactly,
     // so this query never gets a permission-denied on a matching read.
-    const q = role === "owner"
+    const q = (role === "owner" || role === "developer" || role === "observer")
       ? query(collection(db, "enquiries"), orderBy("createdAt", "desc"))
       : query(collection(db, "enquiries"), where("assignedOwnerId", "in", [user.uid, null]), orderBy("createdAt", "desc"));
 
