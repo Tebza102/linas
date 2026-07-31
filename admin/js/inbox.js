@@ -103,8 +103,9 @@ async function main() {
   }
 
   // No page-reload / polling needed for changes: this same listener also
-  // picks up webhook-driven notification-status updates and detail-panel
-  // saves automatically, since they're all just Firestore writes.
+  // picks up server-side notification-status updates (from the SMTP send
+  // in api/_lib/send-notification-email.js) and detail-panel saves
+  // automatically, since they're all just Firestore writes.
   subscribe();
 
   setInterval(() => {

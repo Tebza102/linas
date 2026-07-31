@@ -92,6 +92,7 @@ Deferred in full, not started:
 - A general-purpose task-management module (a narrow, source-derived follow-up view — enquiry/quotation/invoice/content dates — covers Phase 1's needs instead)
 - Real API integrations for Instagram/Facebook/Google Business Profile (currently honest "Setup required"/"Connected" status only, no follower/engagement metrics)
 - A genuine Resend (or equivalent) delivery-status webhook, if a future round reintroduces a provider that supports one
+- A server-generated provenance marker (e.g. `createdVia: "e2e-test" | "admin-maintenance" | "public-form"`) written at record-creation time, so future test/QA records are distinguishable from real ones without relying on name-pattern matching after the fact — see Decision Log D-019
 
 ## Daily status template
 **Date:**  
