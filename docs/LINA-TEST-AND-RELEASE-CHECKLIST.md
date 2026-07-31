@@ -10,8 +10,15 @@ A feature may be marked complete only when the relevant checks pass.
 ## Customer journeys
 - [ ] Catering enquiry works from landing page to admin inbox.
 - [ ] Order/WhatsApp-assisted flow works and gives clear confirmation.
+- [x] Order is recorded in the backend BEFORE WhatsApp opens; opening WhatsApp never counts as a sale on its own. Verified against real production Firestore, 31 Jul (Decision Log D-021).
+- [x] A client-supplied price/subtotal on an order is never trusted — the server always prices from the catalogue. Verified live by forging a value and confirming it was ignored.
+- [x] Only `Collected` orders count as sales; order revenue never mixes with enquiry revenue (separate fields, separate units, separate dashboard/report sections, growth-goal bar untouched).
 - [ ] Social/campaign links land on the correct offer.
 - [ ] Repeat/return journey is understandable.
+
+## Order pricing (per Decision Log D-021 — run whenever a price or the catalogue changes)
+- [ ] `npm run test:unit` passes (includes `menu-catalog-parity.test.js`, which fails if `menu-data.js` and `api/_lib/menu-catalog.js` ever drift).
+- [ ] Any new/changed/de-listed menu item gets a new/updated catalogue id — ids are frozen once shipped; never reuse an id for a different item.
 
 ## Data and admin
 - [ ] Form submissions persist in the configured production database.
