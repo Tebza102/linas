@@ -114,6 +114,21 @@ table.admin-table { width: 100%; min-width: 900px; border-collapse: collapse; fo
 .status-badge[data-status="delayed"] { color: var(--amber); border-color: var(--amber); }
 .status-badge[data-status="bounced"], .status-badge[data-status="failed"], .status-badge[data-status="suppressed"] { color: #e0554a; border-color: #e0554a; }
 
+/* Order statuses. Note "Confirmed" is already defined above (green) and means
+   the same thing for an order, so it is deliberately not redefined. The
+   lowercase notification `pending` above is a different vocabulary — these
+   capitalised order/payment values do not collide with it. */
+.status-badge[data-status="Pending WhatsApp"] { color: var(--amber); border-color: var(--amber); }
+.status-badge[data-status="Preparing"] { color: #b28de0; border-color: #b28de0; }
+.status-badge[data-status="Ready for Collection"] { color: #7fb3e0; border-color: #7fb3e0; }
+.status-badge[data-status="Collected"] { color: var(--green); border-color: var(--green); }
+.status-badge[data-status="Cancelled"] { color: #e0554a; border-color: #e0554a; }
+.status-badge[data-status="Not Collected"] { color: #e0554a; border-color: #e0554a; }
+/* Payment vocabulary, kept visually distinct from order status. */
+.status-badge[data-status="Paid"] { color: var(--green); border-color: var(--green); }
+.status-badge[data-status="Failed"] { color: #e0554a; border-color: #e0554a; }
+.status-badge[data-status="Refunded"] { color: var(--amber); border-color: var(--amber); }
+
 .notification-block { position: relative; }
 .help-tip { display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; margin-left: 6px; border-radius: 50%; border: 1px solid var(--white-faint); color: var(--white-faint); font-size: 11px; cursor: help; position: relative; vertical-align: middle; }
 .help-tip__bubble { display: none; position: absolute; left: 0; top: 22px; z-index: 10; width: 240px; padding: 8px 10px; background: var(--panel); border: 1px solid var(--border); color: var(--white-dim); font-size: 12px; line-height: 1.4; }

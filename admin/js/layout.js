@@ -11,6 +11,13 @@ import { collection, query, where, onSnapshot } from "https://www.gstatic.com/fi
 // in firestore.rules, since a hidden button is not access control).
 const NAV_GROUPS = [
   {
+    label: "Operations",
+    items: [
+      // First group: the daily order queue is what Lina opens most.
+      { id: "orders", label: "Orders", href: "orders.html", roles: ["owner", "developer", "observer"], badge: "orders" }
+    ]
+  },
+  {
     label: "Sales",
     items: [
       { id: "overview", label: "Overview", href: "dashboard.html" },
@@ -145,5 +152,22 @@ export function initLayout({ user, role, active }) {
       if (unreadBadge) { unreadBadge.textContent = String(unread); unreadBadge.hidden = unread === 0; }
       if (overdueBadge) { overdueBadge.textContent = String(overdue); overdueBadge.hidden = overdue === 0; }
     }, (err) => console.error("Layout badge listener error:", err));
+  }
+
+  // Orders awaiting confirmation. This is the platform's only prompt that a
+  // customer has placed an order — nothing emails Lina when one arrives — so
+  // it matters that it is visible from every admin page.
+  // Role-guarded: staff cannot read orders, and must never attempt to.
+  const ordersBadge = document.getElementById("badge-orders");
+  if (ordersBadge && (role === "owner" || role === "developer" || role === "observer")) {
+    onSnapshot(collection(db, "orders"), (snap) => {
+      let pending = 0;
+      snap.forEach((d) => {
+        const o = d.data();
+        if (!o.isTestRecord && o.status === "Pending WhatsApp") pending++;
+      });
+      ordersBadge.textContent = String(pending);
+      ordersBadge.hidden = pending === 0;
+    }, (err) => console.error("Orders badge listener error:", err));
   }
 }

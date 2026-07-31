@@ -19,7 +19,24 @@ import { getFirestore, connectFirestoreEmulator } from "https://www.gstatic.com/
 // allow full end-to-end testing without any possibility of touching real
 // production data (a different projectId is a hard namespace separation
 // within the emulator, not just a different host/port).
-const useEmulator = new URLSearchParams(location.search).get("emulator") === "1";
+// Emulator mode is sticky for the browsing session once requested.
+//
+// It used to be read from the query string alone, which meant the very first
+// internal redirect (login -> inbox, or auth-guard -> login) dropped the flag
+// and silently reconnected the page to REAL production Firebase — making the
+// local emulator admin flow untestable past one navigation. Latching it in
+// sessionStorage keeps the whole session on the emulator. Still opt-in, still
+// never active by default, and scoped to the tab so it cannot leak into
+// ordinary use.
+const emulatorParam = new URLSearchParams(location.search).get("emulator");
+let useEmulator = false;
+try {
+  if (emulatorParam === "1") sessionStorage.setItem("lina-use-emulator", "1");
+  else if (emulatorParam === "0") sessionStorage.removeItem("lina-use-emulator");
+  useEmulator = sessionStorage.getItem("lina-use-emulator") === "1";
+} catch (err) {
+  useEmulator = emulatorParam === "1";
+}
 
 const firebaseConfig = useEmulator
   ? { apiKey: "test-key", authDomain: "localhost", projectId: "lina-s-e2e-test" }

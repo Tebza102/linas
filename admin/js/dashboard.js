@@ -8,6 +8,10 @@ import { db } from "./firebase-init.js";
 import { initLayout } from "./layout.js";
 import { horizontalBarChart, verticalBarChart } from "./charts.js";
 import {
+  ORDER_SALE_STATUSES, ORDER_ACTIVE_STATUSES, ORDER_LOST_STATUSES,
+  fmtCents, sumCents, countIn, sastToday, sastDateOf
+} from "./order-constants.js";
+import {
   collection, query, where, onSnapshot, doc
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
 
@@ -42,7 +46,9 @@ async function main() {
   // ---- Header: greeting, date, honest one-line status ----
   const hour = new Date().getHours();
   const timeOfDay = hour < 12 ? "morning" : hour < 18 ? "afternoon" : "evening";
-  const firstName = (user.displayName || user.email.split("@")[0]).split(" ")[0];
+  // A missing displayName AND email is unusual but possible, and it must not
+  // white-screen the entire Overview over a greeting.
+  const firstName = ((user.displayName || (user.email || "").split("@")[0] || "there").split(" ")[0]) || "there";
   document.getElementById("greeting").textContent = `Good ${timeOfDay}, ${firstName}`;
   document.getElementById("todayDate").textContent = new Date().toLocaleDateString("en-ZA", {
     weekday: "long", year: "numeric", month: "long", day: "numeric"
@@ -53,6 +59,43 @@ async function main() {
   let campaigns = [];
   let bookings = [];
   let contentItems = [];
+  let orders = [];
+
+  /**
+   * Order figures, kept entirely separate from the enquiry-derived revenue
+   * above. Order money is integer cents (fmtCents); enquiry money is whole
+   * Rands (fmtRand). They are never added together, and the growth-goal bar
+   * below stays enquiry-only — combining them would be a business decision,
+   * not a quiet code change.
+   */
+  function renderOrders() {
+    const panel = document.getElementById("ordersPanel");
+    if (!panel || !canReadAll) return;
+    panel.hidden = false;
+
+    const today = sastToday();
+    const real = orders.filter((o) => !o.isTestRecord);
+    const collectedToday = real.filter((o) => o.status === "Collected" && sastDateOf(o.collectedAt) === today);
+
+    document.getElementById("ordersKpis").innerHTML =
+      tile(countIn(orders, ORDER_SALE_STATUSES), "Completed sales") +
+      tile(fmtCents(sumCents(orders, ORDER_SALE_STATUSES)), "Completed sales value") +
+      tile(fmtCents(sumCents(orders, ORDER_ACTIVE_STATUSES)), "Pending order value") +
+      tile(fmtCents(sumCents(orders, ["Cancelled"])), "Cancelled value") +
+      tile(fmtCents(sumCents(orders, ["Not Collected"])), "Not-collected value");
+
+    const awaiting = real.filter((o) => o.status === "Pending WhatsApp").length;
+    const ready = real.filter((o) => o.status === "Ready for Collection").length;
+    renderList(
+      document.getElementById("ordersTodayList"),
+      [
+        `<span>Collected today</span><span>${collectedToday.length} · ${esc(fmtCents(collectedToday.reduce((t, o) => t + (Number(o.subtotalCents) || 0), 0)))}</span>`,
+        `<span>Awaiting confirmation</span><span${awaiting > 0 ? ' class="overdue-text"' : ""}>${awaiting}</span>`,
+        `<span>Ready for collection</span><span>${ready}</span>`
+      ],
+      "No orders yet."
+    );
+  }
 
   function render() {
     const real = enquiries.filter((e) => !isTest(e));
@@ -186,6 +229,12 @@ async function main() {
   }
   onSnapshot(collection(db, "campaigns"), (snap) => { campaigns = snap.docs.map((d) => ({ id: d.id, ...d.data() })); render(); },
     (err) => console.error("Overview campaigns listener error:", err));
+  // Conditional subscribe: staff cannot read orders under firestore.rules, so
+  // they must never attempt the read in the first place.
+  if (canReadAll) {
+    onSnapshot(collection(db, "orders"), (snap) => { orders = snap.docs.map((d) => ({ id: d.id, ...d.data() })); renderOrders(); },
+      (err) => console.error("Overview orders listener error:", err));
+  }
   onSnapshot(collection(db, "contentItems"), (snap) => { contentItems = snap.docs.map((d) => ({ id: d.id, ...d.data() })); render(); },
     (err) => console.error("Overview contentItems listener error:", err));
   onSnapshot(
