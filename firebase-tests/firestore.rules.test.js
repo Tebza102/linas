@@ -11,7 +11,7 @@ const {
   initializeTestEnvironment, assertFails, assertSucceeds
 } = require("@firebase/rules-unit-testing");
 const {
-  doc, getDoc, getDocs, collection, setDoc, updateDoc, deleteDoc, serverTimestamp
+  doc, getDoc, getDocs, collection, setDoc, updateDoc, deleteDoc, serverTimestamp, writeBatch
 } = require("firebase/firestore");
 const fs = require("fs");
 const path = require("path");
@@ -554,4 +554,309 @@ test("a signed-in user can update their own lastLoginAt only, regardless of role
   await assertSucceeds(updateDoc(doc(obsDb, "adminUsers", "observer-uid"), { lastLoginAt: serverTimestamp() }));
   // Still cannot smuggle a role change in alongside it.
   await assertFails(updateDoc(doc(obsDb, "adminUsers", "observer-uid"), { lastLoginAt: serverTimestamp(), role: "owner" }));
+});
+
+// --- Orders: server-created, owner/developer-managed, observer read-only ---
+
+async function seedOrder(id, data) {
+  await testEnv.withSecurityRulesDisabled(async (ctx) => {
+    await setDoc(doc(ctx.firestore(), "orders", id), {
+      referenceNumber: "LINA-ORD-20260731-0001",
+      channel: "web-cart",
+      status: "Pending WhatsApp",
+      statusReason: null,
+      statusUpdatedAt: new Date(),
+      statusUpdatedBy: null,
+      paymentStatus: "Pending",
+      paymentMethod: null,
+      paymentReference: null,
+      paymentUpdatedAt: null,
+      items: [{ itemId: "drinks-juice", name: "Juice", unitPriceCents: 1700, quantity: 1, lineTotalCents: 1700 }],
+      lineCount: 1,
+      itemCount: 1,
+      subtotalCents: 1700,
+      currency: "ZAR",
+      customerName: null,
+      customerPhone: null,
+      customerNote: null,
+      popiaConsent: false,
+      confirmedAt: null,
+      preparingAt: null,
+      readyAt: null,
+      collectedAt: null,
+      cancelledAt: null,
+      notCollectedAt: null,
+      internalNotes: null,
+      isTestRecord: false,
+      submissionId: "seed-submission-0001",
+      orderDateKey: "2026-07-31",
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      ...data
+    });
+  });
+}
+
+test("unauthenticated users cannot read, list or create orders", async () => {
+  await seedOrder("o1", {});
+  const unauth = testEnv.unauthenticatedContext();
+  const unauthDb = unauth.firestore();
+  await assertFails(getDoc(doc(unauthDb, "orders", "o1")));
+  await assertFails(getDocs(collection(unauthDb, "orders")));
+  await assertFails(setDoc(doc(unauthDb, "orders", "hacker-order"), {
+    referenceNumber: "FAKE", status: "Collected", subtotalCents: 1,
+    createdAt: new Date(), updatedAt: new Date()
+  }));
+});
+
+test("even an owner cannot create an order directly — the server endpoint is the only writer", async () => {
+  const owner = testEnv.authenticatedContext("owner-uid", { role: "owner" });
+  await assertFails(setDoc(doc(owner.firestore(), "orders", "manual-order"), {
+    referenceNumber: "LINA-ORD-MANUAL", status: "Pending WhatsApp", subtotalCents: 5000,
+    createdAt: serverTimestamp(), updatedAt: serverTimestamp()
+  }));
+});
+
+test("owner and observer can read orders; staff cannot", async () => {
+  await seedOrder("o2", {});
+  const owner = testEnv.authenticatedContext("owner-uid", { role: "owner" });
+  await assertSucceeds(getDoc(doc(owner.firestore(), "orders", "o2")));
+
+  const observer = testEnv.authenticatedContext("observer-uid", { role: "observer" });
+  await assertSucceeds(getDoc(doc(observer.firestore(), "orders", "o2")));
+
+  const staff = testEnv.authenticatedContext("staff-uid", { role: "staff" });
+  await assertFails(getDoc(doc(staff.firestore(), "orders", "o2")));
+});
+
+test("observer and staff cannot update an order", async () => {
+  await seedOrder("o3", {});
+  const observer = testEnv.authenticatedContext("observer-uid", { role: "observer" });
+  await assertFails(updateDoc(doc(observer.firestore(), "orders", "o3"), {
+    status: "Confirmed", statusUpdatedAt: serverTimestamp(), confirmedAt: serverTimestamp(), updatedAt: serverTimestamp()
+  }));
+  const staff = testEnv.authenticatedContext("staff-uid", { role: "staff" });
+  await assertFails(updateDoc(doc(staff.firestore(), "orders", "o3"), {
+    internalNotes: "staff note", updatedAt: serverTimestamp()
+  }));
+});
+
+test("owner can advance Pending WhatsApp to Confirmed", async () => {
+  await seedOrder("o4", {});
+  const owner = testEnv.authenticatedContext("owner-uid", { role: "owner" });
+  await assertSucceeds(updateDoc(doc(owner.firestore(), "orders", "o4"), {
+    status: "Confirmed",
+    statusUpdatedAt: serverTimestamp(),
+    statusUpdatedBy: "owner-uid",
+    confirmedAt: serverTimestamp(),
+    updatedAt: serverTimestamp()
+  }));
+});
+
+test("developer has the same order-management access as owner", async () => {
+  await seedOrder("o5", {});
+  const dev = testEnv.authenticatedContext("dev-uid", { role: "developer" });
+  const devDb = dev.firestore();
+  await assertSucceeds(getDoc(doc(devDb, "orders", "o5")));
+  await assertSucceeds(updateDoc(doc(devDb, "orders", "o5"), {
+    status: "Confirmed", statusUpdatedAt: serverTimestamp(),
+    statusUpdatedBy: "dev-uid", confirmedAt: serverTimestamp(), updatedAt: serverTimestamp()
+  }));
+});
+
+test("an invalid order status or payment status is rejected", async () => {
+  await seedOrder("o6", {});
+  const owner = testEnv.authenticatedContext("owner-uid", { role: "owner" });
+  const ownerDb = owner.firestore();
+  await assertFails(updateDoc(doc(ownerDb, "orders", "o6"), {
+    status: "Delivered By Drone", statusUpdatedAt: serverTimestamp(), updatedAt: serverTimestamp()
+  }));
+  await assertFails(updateDoc(doc(ownerDb, "orders", "o6"), {
+    paymentStatus: "Half Paid", updatedAt: serverTimestamp()
+  }));
+});
+
+test("Cancelled requires a reason; Not Collected requires a reason", async () => {
+  await seedOrder("o7", { status: "Confirmed" });
+  const owner = testEnv.authenticatedContext("owner-uid", { role: "owner" });
+  const ownerDb = owner.firestore();
+
+  await assertFails(updateDoc(doc(ownerDb, "orders", "o7"), {
+    status: "Cancelled", statusUpdatedAt: serverTimestamp(),
+    cancelledAt: serverTimestamp(), updatedAt: serverTimestamp()
+  }));
+  await assertSucceeds(updateDoc(doc(ownerDb, "orders", "o7"), {
+    status: "Cancelled", statusReason: "Customer changed their mind",
+    statusUpdatedAt: serverTimestamp(), cancelledAt: serverTimestamp(), updatedAt: serverTimestamp()
+  }));
+
+  await seedOrder("o8", { status: "Ready for Collection" });
+  await assertFails(updateDoc(doc(ownerDb, "orders", "o8"), {
+    status: "Not Collected", statusUpdatedAt: serverTimestamp(),
+    notCollectedAt: serverTimestamp(), updatedAt: serverTimestamp()
+  }));
+  await assertSucceeds(updateDoc(doc(ownerDb, "orders", "o8"), {
+    status: "Not Collected", statusReason: "Customer never arrived",
+    statusUpdatedAt: serverTimestamp(), notCollectedAt: serverTimestamp(), updatedAt: serverTimestamp()
+  }));
+});
+
+test("marking Collected requires a server-time collectedAt — the sale timestamp cannot be faked", async () => {
+  await seedOrder("o9", { status: "Ready for Collection" });
+  const owner = testEnv.authenticatedContext("owner-uid", { role: "owner" });
+  const ownerDb = owner.firestore();
+  // A back-dated or omitted collection time would corrupt daily sales.
+  await assertFails(updateDoc(doc(ownerDb, "orders", "o9"), {
+    status: "Collected", statusUpdatedAt: serverTimestamp(), updatedAt: serverTimestamp()
+  }));
+  await assertFails(updateDoc(doc(ownerDb, "orders", "o9"), {
+    status: "Collected", statusUpdatedAt: serverTimestamp(),
+    collectedAt: new Date("2020-01-01"), updatedAt: serverTimestamp()
+  }));
+  await assertSucceeds(updateDoc(doc(ownerDb, "orders", "o9"), {
+    status: "Collected", statusUpdatedAt: serverTimestamp(),
+    collectedAt: serverTimestamp(), updatedAt: serverTimestamp()
+  }));
+});
+
+test("a terminal order cannot be moved back to an active status", async () => {
+  await seedOrder("o10", { status: "Collected", collectedAt: new Date() });
+  const owner = testEnv.authenticatedContext("owner-uid", { role: "owner" });
+  const ownerDb = owner.firestore();
+  await assertFails(updateDoc(doc(ownerDb, "orders", "o10"), {
+    status: "Preparing", statusUpdatedAt: serverTimestamp(), updatedAt: serverTimestamp()
+  }));
+  await seedOrder("o11", { status: "Cancelled", statusReason: "test", cancelledAt: new Date() });
+  await assertFails(updateDoc(doc(ownerDb, "orders", "o11"), {
+    status: "Confirmed", statusUpdatedAt: serverTimestamp(),
+    confirmedAt: serverTimestamp(), updatedAt: serverTimestamp()
+  }));
+});
+
+test("a Collected order still accepts internal notes and payment reconciliation", async () => {
+  // This is the case a flat conjunction of the transition rules would break:
+  // the status hasn't changed, so demanding a fresh collectedAt would be wrong.
+  await seedOrder("o12", { status: "Collected", collectedAt: new Date() });
+  const owner = testEnv.authenticatedContext("owner-uid", { role: "owner" });
+  const ownerDb = owner.firestore();
+  await assertSucceeds(updateDoc(doc(ownerDb, "orders", "o12"), {
+    internalNotes: "Customer collected late but happy.", updatedAt: serverTimestamp()
+  }));
+  await assertSucceeds(updateDoc(doc(ownerDb, "orders", "o12"), {
+    paymentStatus: "Refunded", paymentUpdatedAt: serverTimestamp(), updatedAt: serverTimestamp()
+  }));
+});
+
+test("order money, line items and identity are immutable from the client", async () => {
+  // diff() only reports keys whose VALUE changes, so each of these writes a
+  // genuinely different value than the seed — otherwise the check proves nothing.
+  await seedOrder("o13", {});
+  const owner = testEnv.authenticatedContext("owner-uid", { role: "owner" });
+  const ownerDb = owner.firestore();
+  await assertFails(updateDoc(doc(ownerDb, "orders", "o13"), { subtotalCents: 1, updatedAt: serverTimestamp() }));
+  await assertFails(updateDoc(doc(ownerDb, "orders", "o13"), {
+    items: [{ itemId: "drinks-juice", name: "Juice", unitPriceCents: 1, quantity: 99, lineTotalCents: 99 }],
+    updatedAt: serverTimestamp()
+  }));
+  await assertFails(updateDoc(doc(ownerDb, "orders", "o13"), { referenceNumber: "LINA-ORD-FAKE-9999", updatedAt: serverTimestamp() }));
+  await assertFails(updateDoc(doc(ownerDb, "orders", "o13"), { submissionId: "someone-elses-id", updatedAt: serverTimestamp() }));
+  await assertFails(updateDoc(doc(ownerDb, "orders", "o13"), { isTestRecord: true, updatedAt: serverTimestamp() }));
+});
+
+test("an admin backfilling customer details cannot grant POPIA consent on their behalf", async () => {
+  await seedOrder("o14", {});
+  const owner = testEnv.authenticatedContext("owner-uid", { role: "owner" });
+  const ownerDb = owner.firestore();
+  // Filling in details the customer gave over WhatsApp is fine...
+  await assertSucceeds(updateDoc(doc(ownerDb, "orders", "o14"), {
+    customerName: "Thabo Nkosi", customerPhone: "0764834344", updatedAt: serverTimestamp()
+  }));
+  // ...but consent is the customer's to give, never the admin's to record.
+  await assertFails(updateDoc(doc(ownerDb, "orders", "o14"), {
+    popiaConsent: true, updatedAt: serverTimestamp()
+  }));
+});
+
+test("an order update without a server-time updatedAt is rejected", async () => {
+  await seedOrder("o15", {});
+  const owner = testEnv.authenticatedContext("owner-uid", { role: "owner" });
+  await assertFails(updateDoc(doc(owner.firestore(), "orders", "o15"), {
+    internalNotes: "no timestamp", updatedAt: new Date("2020-01-01")
+  }));
+});
+
+test("orders can never be deleted, even by an owner", async () => {
+  await seedOrder("o16", {});
+  const owner = testEnv.authenticatedContext("owner-uid", { role: "owner" });
+  await assertFails(deleteDoc(doc(owner.firestore(), "orders", "o16")));
+});
+
+test("order activities are append-only and attributable", async () => {
+  await testEnv.withSecurityRulesDisabled(async (ctx) => {
+    await setDoc(doc(ctx.firestore(), "orderActivities", "oa1"), {
+      orderId: "o1", orderReference: "LINA-ORD-20260731-0001", actionType: "created",
+      previousValue: null, newValue: "Pending WhatsApp", createdBy: "system", createdAt: new Date()
+    });
+  });
+  const owner = testEnv.authenticatedContext("owner-uid", { role: "owner" });
+  const ownerDb = owner.firestore();
+
+  await assertSucceeds(getDoc(doc(ownerDb, "orderActivities", "oa1")));
+  // History is immutable once written — that is the whole point of an audit trail.
+  await assertFails(updateDoc(doc(ownerDb, "orderActivities", "oa1"), { newValue: "Collected" }));
+  await assertFails(deleteDoc(doc(ownerDb, "orderActivities", "oa1")));
+
+  await assertSucceeds(setDoc(doc(ownerDb, "orderActivities", "oa2"), {
+    orderId: "o1", orderReference: "LINA-ORD-20260731-0001", actionType: "status-change",
+    previousValue: "Pending WhatsApp", newValue: "Confirmed",
+    createdBy: "owner-uid", createdAt: serverTimestamp()
+  }));
+  // Cannot attribute an activity to someone else.
+  await assertFails(setDoc(doc(ownerDb, "orderActivities", "oa3"), {
+    orderId: "o1", actionType: "status-change", createdBy: "someone-else", createdAt: serverTimestamp()
+  }));
+});
+
+test("observer can read order activities but cannot write them; unauthenticated is denied", async () => {
+  await testEnv.withSecurityRulesDisabled(async (ctx) => {
+    await setDoc(doc(ctx.firestore(), "orderActivities", "oa4"), {
+      orderId: "o1", actionType: "created", createdBy: "system", createdAt: new Date()
+    });
+  });
+  const observer = testEnv.authenticatedContext("observer-uid", { role: "observer" });
+  const obsDb = observer.firestore();
+  await assertSucceeds(getDoc(doc(obsDb, "orderActivities", "oa4")));
+  await assertFails(setDoc(doc(obsDb, "orderActivities", "oa5"), {
+    orderId: "o1", actionType: "note", createdBy: "observer-uid", createdAt: serverTimestamp()
+  }));
+
+  const unauth = testEnv.unauthenticatedContext();
+  await assertFails(getDoc(doc(unauth.firestore(), "orderActivities", "oa4")));
+});
+
+test("a status change and its audit entry commit together in one batch", async () => {
+  // The admin UI writes both in a writeBatch so an order's status can never
+  // advance without its audit record. This proves both writes see the same
+  // request.time, which both rules assert against.
+  await seedOrder("o17", {});
+  const owner = testEnv.authenticatedContext("owner-uid", { role: "owner" });
+  const ownerDb = owner.firestore();
+  const batch = writeBatch(ownerDb);
+  batch.update(doc(ownerDb, "orders", "o17"), {
+    status: "Confirmed", statusUpdatedAt: serverTimestamp(),
+    statusUpdatedBy: "owner-uid", confirmedAt: serverTimestamp(), updatedAt: serverTimestamp()
+  });
+  batch.set(doc(collection(ownerDb, "orderActivities")), {
+    orderId: "o17", orderReference: "LINA-ORD-20260731-0001", actionType: "status-change",
+    previousValue: "Pending WhatsApp", newValue: "Confirmed",
+    createdBy: "owner-uid", createdAt: serverTimestamp()
+  });
+  await assertSucceeds(batch.commit());
+});
+
+test("order reference counters remain unreachable from any client", async () => {
+  const owner = testEnv.authenticatedContext("owner-uid", { role: "owner" });
+  const ownerDb = owner.firestore();
+  await assertFails(getDoc(doc(ownerDb, "counters", "ORD-20260731")));
+  await assertFails(setDoc(doc(ownerDb, "counters", "ORD-20260731"), { count: 9999 }));
 });

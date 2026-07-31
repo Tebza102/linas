@@ -292,6 +292,105 @@ service cloud.firestore {
       allow delete: if isOwnerOrDev();
     }
 
+    // Mobile-kitchen orders placed through the public cart.
+    //
+    // Created ONLY by /api/orders/create (Admin SDK, bypasses these rules) —
+    // the server is the sole writer because prices, totals and reference
+    // numbers must all be computed somewhere the customer cannot reach.
+    //
+    // Never hard-deleted: an order that was cancelled or not collected is a
+    // real business event and stays on the record with that status.
+    //
+    // NOTE ON SCOPE: these rules enforce what would corrupt the books — the
+    // status enum, terminal immutability, a required reason for the two
+    // negative outcomes, and the immutability of money and line items. The
+    // full transition GRAPH (which status may follow which) is enforced in
+    // admin/js/orders.js instead; expressing it here would be a long, brittle
+    // chain of per-status conditions for no additional safety. That split is
+    // deliberate, not an oversight.
+    function isValidOrderStatus(s) {
+      return s in ['Pending WhatsApp', 'Confirmed', 'Preparing',
+                   'Ready for Collection', 'Collected', 'Cancelled', 'Not Collected'];
+    }
+    function isValidPaymentStatus(s) {
+      return s in ['Pending', 'Paid', 'Failed', 'Refunded'];
+    }
+    function isTerminalOrderStatus(s) {
+      return s in ['Collected', 'Cancelled', 'Not Collected'];
+    }
+
+    match /orders/{orderId} {
+      allow read: if isOwnerOrDev() || isObserver();
+      allow create: if false;
+      allow delete: if false;
+
+      // A terminal order is frozen except for internal notes and payment
+      // reconciliation — a refund can legitimately follow collection.
+      function isTerminalUpdate() {
+        return request.resource.data.status == resource.data.status
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+               'internalNotes', 'paymentStatus', 'paymentMethod',
+               'paymentReference', 'paymentUpdatedAt', 'updatedAt'
+             ]);
+      }
+
+      // Requirements that apply ONLY when the status actually changes.
+      // Kept separate from the general update check on purpose: folding these
+      // into a flat conjunction would demand a fresh collectedAt every time
+      // someone edits a note on an already-Collected order, and the write
+      // would fail for no good reason.
+      function isStatusTransition() {
+        return request.resource.data.statusUpdatedAt == request.time
+          && (request.resource.data.status != 'Collected'
+              || request.resource.data.collectedAt == request.time)
+          && (request.resource.data.status != 'Cancelled'
+              || request.resource.data.cancelledAt == request.time)
+          && (request.resource.data.status != 'Not Collected'
+              || request.resource.data.notCollectedAt == request.time)
+          // Cancelling or writing off an order always needs a stated reason —
+          // "why did this not become a sale" must never be blank.
+          && (!(request.resource.data.status in ['Cancelled', 'Not Collected'])
+              || (request.resource.data.statusReason is string
+                  && request.resource.data.statusReason.size() > 0));
+      }
+
+      function isOrderUpdate() {
+        // items / subtotalCents / referenceNumber / submissionId / popiaConsent
+        // are immutable purely by their ABSENCE from this list. popiaConsent
+        // in particular must never be settable by an admin backfilling
+        // customer details — consent is the customer's to give.
+        return request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+             'status', 'statusReason', 'statusUpdatedAt', 'statusUpdatedBy',
+             'paymentStatus', 'paymentMethod', 'paymentReference', 'paymentUpdatedAt',
+             'internalNotes', 'customerName', 'customerPhone',
+             'confirmedAt', 'preparingAt', 'readyAt', 'collectedAt',
+             'cancelledAt', 'notCollectedAt', 'updatedAt'
+           ])
+          && request.resource.data.updatedAt == request.time
+          && isValidOrderStatus(request.resource.data.status)
+          && isValidPaymentStatus(request.resource.data.paymentStatus)
+          && (isTerminalOrderStatus(resource.data.status)
+                ? isTerminalUpdate()
+                : (request.resource.data.status == resource.data.status
+                   || isStatusTransition()));
+      }
+
+      allow update: if isOwnerOrDev() && isOrderUpdate();
+    }
+
+    // Immutable audit trail for orders, mirroring enquiryActivities. Written
+    // by the server on creation and by an admin on every status change (in
+    // the same batch as the order update, so status can never move without
+    // its audit entry).
+    match /orderActivities/{activityId} {
+      allow read: if isOwnerOrDev() || isObserver();
+      allow create: if isOwnerOrDev()
+        && request.resource.data.createdBy == request.auth.uid
+        && request.resource.data.createdAt == request.time;
+      allow update: if false;
+      allow delete: if false;
+    }
+
     // Per-day reference-number counters are written only by the server
     // endpoint via the Admin SDK. No client ever needs to touch them.
     match /counters/{counterId} {
