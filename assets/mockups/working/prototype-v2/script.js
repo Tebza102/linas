@@ -2,9 +2,8 @@
   "use strict";
 
   var CONFIG = {
-    // No WhatsApp number confirmed yet (Client Inputs Register I-006 / I-014).
-    // Leave null until Tebogo confirms a real number — never guess one.
-    whatsappNumber: null
+    // Confirmed real number: +27 76 483 4344, international format for wa.me.
+    whatsappNumber: "27764834344"
   };
 
   var prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -79,7 +78,7 @@
   var whatsappNote = document.getElementById("whatsappNote");
   function handleWhatsAppAction(itemName) {
     if (CONFIG.whatsappNumber) {
-      var text = itemName ? "Hi Lina's, I'd like to order: " + itemName : "Hi Lina's, I'd like to place an order.";
+      var text = itemName ? "Hi Lina's, I'd like to order: " + itemName : "Hello Lina's, I would like to enquire about your catering or mobile kitchen services.";
       window.open("https://wa.me/" + CONFIG.whatsappNumber + "?text=" + encodeURIComponent(text), "_blank", "noopener");
     } else if (whatsappNote) {
       whatsappNote.textContent = "WhatsApp ordering isn't connected to a number yet. Nothing was sent — please use the enquiry form instead.";
