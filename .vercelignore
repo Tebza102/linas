@@ -13,6 +13,11 @@
 # contact sheets, unused brand/media files, and all Firebase project/rules
 # config (firebase.json, firestore.rules, .firebaserc, firestore.indexes.json
 # — deployed separately via `firebase deploy`, not part of the Vercel site).
+#
+# /middleware.js is deliberately re-admitted below (Coming Soon route gate,
+# see docs/LINA-COMING-SOON-MODE.md) — this allowlist model is exactly why it
+# needs its own explicit line: a missing entry here means the gate silently
+# never deploys while the site keeps serving as if nothing changed.
 
 /*
 !/assets
@@ -20,6 +25,7 @@
 !/admin
 !/package.json
 !/package-lock.json
+!/middleware.js
 
 /assets/*
 !/assets/mockups
