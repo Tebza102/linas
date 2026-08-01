@@ -56,7 +56,11 @@ function vercelizeResponse(res) {
 const routes = {
   "/api/enquiries/create": require("../api/enquiries/create"),
   "/api/enquiries/retry-notification": require("../api/enquiries/retry-notification"),
-  "/api/orders/create": require("../api/orders/create")
+  "/api/orders/create": require("../api/orders/create"),
+  "/api/preview/unlock": require("../api/preview/unlock"),
+  "/api/preview/developer-unlock": require("../api/preview/developer-unlock"),
+  "/api/preview/logout": require("../api/preview/logout"),
+  "/api/coming-soon/config": require("../api/coming-soon/config")
 };
 
 const server = http.createServer((req, res) => {
