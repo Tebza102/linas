@@ -1,0 +1,195 @@
+/* Lina's — Coming Soon page.
+ *
+ * Deliberately a standalone stylesheet, not an edit to styles.css: this
+ * page needs its own approved colour balance (warm-white-led, red as
+ * controlled accent, black reserved for the closing footer) and must never
+ * risk bleeding a rule into the live site's CSS or vice versa. Font stacks
+ * are duplicated from styles.css's --font-display/--font-body rather than
+ * linked, for the same isolation reason — no new webfonts either way.
+ */
+
+*, *::before, *::after { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+
+:root {
+  --cs-red: #A43129;
+  --cs-black: #000000;
+  --cs-black-soft: #111111;
+  --cs-warm-white: #F7F5F1;
+  --cs-white: #FFFFFF;
+  --cs-text-on-white: rgba(0, 0, 0, 0.64);
+  --cs-text-on-black: rgba(255, 255, 255, 0.70);
+
+  --cs-font-display: Georgia, "Iowan Old Style", "Palatino Linotype", "Times New Roman", serif;
+  --cs-font-body: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+
+  --cs-edge: 24px;
+}
+@media (min-width: 1024px) {
+  :root { --cs-edge: 64px; }
+}
+
+body {
+  font-family: var(--cs-font-body);
+  background: var(--cs-warm-white);
+  color: var(--cs-black);
+  -webkit-font-smoothing: antialiased;
+}
+
+img { max-width: 100%; display: block; }
+
+.skip-link {
+  position: absolute; left: -9999px; top: 0;
+  background: var(--cs-white); color: var(--cs-black);
+  padding: 12px 20px; z-index: 100;
+}
+.skip-link:focus { left: 12px; top: 12px; }
+
+/* ---------- Header (red band) ---------- */
+.cs-header {
+  background: var(--cs-red);
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px var(--cs-edge);
+  flex-wrap: wrap; gap: 12px;
+}
+.cs-header__mark { display: inline-flex; }
+.cs-header__logo { height: 44px; width: auto; }
+.cs-header__actions { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.cs-header__preview-link {
+  background: none; border: none; color: rgba(255,255,255,0.72);
+  font-family: var(--cs-font-body); font-size: 13px; text-decoration: underline;
+  cursor: pointer; padding: 8px 4px;
+}
+.cs-header__preview-link:hover, .cs-header__preview-link:focus-visible { color: var(--cs-white); }
+
+/* ---------- Buttons ---------- */
+.cs-btn {
+  display: inline-block; font-family: var(--cs-font-body); font-size: 15px; font-weight: 600;
+  padding: 12px 24px; border-radius: 2px; text-decoration: none; text-align: center;
+  border: 1px solid transparent; cursor: pointer; min-height: 44px; line-height: 1.2;
+}
+.cs-btn--primary { background: var(--cs-red); color: var(--cs-white); }
+.cs-btn--primary:hover, .cs-btn--primary:focus-visible { background: #8B2921; }
+.cs-btn--outline { background: transparent; color: var(--cs-black); border-color: var(--cs-black); }
+.cs-btn--outline:hover, .cs-btn--outline:focus-visible { background: var(--cs-black); color: var(--cs-white); }
+.cs-btn--ghost { background: transparent; color: var(--cs-red); border-color: var(--cs-red); }
+.cs-btn--ghost:hover, .cs-btn--ghost:focus-visible { background: var(--cs-red); color: var(--cs-white); }
+.cs-btn--ghost-on-red { background: transparent; color: var(--cs-white); border-color: rgba(255,255,255,0.5); font-size: 14px; padding: 10px 18px; }
+.cs-btn--ghost-on-red:hover, .cs-btn--ghost-on-red:focus-visible { background: rgba(255,255,255,0.15); }
+
+/* ---------- Hero ---------- */
+.cs-hero {
+  display: grid; grid-template-columns: 1fr; background: var(--cs-warm-white);
+}
+@media (min-width: 900px) {
+  .cs-hero { grid-template-columns: 1.1fr 1fr; align-items: stretch; }
+}
+.cs-hero__media { min-height: 280px; overflow: hidden; }
+@media (min-width: 900px) { .cs-hero__media { min-height: 640px; } }
+.cs-hero__image { width: 100%; height: 100%; object-fit: cover; object-position: center 30%; }
+.cs-hero__content {
+  padding: 48px var(--cs-edge) 56px; display: flex; flex-direction: column; justify-content: center; gap: 20px;
+}
+.cs-hero__eyebrow {
+  font-family: var(--cs-font-display); font-style: italic; color: var(--cs-red);
+  font-size: 18px; margin: 0; letter-spacing: 0.02em;
+}
+.cs-hero__title {
+  font-family: var(--cs-font-display); color: var(--cs-red);
+  font-size: clamp(34px, 6vw, 56px); line-height: 1.08; margin: 0; font-weight: 400;
+}
+.cs-hero__sub {
+  font-size: 17px; line-height: 1.6; color: var(--cs-text-on-white);
+  max-width: 44ch; margin: 0;
+}
+.cs-hero__actions { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 8px; }
+
+/* ---------- Countdown (hidden until a launch date exists) ---------- */
+.cs-countdown { background: var(--cs-white); text-align: center; padding: 40px var(--cs-edge); }
+.cs-countdown__label { font-family: var(--cs-font-display); font-size: 20px; color: var(--cs-black); margin: 0 0 20px; }
+.cs-countdown__grid { display: flex; justify-content: center; gap: 24px; flex-wrap: wrap; }
+.cs-countdown__unit { display: flex; flex-direction: column; align-items: center; min-width: 64px; }
+.cs-countdown__value { font-family: var(--cs-font-display); font-size: 40px; color: var(--cs-red); line-height: 1; }
+.cs-countdown__name { font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--cs-text-on-white); margin-top: 6px; }
+.cs-visually-hidden {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+}
+
+/* ---------- Promo (hidden while disabled) ---------- */
+.cs-promo { background: var(--cs-red); color: var(--cs-white); text-align: center; padding: 24px var(--cs-edge); }
+.cs-promo__text { margin: 0; font-size: 16px; font-weight: 600; }
+
+/* ---------- Enquiry ---------- */
+.cs-enquiry { padding: 64px var(--cs-edge); max-width: 640px; margin: 0 auto; }
+.cs-section-title { font-family: var(--cs-font-display); font-size: clamp(26px, 4vw, 34px); color: var(--cs-black); margin: 0 0 12px; }
+.cs-section-lede { color: var(--cs-text-on-white); line-height: 1.6; margin: 0 0 32px; }
+.cs-form { display: grid; gap: 18px; }
+.cs-form label { display: grid; gap: 6px; font-size: 14px; color: var(--cs-black); }
+.cs-form input[type="text"], .cs-form input[type="tel"], .cs-form input[type="email"],
+.cs-form select, .cs-form textarea {
+  font-family: var(--cs-font-body); font-size: 16px; padding: 12px 14px;
+  border: 1px solid rgba(0,0,0,0.2); border-radius: 2px; background: var(--cs-white); color: var(--cs-black);
+  min-height: 44px;
+}
+.cs-form textarea { min-height: 88px; resize: vertical; }
+.cs-checkbox { display: flex; flex-direction: row; align-items: flex-start; gap: 10px; font-size: 14px; }
+.cs-checkbox input { margin-top: 3px; min-height: auto; width: 18px; height: 18px; }
+.cs-form__status { min-height: 20px; font-size: 14px; margin: 0; }
+.cs-form__status[data-state="error"] { color: var(--cs-red); }
+.cs-form__status[data-state="success"] { color: #2E6B3E; }
+.cs-reference-box {
+  margin-top: 8px; padding: 18px; border-left: 3px solid var(--cs-red); background: var(--cs-white);
+}
+.cs-reference-box strong { display: block; font-size: 20px; margin: 6px 0 10px; font-family: var(--cs-font-display); }
+.cs-reference-box p { font-size: 13px; margin: 0 0 12px; color: var(--cs-text-on-white); }
+
+/* ---------- Statement (controlled red section) ---------- */
+.cs-statement { background: var(--cs-red); padding: 48px var(--cs-edge); text-align: center; }
+.cs-statement__text {
+  font-family: var(--cs-font-display); font-size: clamp(18px, 2.4vw, 24px); line-height: 1.5;
+  color: var(--cs-white); max-width: 56ch; margin: 0 auto;
+}
+
+/* ---------- Footer (black, closing) ---------- */
+.cs-footer { background: var(--cs-black); color: var(--cs-text-on-black); padding: 48px var(--cs-edge) 32px; }
+.cs-footer__logo { height: 40px; width: auto; margin: 0 0 28px; filter: brightness(0) invert(1); opacity: 0.9; }
+.cs-contact-list { display: grid; gap: 20px; grid-template-columns: 1fr; margin: 0; }
+@media (min-width: 700px) { .cs-contact-list { grid-template-columns: repeat(3, 1fr); } }
+.cs-contact-list dt { font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; color: rgba(255,255,255,0.45); margin: 0 0 4px; }
+.cs-contact-list dd { margin: 0; font-size: 15px; color: var(--cs-text-on-black); }
+.cs-contact-list a { color: var(--cs-white); text-decoration: underline; }
+
+/* ---------- Private Preview modal ---------- */
+.cs-modal-backdrop {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.55);
+  display: flex; align-items: center; justify-content: center; padding: 20px; z-index: 200;
+}
+.cs-modal {
+  background: var(--cs-white); max-width: 420px; width: 100%; padding: 32px;
+  border-radius: 2px; position: relative;
+}
+.cs-modal h2 { font-family: var(--cs-font-display); font-size: 22px; margin: 0 0 12px; color: var(--cs-black); }
+.cs-modal p { font-size: 14px; color: var(--cs-text-on-white); line-height: 1.5; margin: 0 0 20px; }
+.cs-modal__close {
+  position: absolute; top: 16px; right: 16px; background: none; border: none;
+  font-size: 14px; cursor: pointer; color: var(--cs-text-on-white); padding: 6px;
+}
+.cs-modal label { display: block; font-size: 14px; margin-bottom: 6px; color: var(--cs-black); }
+.cs-password-field { display: flex; gap: 8px; }
+.cs-password-field input {
+  flex: 1; font-size: 16px; padding: 12px 14px; border: 1px solid rgba(0,0,0,0.2);
+  border-radius: 2px; min-height: 44px;
+}
+.cs-password-toggle {
+  background: none; border: 1px solid rgba(0,0,0,0.2); border-radius: 2px;
+  padding: 0 14px; font-size: 13px; cursor: pointer; min-height: 44px;
+}
+.cs-modal__actions { display: flex; gap: 12px; justify-content: flex-end; margin-top: 20px; }
+.cs-modal[aria-busy="true"] .cs-btn--primary { opacity: 0.6; pointer-events: none; }
+
+@media (max-width: 480px) {
+  .cs-modal { padding: 24px; }
+  .cs-modal__actions { flex-direction: column-reverse; }
+  .cs-modal__actions .cs-btn { width: 100%; }
+}

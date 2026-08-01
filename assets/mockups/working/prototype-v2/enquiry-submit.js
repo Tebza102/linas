@@ -65,16 +65,22 @@
     status.removeAttribute("data-state");
     refBox.hidden = true;
 
+    // Optional fields are guarded with `&&` because not every page using
+    // this script has the full quote-request field set — the Coming Soon
+    // page's short enquiry form only has the fields the validator actually
+    // requires plus a note, and omits date/location/guests/requirements
+    // entirely rather than asking for detail a "just tell me you're
+    // interested" enquiry doesn't need.
     var payload = {
       customerName: form.name.value.trim(),
       phone: form.phone.value.trim(),
       email: form.email.value.trim(),
       enquiryType: form.occasion.value,
-      eventDate: form.date.value || undefined,
-      location: form.location.value.trim() || undefined,
-      guestCount: form.guests.value || undefined,
-      serviceRequirements: form.requirements.value.trim() || undefined,
-      message: form.notes.value.trim() || undefined,
+      eventDate: (form.date && form.date.value) || undefined,
+      location: (form.location && form.location.value.trim()) || undefined,
+      guestCount: (form.guests && form.guests.value) || undefined,
+      serviceRequirements: (form.requirements && form.requirements.value.trim()) || undefined,
+      message: (form.notes && form.notes.value.trim()) || undefined,
       source: form.source.value || "Website",
       popiaConsent: form.consent.checked,
       company: form.company.value, // honeypot — real visitors never fill this
