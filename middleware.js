@@ -1,19 +1,51 @@
-// Lina's — Routing Middleware de-risk spike (CP0).
+// Lina's — Coming Soon route gate.
 //
-// Confirms Vercel Routing Middleware actually executes on this zero-build,
-// CommonJS-everywhere project before any gating logic is built on top of it.
-// This file is deliberately trivial: it sets one observable response header
-// and does nothing else. See docs/LINA-COMING-SOON-MODE.md once CP5 lands.
+// Runs before the CDN on every request (confirmed working on this
+// zero-build, CommonJS project in CP0 — Vercel compiles this ESM file to
+// CommonJS automatically). This is the only mechanism on this stack that
+// can gate a static HTML page: there is no server rendering these pages to
+// add an "if locked" check to, so the gate has to happen here, before the
+// static file is ever served.
+//
+// COMING_SOON_ENABLED unset or anything other than "true" ⇒ full
+// passthrough, site behaves exactly as it does today. A missing env var
+// must never take a live business offline.
+//
+// See docs/LINA-COMING-SOON-MODE.md for the full operations runbook.
+
+import { next, rewrite } from "@vercel/functions";
+import { classifyPath } from "./api/_lib/preview-paths.js";
+import { verifyPreviewToken, parseCookies, COOKIE_NAME } from "./api/_lib/preview-token.js";
+
+const COMING_SOON_PATH = "/assets/mockups/working/prototype-v2/coming-soon.html";
 
 export default function middleware(request) {
-  const headers = new Headers();
-  headers.set("x-lina-middleware", "active");
-  return new Response(null, {
-    status: 200,
-    headers,
-  });
-}
+  if (process.env.COMING_SOON_ENABLED !== "true") {
+    return next();
+  }
 
-export const config = {
-  matcher: "/mw-spike-check",
-};
+  const url = new URL(request.url);
+
+  if (classifyPath(url.pathname) === "allowed") {
+    return next();
+  }
+
+  const cookies = parseCookies(request.headers.get("cookie"));
+  const result = verifyPreviewToken(cookies[COOKIE_NAME]);
+
+  if (result.valid) {
+    // A reviewer/developer's unlocked response must never be cached and
+    // handed to a different, unauthenticated visitor.
+    return next({ headers: { "Cache-Control": "private, no-store" } });
+  }
+
+  if (url.pathname === "/") {
+    return rewrite(new URL(COMING_SOON_PATH, url), {
+      headers: { "Cache-Control": "private, no-store" }
+    });
+  }
+
+  const redirectUrl = new URL("/", url);
+  redirectUrl.searchParams.set("from", url.pathname);
+  return Response.redirect(redirectUrl, 302);
+}
