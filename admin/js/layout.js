@@ -40,7 +40,12 @@ const NAV_GROUPS = [
     items: [
       { id: "users", label: "Users", href: "users.html", roles: ["owner", "developer"] },
       { id: "settings", label: "Settings", href: "settings.html", roles: ["owner", "developer"] },
-      { id: "public-site", label: "View Public Site", href: "/", external: true }
+      { id: "public-site", label: "View Public Site", href: "/", external: true },
+      // Only appears while Coming Soon mode is capable of gating the site —
+      // owner/developer only, matching api/preview/developer-unlock.js's
+      // own server-side check (this button hides it, the endpoint enforces
+      // it; a hidden button is never treated as access control on its own).
+      { id: "unlock-preview", label: "Unlock Website Preview", action: "unlock-preview", roles: ["owner", "developer"] }
     ]
   }
 ];
@@ -62,7 +67,14 @@ export function initLayout({ user, role, active }) {
   const groupsHtml = NAV_GROUPS.map((group) => {
     const items = group.items.filter((item) => !item.roles || item.roles.includes(role));
     if (!items.length) return "";
-    const itemsHtml = items.map((item) => `
+    const itemsHtml = items.map((item) => item.action
+      ? `
+      <button type="button" class="sidebar-nav__item sidebar-nav__item--action" id="sidebarAction-${item.action}">
+        <span class="sidebar-nav__label">${esc(item.label)}</span>
+      </button>
+      <p class="sidebar-nav__action-status" id="sidebarActionStatus-${item.action}" role="status" aria-live="polite"></p>
+      `
+      : `
       <a class="sidebar-nav__item${item.id === active ? " sidebar-nav__item--active" : ""}"
          href="${item.href}" ${item.external ? 'target="_blank" rel="noopener"' : ""} ${item.id === active ? 'aria-current="page"' : ""}>
         <span class="sidebar-nav__label">${esc(item.label)}</span>
@@ -169,5 +181,43 @@ export function initLayout({ user, role, active }) {
       ordersBadge.textContent = String(pending);
       ordersBadge.hidden = pending === 0;
     }, (err) => console.error("Orders badge listener error:", err));
+  }
+
+  // Unlock Website Preview — owner/developer only, no shared reviewer
+  // password needed. Verifies the current session server-side
+  // (api/preview/developer-unlock.js re-checks the role from the Firebase
+  // ID token; this button never grants access on its own) and, once
+  // unlocked, opens the public site in a new tab — the same signed cookie
+  // then lets every public page through the Coming Soon gate for 30 days.
+  const unlockBtn = document.getElementById("sidebarAction-unlock-preview");
+  if (unlockBtn) {
+    const statusEl = document.getElementById("sidebarActionStatus-unlock-preview");
+    unlockBtn.addEventListener("click", async () => {
+      unlockBtn.disabled = true;
+      statusEl.textContent = "Unlocking…";
+      statusEl.removeAttribute("data-state");
+      try {
+        const idToken = await user.getIdToken();
+        const res = await fetch("/api/preview/developer-unlock", {
+          method: "POST",
+          headers: { Authorization: `Bearer ${idToken}` }
+        });
+        const data = await res.json();
+        if (res.ok && data.ok) {
+          statusEl.textContent = "Unlocked — opening the site…";
+          statusEl.setAttribute("data-state", "success");
+          window.open("/", "_blank", "noopener");
+        } else {
+          statusEl.textContent = (data && data.error) || "Could not unlock the preview.";
+          statusEl.setAttribute("data-state", "error");
+        }
+      } catch (err) {
+        console.error("Preview unlock failed:", err);
+        statusEl.textContent = "Could not reach the server. Please try again.";
+        statusEl.setAttribute("data-state", "error");
+      } finally {
+        unlockBtn.disabled = false;
+      }
+    });
   }
 }

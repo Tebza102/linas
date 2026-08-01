@@ -16,6 +16,14 @@ A feature may be marked complete only when the relevant checks pass.
 - [ ] Social/campaign links land on the correct offer.
 - [ ] Repeat/return journey is understandable.
 
+## Coming Soon / private preview gate (per Decision Log D-023 — run before ever setting COMING_SOON_ENABLED=true in a real environment)
+- [ ] `COMING_SOON_COOKIE_SECRET` and `COMING_SOON_REVIEWER_PASSWORD` are set to real values (never the test placeholders in .env.example).
+- [ ] Gate-on: every protected route AND its raw `.html` twin redirects for an unauthenticated visitor.
+- [ ] Gate-on: `/admin/*` and `/api/*` still work exactly as normal.
+- [ ] Gate-off (or the env var unset): the site is byte-identical to a normal deploy.
+- [ ] A tampered/expired/wrong-version cookie is rejected, not just a missing one.
+- [ ] `admin:check` includes every `api/preview/*`, `api/coming-soon/*`, `api/_lib/preview-*.js`, and `coming-soon.js`/`preview-exit.js` file.
+
 ## Order pricing (per Decision Log D-021 — run whenever a price or the catalogue changes)
 - [ ] `npm run test:unit` passes (includes `menu-catalog-parity.test.js`, which fails if `menu-data.js` and `api/_lib/menu-catalog.js` ever drift).
 - [ ] Any new/changed/de-listed menu item gets a new/updated catalogue id — ids are frozen once shipped; never reuse an id for a different item.

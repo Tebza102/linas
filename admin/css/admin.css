@@ -194,6 +194,17 @@ table.admin-table { width: 100%; min-width: 900px; border-collapse: collapse; fo
   color: var(--white); border-left-color: var(--red); background: rgba(164,49,41,0.16); font-weight: 700;
 }
 .sidebar-nav__label { overflow: hidden; text-overflow: ellipsis; }
+.sidebar-nav__item--action {
+  width: 100%; background: none; border: none; border-left: 4px solid transparent;
+  cursor: pointer; text-align: left; font-family: var(--font-display);
+}
+.sidebar-nav__item--action:disabled { opacity: 0.6; cursor: default; }
+.sidebar-nav__action-status {
+  margin: 0; padding: 0 var(--space-4) var(--space-2); font-size: 12px; font-family: var(--font-body);
+  color: var(--white-dim); min-height: 16px;
+}
+.sidebar-nav__action-status[data-state="success"] { color: #7FBF8F; }
+.sidebar-nav__action-status[data-state="error"] { color: var(--red); }
 .sidebar-badge {
   background: var(--red); color: var(--white); font-size: 11px; font-weight: 700; font-family: var(--font-body);
   min-width: 20px; height: 20px; border-radius: 999px; display: flex; align-items: center; justify-content: center;
