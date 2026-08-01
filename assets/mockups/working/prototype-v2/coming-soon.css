@@ -60,7 +60,7 @@ img { max-width: 100%; display: block; }
   flex-wrap: wrap; gap: 12px;
 }
 .cs-header__mark { display: inline-flex; }
-.cs-header__logo { height: 44px; width: auto; }
+.cs-header__logo { height: 44px; width: auto; object-fit: contain; }
 .cs-header__actions { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
 .cs-header__preview-link {
   background: none; border: none; color: rgba(255,255,255,0.72);
@@ -142,7 +142,10 @@ img { max-width: 100%; display: block; }
 
 /* ---------- Footer (black, closing) ---------- */
 .cs-footer { background: var(--cs-black); color: var(--cs-text-on-black); padding: 48px var(--cs-edge) 32px; }
-.cs-footer__logo { height: 40px; width: auto; margin: 0 0 28px; filter: brightness(0) invert(1); opacity: 0.9; }
+/* No brightness/invert filter here (the old logo needed one to read as
+   white on the black footer) — the new logo is already rendered white-on-
+   black at source, so it reads correctly on the black footer as-is. */
+.cs-footer__logo { height: 40px; width: auto; margin: 0 0 28px; object-fit: contain; }
 .cs-contact-list { display: grid; gap: 20px; grid-template-columns: 1fr; margin: 0; }
 @media (min-width: 700px) { .cs-contact-list { grid-template-columns: repeat(3, 1fr); } }
 .cs-contact-list dt { font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; color: rgba(255,255,255,0.45); margin: 0 0 4px; }

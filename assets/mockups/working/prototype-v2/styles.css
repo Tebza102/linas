@@ -78,10 +78,10 @@ a { color: inherit; }
   display: flex; align-items: center; gap: var(--space-2);
   text-decoration: none; color: var(--white);
 }
-/* The real Lina's logo lockup (chef illustration + script wordmark on the
-   brand red) is the brand identifier — shown whole, uncropped, unmasked,
-   at its natural aspect ratio. No typed duplicate of the wordmark. */
-.site-header__logo { height: 72px; width: auto; border-radius: 3px; display: block; }
+/* The real Lina's logo lockup (chef illustration + script wordmark) is the
+   brand identifier — shown whole, uncropped, unmasked, at its natural
+   aspect ratio. No typed duplicate of the wordmark. */
+.site-header__logo { height: 72px; width: auto; border-radius: 3px; display: block; object-fit: contain; }
 @media (max-width: 640px) { .site-header__logo { height: 56px; } }
 .site-header__right { display: flex; align-items: center; gap: var(--space-3); }
 /* Refined hamburger — three fixed bars, no text label. A text "MENU" button
