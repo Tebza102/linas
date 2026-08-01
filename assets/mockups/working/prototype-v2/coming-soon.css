@@ -12,14 +12,14 @@
 html, body { margin: 0; padding: 0; }
 
 :root {
-  --cs-red: #A43129;
+  --cs-red: #B2373E;
   /* Top bar red, sampled directly from the actual logo file used in the
      header (lina-logo-header-working-v1-20260731.jpg) — averaged across
      2600+ background-red pixels, R174/G1/B1. This makes the bar and the
      logo's own red field the same colour with no visible seam. Scoped to
      the header only; other red surfaces (hero title, buttons, promo/
      statement sections) still use --cs-red and are unchanged. */
-  --cs-red-topbar: #AE0101;
+  --cs-red-topbar: #B2373E;
   --cs-black: #000000;
   --cs-black-soft: #111111;
   --cs-warm-white: #F7F5F1;
@@ -60,7 +60,7 @@ img { max-width: 100%; display: block; }
   flex-wrap: wrap; gap: 12px;
 }
 .cs-header__mark { display: inline-flex; }
-.cs-header__logo { height: 44px; width: auto; object-fit: contain; }
+.cs-header__logo { height: 154px; width: auto; object-fit: contain; }
 .cs-header__actions { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
 .cs-header__preview-link {
   background: none; border: none; color: rgba(255,255,255,0.72);
@@ -145,7 +145,7 @@ img { max-width: 100%; display: block; }
 /* No brightness/invert filter here (the old logo needed one to read as
    white on the black footer) — the new logo is already rendered white-on-
    black at source, so it reads correctly on the black footer as-is. */
-.cs-footer__logo { height: 40px; width: auto; margin: 0 0 28px; object-fit: contain; }
+.cs-footer__logo { height: 150px; width: auto; margin: 0 0 28px; object-fit: contain; }
 .cs-contact-list { display: grid; gap: 20px; grid-template-columns: 1fr; margin: 0; }
 @media (min-width: 700px) { .cs-contact-list { grid-template-columns: repeat(3, 1fr); } }
 .cs-contact-list dt { font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; color: rgba(255,255,255,0.45); margin: 0 0 4px; }
