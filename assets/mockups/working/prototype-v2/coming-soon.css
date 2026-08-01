@@ -13,11 +13,13 @@ html, body { margin: 0; padding: 0; }
 
 :root {
   --cs-red: #A43129;
-  /* Confirmed Lina red for the top bar specifically — the previous top bar
-     background used --cs-red (#A43129), which does not match the confirmed
-     brand value. Scoped to the header only, per instruction; other red
-     surfaces (hero title, buttons, promo/statement sections) are unchanged. */
-  --cs-red-topbar: #B2373E;
+  /* Top bar red, sampled directly from the actual logo file used in the
+     header (lina-logo-header-working-v1-20260731.jpg) — averaged across
+     2600+ background-red pixels, R174/G1/B1. This makes the bar and the
+     logo's own red field the same colour with no visible seam. Scoped to
+     the header only; other red surfaces (hero title, buttons, promo/
+     statement sections) still use --cs-red and are unchanged. */
+  --cs-red-topbar: #AE0101;
   --cs-black: #000000;
   --cs-black-soft: #111111;
   --cs-warm-white: #F7F5F1;
