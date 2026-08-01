@@ -19,6 +19,16 @@ import { verifyPreviewToken, parseCookies, COOKIE_NAME } from "./api/_lib/previe
 
 const COMING_SOON_PATH = "/assets/mockups/working/prototype-v2/coming-soon.html";
 
+// Node runtime, not the Edge default: preview-token.js uses Node's built-in
+// `crypto` module (crypto.timingSafeEqual) for real constant-time signature
+// verification, which the Edge runtime does not support. Using Node here
+// also means middleware and every api/preview/* endpoint share the exact
+// same signing/verification code, rather than two implementations (Web
+// Crypto here, Node crypto there) that could quietly drift apart.
+export const config = {
+  runtime: "nodejs"
+};
+
 export default function middleware(request) {
   if (process.env.COMING_SOON_ENABLED !== "true") {
     return next();
