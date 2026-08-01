@@ -1,6 +1,7 @@
 // Lina's — Coming Soon page behaviour: countdown (hidden until a launch
 // date is configured), promo region (hidden until enabled), and the
-// Private Preview password dialog. enquiry-submit.js handles the form.
+// Private Preview password dialog. Public contact on this page is
+// WhatsApp-only — there is no enquiry form here.
 (function () {
   "use strict";
 

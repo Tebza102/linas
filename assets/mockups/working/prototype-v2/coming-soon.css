@@ -13,6 +13,11 @@ html, body { margin: 0; padding: 0; }
 
 :root {
   --cs-red: #A43129;
+  /* Confirmed Lina red for the top bar specifically — the previous top bar
+     background used --cs-red (#A43129), which does not match the confirmed
+     brand value. Scoped to the header only, per instruction; other red
+     surfaces (hero title, buttons, promo/statement sections) are unchanged. */
+  --cs-red-topbar: #B2373E;
   --cs-black: #000000;
   --cs-black-soft: #111111;
   --cs-warm-white: #F7F5F1;
@@ -47,7 +52,7 @@ img { max-width: 100%; display: block; }
 
 /* ---------- Header (red band) ---------- */
 .cs-header {
-  background: var(--cs-red);
+  background: var(--cs-red-topbar);
   display: flex; align-items: center; justify-content: space-between;
   padding: 16px var(--cs-edge);
   flex-wrap: wrap; gap: 12px;
@@ -120,29 +125,11 @@ img { max-width: 100%; display: block; }
 .cs-promo { background: var(--cs-red); color: var(--cs-white); text-align: center; padding: 24px var(--cs-edge); }
 .cs-promo__text { margin: 0; font-size: 16px; font-weight: 600; }
 
-/* ---------- Enquiry ---------- */
-.cs-enquiry { padding: 64px var(--cs-edge); max-width: 640px; margin: 0 auto; }
-.cs-section-title { font-family: var(--cs-font-display); font-size: clamp(26px, 4vw, 34px); color: var(--cs-black); margin: 0 0 12px; }
-.cs-section-lede { color: var(--cs-text-on-white); line-height: 1.6; margin: 0 0 32px; }
-.cs-form { display: grid; gap: 18px; }
-.cs-form label { display: grid; gap: 6px; font-size: 14px; color: var(--cs-black); }
-.cs-form input[type="text"], .cs-form input[type="tel"], .cs-form input[type="email"],
-.cs-form select, .cs-form textarea {
-  font-family: var(--cs-font-body); font-size: 16px; padding: 12px 14px;
-  border: 1px solid rgba(0,0,0,0.2); border-radius: 2px; background: var(--cs-white); color: var(--cs-black);
-  min-height: 44px;
-}
-.cs-form textarea { min-height: 88px; resize: vertical; }
-.cs-checkbox { display: flex; flex-direction: row; align-items: flex-start; gap: 10px; font-size: 14px; }
-.cs-checkbox input { margin-top: 3px; min-height: auto; width: 18px; height: 18px; }
+/* .cs-form__status is shared with the Private Preview modal below — kept
+   here since it has no enquiry-specific styling of its own. */
 .cs-form__status { min-height: 20px; font-size: 14px; margin: 0; }
 .cs-form__status[data-state="error"] { color: var(--cs-red); }
 .cs-form__status[data-state="success"] { color: #2E6B3E; }
-.cs-reference-box {
-  margin-top: 8px; padding: 18px; border-left: 3px solid var(--cs-red); background: var(--cs-white);
-}
-.cs-reference-box strong { display: block; font-size: 20px; margin: 6px 0 10px; font-family: var(--cs-font-display); }
-.cs-reference-box p { font-size: 13px; margin: 0 0 12px; color: var(--cs-text-on-white); }
 
 /* ---------- Statement (controlled red section) ---------- */
 .cs-statement { background: var(--cs-red); padding: 48px var(--cs-edge); text-align: center; }
