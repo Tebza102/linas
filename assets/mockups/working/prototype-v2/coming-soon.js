@@ -83,7 +83,13 @@
   }
 
   function openModal() {
-    lastFocused = document.activeElement;
+    // The button reference itself, not document.activeElement: a click
+    // doesn't reliably focus a <button> in every browser (notably Safari
+    // and Firefox on macOS), so snapshotting "whatever was focused" is
+    // fragile — there is only one trigger for this modal, so returning to
+    // it explicitly is both simpler and correct regardless of how the
+    // modal was opened.
+    lastFocused = openBtn;
     backdrop.hidden = false;
     status.textContent = "";
     status.removeAttribute("data-state");
@@ -165,14 +171,20 @@
         .then(function (res) { return res.json().then(function (data) { return { ok: res.ok, data: data }; }); })
         .then(function (result) {
           submitting = false;
-          modal.removeAttribute("aria-busy");
-          submitBtn.disabled = false;
           if (result.ok && result.data.ok) {
             var params = new URLSearchParams(location.search);
             var dest = params.get("from") || "/";
             location.href = dest;
             return;
           }
+          // A slow response can resolve after the visitor has already
+          // closed the modal (Escape, Cancel, backdrop click) — the modal's
+          // own hidden state is checked fresh here rather than trusted from
+          // when the request was sent, so a late error never reopens focus
+          // on an input the visitor can no longer see.
+          if (backdrop.hidden) return;
+          modal.removeAttribute("aria-busy");
+          submitBtn.disabled = false;
           // Deliberately generic — never confirms whether the password was
           // close, malformed, or simply wrong.
           status.textContent = (result.data && result.data.error) || "That password isn't correct. Please try again.";
@@ -182,6 +194,7 @@
         })
         .catch(function () {
           submitting = false;
+          if (backdrop.hidden) return;
           modal.removeAttribute("aria-busy");
           submitBtn.disabled = false;
           status.textContent = "Could not reach the server. Please try again.";
