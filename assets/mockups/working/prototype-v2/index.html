@@ -6,15 +6,19 @@
 <title>Lina's — Chef-led catering &amp; mobile kitchen</title>
 <link rel="icon" href="/assets/source/brand/Linas_Favicon.jpg">
 <link rel="stylesheet" href="/assets/mockups/working/prototype-v2/styles.css">
+<link rel="stylesheet" href="/assets/mockups/working/prototype-v2/home.css">
 </head>
-<body>
+<body class="home">
 
 <header class="site-header">
   <a class="site-header__mark" href="/">
     <img src="/assets/mockups/working/media/linas-logo-nb-wl.svg" alt="Lina's Mobile Food Kitchen" width="4678" height="3307" class="site-header__logo">
   </a>
   <div class="site-header__right">
-    <button class="nav-toggle" id="navToggle" aria-haspopup="true" aria-controls="siteNav" aria-label="Open menu"><span></span><span></span><span></span></button>
+    <a class="home-nav__cta" id="homeNavCta" href="/contact">Request a Quote</a>
+    <button class="nav-toggle nav-toggle--icon" id="navToggle" aria-haspopup="true" aria-controls="siteNav" aria-label="Open website navigation">
+      <svg class="nav-toggle__icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M3 6h18M3 12h18M3 18h18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+    </button>
   </div>
 </header>
 
@@ -32,45 +36,39 @@
 </nav>
 
 <main id="top">
-  <!-- One-screen cinematic gateway. Opens on the confirmed chef still (slow Ken
-       Burns), then crossfades into food-preparation motion once it has settled
-       — see script.js heroSequence(). Reduced-motion users see the still only. -->
-  <section class="gateway gateway--sequence" id="hero" aria-label="Lina's — chef-led catering and mobile kitchen">
-    <img class="gateway__still" id="heroStill" src="/assets/mockups/working/media/lina-hero-poster-working-v1-20260728.jpg" alt="Chef Lina inside her mobile kitchen trailer, presenting a plated meal">
-    <video class="gateway__media" id="heroVideo" data-autoplay-hero
-      poster="/assets/mockups/working/media/lina-hero-poster-working-v1-20260728.jpg" muted loop playsinline preload="auto">
-      <source src="/assets/mockups/working/media/lina-hero-preview-working-v1-20260728.mp4" type="video/mp4">
-    </video>
-    <div class="gateway__scrim"></div>
+  <!-- Poster-led first screen — one viewport, chef-led animated gateway.
+       Content, hero sequence and destination reveal media are driven
+       entirely by home-media.js. See home.js for the auto-cycling
+       crossfade and the desktop hover / mobile two-tap destination
+       reveals. -->
+  <section class="home-hero" id="hero" aria-label="Lina's — chef-led catering and mobile kitchen">
+    <div class="home-hero__body">
+      <div class="home-hero__copy">
+        <p class="home-hero__tagline home-hero__reveal home-hero__reveal--1" id="homeTagline"></p>
+        <div class="home-hero__eyebrow-row home-hero__reveal home-hero__reveal--1">
+          <p class="home-hero__eyebrow" id="homeEyebrow"></p>
+        </div>
+        <h1 class="home-hero__title home-hero__reveal home-hero__reveal--2" id="homeHeadline"></h1>
+        <p class="home-hero__sub home-hero__reveal home-hero__reveal--3" id="homeSupporting"></p>
 
-    <div class="gateway__content">
-      <p class="gateway__eyebrow gateway__reveal gateway__reveal--1">Chef Lina</p>
-      <h1 class="gateway__title gateway__reveal gateway__reveal--2">Chef-led catering &amp; mobile-kitchen experiences.</h1>
-      <p class="gateway__sub gateway__reveal gateway__reveal--3">Weddings, funerals, corporate events and private catering — plus a real mobile kitchen serving plates to order.</p>
-      <div class="gateway__actions gateway__reveal gateway__reveal--4">
-        <a href="/contact" class="btn btn--primary">Request a Quote</a>
-        <a href="/menu" class="btn btn--ghost">Explore the Menu</a>
+        <ul class="home-destinations home-hero__reveal home-hero__reveal--3" id="homeDestinations"></ul>
       </div>
+
+      <div class="home-hero__visual home-hero__reveal home-hero__reveal--4" id="homeHeroVisual"></div>
     </div>
   </section>
 </main>
 
-<footer class="site-footer" id="footer-contact">
-  <dl class="contact-list">
-    <div><dt>Address</dt><dd>1 Chris Street, Heidelberg, 1441</dd></div>
-    <div><dt>Mobile Kitchen</dt><dd>Unique Builders parking lot, just before Oasis Center.</dd></div>
-    <div><dt>Hours</dt><dd>Mon–Fri: 08:00–17:00<br>Saturday: 08:30–14:00<br>Sunday: Closed</dd></div>
-    <div><dt>WhatsApp</dt><dd><a href="https://wa.me/27764834344?text=Hello%20Lina's%2C%20I%20would%20like%20to%20enquire%20about%20your%20catering%20or%20mobile%20kitchen%20services." target="_blank" rel="noopener">+27 76 483 4344</a></dd></div>
-    <div><dt>Email</dt><dd><a href="mailto:enquiries@linas.co.za">enquiries@linas.co.za</a></dd></div>
-    <div><dt>Instagram</dt><dd><a href="https://instagram.com/chef_lina_moek" target="_blank" rel="noopener">@chef_lina_moek</a></dd></div>
-  </dl>
-</footer>
-
-<button class="sticky-whatsapp" id="stickyWhatsapp" data-whatsapp-trigger aria-describedby="whatsappNote">💬 WhatsApp</button>
+<button class="sticky-whatsapp sticky-whatsapp--icon" id="stickyWhatsapp" data-whatsapp-trigger aria-label="Chat on WhatsApp" aria-describedby="whatsappNote">
+  <svg class="sticky-whatsapp__icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 2C6.48 2 2 6.24 2 11.5c0 1.94.6 3.74 1.63 5.24L2 22l5.46-1.57A10.4 10.4 0 0 0 12 21c5.52 0 10-4.24 10-9.5S17.52 2 12 2Zm5.16 13.13c-.22.62-1.28 1.18-1.77 1.24-.45.06-1.02.09-1.65-.1-.38-.12-.87-.28-1.5-.55-2.64-1.15-4.36-3.83-4.5-4.01-.13-.18-1.08-1.44-1.08-2.74 0-1.3.68-1.94.92-2.2.24-.26.53-.33.7-.33h.5c.16 0 .38-.03.58.44l.72 1.77c.06.14.1.3.02.48-.08.18-.12.29-.24.44l-.36.42c-.12.12-.24.25-.1.5.13.24.6 1 1.29 1.62.9.8 1.65 1.05 1.9 1.17.24.12.38.1.53-.06l.63-.72c.2-.23.4-.19.66-.1.27.1 1.68.79 1.97.93.28.15.47.22.53.35.07.13.07.71-.15 1.33Z"/></svg>
+  <span class="sticky-whatsapp__label">WhatsApp</span>
+</button>
 <p class="whatsapp-note" id="whatsappNote" role="status" aria-live="polite"></p>
 
 <script src="/assets/mockups/working/prototype-v2/menu-data.js"></script>
+<script src="/assets/mockups/working/prototype-v2/home-media.js"></script>
 <script src="/assets/mockups/working/prototype-v2/script.js"></script>
+<script src="/assets/mockups/working/prototype-v2/home.js"></script>
 <script type="module" src="/assets/mockups/working/prototype-v2/public-admin-link.js"></script>
 <script src="/assets/mockups/working/prototype-v2/preview-exit.js" defer></script>
 </body>
