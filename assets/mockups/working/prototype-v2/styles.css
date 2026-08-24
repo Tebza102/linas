@@ -529,148 +529,176 @@ a { color: inherit; }
 .menu-page .nav-toggle:focus-visible span { background: #ffffff; }
 .menu-page .site-header :focus-visible { outline-color: #ffffff; }
 
-/* Editorial intro — compact, not another full-screen hero. Reuses the
-   page's existing eyebrow/title copy and existing approved image
-   unchanged; only the container/treatment changes (white editorial
-   panel instead of the dark full-bleed cinematic scrim). */
+/* Typographic masthead — a web interpretation of the approved Lina's menu
+   artwork's header. No hero image at all: on a menu sheet the type IS the
+   composition, and the artwork's chef photograph is deliberately not
+   reproduced here (see Decision Log). */
 .menu-page .menu-hero {
   padding: 128px var(--edge) var(--space-8);
 }
 @media (min-width: 900px) {
-  .menu-page .menu-hero { padding: 148px var(--edge) var(--space-12); }
+  .menu-page .menu-hero { padding: 152px var(--edge) var(--space-12); }
 }
-.menu-page .menu-hero__grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: var(--space-6);
-  align-items: center;
-  max-width: 1200px;
+.menu-page .menu-masthead {
+  max-width: 760px;
   margin: 0 auto;
+  text-align: center;
 }
-@media (min-width: 900px) {
-  .menu-page .menu-hero__grid { grid-template-columns: 1.15fr 0.85fr; gap: var(--space-12); }
-}
-.menu-page .menu-hero__eyebrow {
-  font-family: var(--font-body);
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--menu-red);
-  margin: 0 0 var(--space-3);
-}
-.menu-page .menu-hero__title {
+.menu-page .menu-masthead__brand {
   font-family: var(--font-display);
-  font-weight: 400;
-  font-size: clamp(28px, 4.6vw, 46px);
-  line-height: 1.1;
+  font-size: clamp(30px, 5.5vw, 46px);
+  line-height: 1;
   color: var(--menu-red);
   margin: 0;
-  max-width: 16ch;
+  letter-spacing: 0.02em;
 }
-.menu-page .menu-hero__media {
-  position: relative;
-  height: 200px;
-  overflow: hidden;
-  border-radius: 2px;
-}
-@media (min-width: 900px) {
-  .menu-page .menu-hero__media { height: 300px; }
-}
-.menu-page .menu-hero__media img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  transition: transform 900ms ease;
-}
-.menu-page .menu-hero__media:hover img { transform: scale(1.02); }
-
-/* Category navigation — text-led, red underline active marker, no pill
-   buttons, wraps freely instead of horizontal-scrolling. */
-.menu-page .menu-categories { max-width: 1100px; margin: 0 auto; }
-.menu-page .menu__tabs {
-  overflow-x: visible;
-  flex-wrap: wrap;
-  gap: var(--space-2) var(--space-6);
-  padding: 0 var(--edge) var(--space-4);
-  border-bottom: 1px solid var(--menu-ink-faint);
-  margin-bottom: var(--space-6);
-}
-.menu-page .menu__tab {
-  flex: none;
-  background: none;
-  border: none;
-  border-radius: 0;
-  padding: var(--space-2) 0;
-  color: var(--menu-ink-dim);
+.menu-page .menu-masthead__tagline {
   font-family: var(--font-body);
-  font-size: 13px;
+  font-size: clamp(10px, 1.6vw, 12px);
+  font-weight: 600;
+  letter-spacing: 0.22em;
   text-transform: uppercase;
-  letter-spacing: 0.06em;
-  position: relative;
+  color: var(--menu-ink-dim);
+  margin: var(--space-3) 0 0;
 }
-.menu-page .menu__tab::after {
-  content: "";
-  position: absolute; left: 0; right: 100%; bottom: -1px; height: 2px;
+/* The artwork's fine centred divider, reduced to a single restrained rule. */
+.menu-page .menu-masthead__rule {
+  display: block;
+  width: 88px;
+  height: 1px;
   background: var(--menu-red);
-  transition: right 220ms ease;
+  margin: var(--space-4) auto;
 }
-.menu-page .menu__tab:hover,
-.menu-page .menu__tab:focus-visible { color: var(--menu-red); }
-.menu-page .menu__tab[aria-selected="true"] {
-  background: none;
-  border-color: transparent;
+.menu-page .menu-masthead__title {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: clamp(44px, 11vw, 96px);
+  line-height: 0.95;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
   color: var(--menu-red);
+  margin: 0;
 }
-.menu-page .menu__tab[aria-selected="true"]::after { right: 0; }
+.menu-page .menu-masthead__services {
+  font-family: var(--font-body);
+  font-size: clamp(10px, 1.6vw, 12px);
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--menu-ink-dim);
+  margin: var(--space-3) 0 0;
+}
 
-/* Menu items — flat editorial rows, not repeated boxed cards. The
-   existing .menu-card/.menu-card__open/.menu-card__add DOM structure
-   (script.js) is unchanged; only its layout/colour is re-flowed here
-   from a stacked card into a horizontal row. */
+/* Tightened from the shared .section rhythm so the masthead and the first
+   category read as one continuous menu sheet rather than two blocks. */
+.menu-page .menu-categories {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding-top: var(--space-4);
+  padding-bottom: var(--space-8);
+}
+
+/* Category sections — every category renders sequentially on one sheet
+   (script.js renderGrid), each with the artwork's red editorial heading
+   and thin rule. Headings/notes come from LINA_MENU data; the uppercase
+   styling is CSS only, so the underlying cat.label is never altered. */
 .menu-page .menu__grid {
   display: block;
   padding: 0 var(--edge);
-  max-width: 900px;
+  max-width: 760px;
   margin: 0 auto;
 }
+.menu-page .menu-section { margin-bottom: var(--space-12); }
+.menu-page .menu-section:last-child { margin-bottom: 0; }
+.menu-page .menu-section__title {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: clamp(20px, 3.2vw, 27px);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--menu-red);
+  margin: 0;
+  padding-bottom: var(--space-2);
+  border-bottom: 1px solid var(--menu-red);
+}
+.menu-page .menu-section__note {
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--menu-ink-dim);
+  margin: var(--space-3) 0 0;
+}
+
+/* Menu items — editorial "name ..... price" rows. The existing
+   .menu-card/.menu-card__open/.menu-card__add DOM (script.js) is
+   unchanged; only its layout/colour is re-flowed here. No per-row solid
+   divider: the dotted leader is the row's own horizontal line, matching
+   the artwork, so the previous .menu-card:first-child top border is
+   deliberately gone (it would also no longer match, since a heading is
+   now each section's first child). */
 .menu-page .menu-card {
   flex-direction: row;
-  align-items: center;
+  align-items: baseline;
   background: none;
-  border-bottom: 1px solid var(--menu-ink-faint);
-  padding: var(--space-3) 0;
+  border-bottom: none;
+  padding: var(--space-3) 0 0;
   gap: var(--space-4);
 }
-.menu-page .menu-card:first-child { border-top: 1px solid var(--menu-ink-faint); }
 .menu-page .menu-card__open {
   display: flex;
-  align-items: center;
+  align-items: baseline;
   gap: var(--space-4);
   width: auto;
+  flex: 1 1 auto;
   min-width: 0;
 }
-.menu-page .menu-card__image {
-  width: 76px;
-  height: 76px;
-  flex: none;
-  border-radius: 2px;
+/* Thumbnails are hidden on the main sheet only — the artwork lists items
+   typographically. The image, its alt/imageConfidence handling and the
+   "Representative photo" tag all remain intact in script.js and still
+   render inside the item-detail modal. */
+.menu-page .menu-card__image { display: none; }
+.menu-page .menu-card__body {
+  padding: 0;
+  min-width: 0;
+  flex: 1 1 auto;
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
 }
-.menu-page .menu-card__image--type { background: var(--menu-ink-faint); border-top: none; }
-.menu-page .menu-card__initial { color: var(--menu-ink-dim); font-size: 26px; }
-.menu-page .menu-card__tag { font-size: 7px; padding: 1px 2px; letter-spacing: 0; }
-.menu-page .menu-card__body { padding: 0; min-width: 0; }
 .menu-page .menu-card__name {
   font-family: var(--font-display);
-  font-size: 17px;
+  font-size: clamp(15px, 2.1vw, 17px);
   font-weight: 400;
+  line-height: 1.35;
   color: var(--menu-ink);
-  margin: 0 0 2px;
+  margin: 0;
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+}
+/* The dotted leader is purely decorative CSS — no repeated dot characters
+   are ever inserted into the data or the DOM, so it is never announced by
+   a screen reader and never affects the copied text. */
+.menu-page .menu-card__name::after {
+  content: "";
+  flex: 1 1 auto;
+  min-width: 12px;
+  border-bottom: 1px dotted var(--menu-ink-faint);
+  transform: translateY(-0.3em);
 }
 .menu-page .menu-card__price {
-  font-size: 13px;
-  font-weight: 600;
+  flex: none;
+  margin: 0;
+  font-family: var(--font-body);
+  font-size: clamp(14px, 2vw, 16px);
+  font-weight: 700;
   color: var(--menu-red);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
 }
 
 /* Order action — Lina red outline, fills solid on hover/focus, matching
@@ -694,8 +722,130 @@ a { color: inherit; }
   color: var(--menu-white);
 }
 
+/* Conversion strip — references the approved artwork's red action band.
+   Both actions reuse existing integrations (data-whatsapp-trigger and the
+   /contact enquiry journey); no new route, URL or ordering mechanism. */
+.menu-page .menu-cta {
+  background: var(--menu-red);
+  color: var(--menu-white);
+  padding: var(--space-12) var(--edge);
+  margin-top: var(--space-8);
+}
+.menu-page .menu-cta__inner {
+  max-width: 760px;
+  margin: 0 auto;
+  text-align: center;
+}
+.menu-page .menu-cta__lede {
+  font-family: var(--font-display);
+  font-size: clamp(19px, 3vw, 26px);
+  color: var(--menu-white);
+  margin: 0 0 var(--space-8);
+}
+.menu-page .menu-cta__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-4);
+}
+.menu-page .menu-cta__action {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  min-width: 210px;
+  min-height: 56px;
+  padding: 14px 26px;
+  border-radius: 2px;
+  border: 1px solid var(--menu-white);
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 200ms ease, color 200ms ease;
+}
+.menu-page .menu-cta__action--primary {
+  background: var(--menu-white);
+  color: var(--menu-red);
+}
+.menu-page .menu-cta__action--secondary {
+  background: transparent;
+  color: var(--menu-white);
+}
+.menu-page .menu-cta__action--primary:hover,
+.menu-page .menu-cta__action--primary:focus-visible {
+  background: transparent;
+  color: var(--menu-white);
+}
+.menu-page .menu-cta__action--secondary:hover,
+.menu-page .menu-cta__action--secondary:focus-visible {
+  background: var(--menu-white);
+  color: var(--menu-red);
+}
+.menu-page .menu-cta :focus-visible { outline-color: var(--menu-white); }
+.menu-page .menu-cta__action-note {
+  font-size: 11px;
+  font-weight: 400;
+  letter-spacing: 0.04em;
+  text-transform: none;
+  opacity: 0.8;
+}
+
+/* Black closing section — same essential system as the approved
+   .catering-cta-block / .about-cta-block treatment (var(--black) field,
+   centred composition, display type, --white-dim supporting copy), scoped
+   to .menu-page so neither of those frozen pages is touched. */
+.menu-page .menu-end {
+  background: var(--black);
+  color: var(--white);
+  padding: var(--space-16) var(--edge);
+  text-align: center;
+}
+.menu-page .menu-end__inner { max-width: 640px; margin: 0 auto; }
+.menu-page .menu-end__brand {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: clamp(26px, 4vw, 40px);
+  color: var(--white);
+  margin: 0 0 var(--space-3);
+}
+.menu-page .menu-end__lede {
+  color: var(--white-dim);
+  font-size: 15px;
+  line-height: 1.6;
+  margin: 0 auto var(--space-4);
+  max-width: 56ch;
+}
+.menu-page .menu-end__meta {
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--white-dim);
+  margin: 0;
+}
+
+/* Mobile — the leader is dropped where item names wrap, so the row stays a
+   clean two-part "name / price" block rather than a broken dotted line. */
+@media (max-width: 560px) {
+  .menu-page .menu-card {
+    flex-wrap: wrap;
+    gap: var(--space-2) var(--space-3);
+    padding-top: var(--space-4);
+  }
+  .menu-page .menu-card__open { flex: 1 1 100%; }
+  .menu-page .menu-card__name::after { display: none; }
+  .menu-page .menu-card__body { gap: var(--space-3); }
+  .menu-page .menu-card__add { margin-left: auto; }
+  .menu-page .menu-cta__action { min-width: 0; width: 100%; }
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .menu-page .menu-hero__media:hover img { transform: none; }
+  .menu-page .menu-cta__action { transition: none; }
 }
 
 /* ============================================================

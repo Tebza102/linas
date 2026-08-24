@@ -30,9 +30,18 @@
 /assets/*
 !/assets/mockups
 !/assets/source
+!/assets/menu
 
 /assets/mockups/*
 !/assets/mockups/working
+
+# The customer-facing menu download (/menu's "Download Menu" action). The
+# directory is re-admitted above only so this one file can be, then
+# everything else inside it — working exports, REVIEW artefacts, generation
+# sources — is denied again immediately below. Nothing else in assets/menu
+# reaches the deployment.
+/assets/menu/*
+!/assets/menu/Linas-Menu.pdf
 
 /assets/mockups/working/*
 !/assets/mockups/working/prototype-v2

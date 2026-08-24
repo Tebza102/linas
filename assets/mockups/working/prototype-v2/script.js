@@ -100,9 +100,7 @@
   });
 
   /* ---------- Interactive menu (menu.html only — guarded) ---------- */
-  var menuTabsEl = document.getElementById("menuTabs");
   var menuGridEl = document.getElementById("menuGrid");
-  var activeCategory = null;
 
   function escapeHtml(s) {
     return String(s).replace(/[&<>"']/g, function (c) {
@@ -110,22 +108,11 @@
     });
   }
 
-  function renderTabs() {
-    menuTabsEl.innerHTML = "";
-    LINA_MENU.categories.forEach(function (cat) {
-      var btn = document.createElement("button");
-      btn.type = "button"; btn.className = "menu__tab"; btn.setAttribute("role", "tab");
-      btn.setAttribute("aria-selected", cat.id === activeCategory ? "true" : "false");
-      btn.textContent = cat.label + (cat.priceNote ? " (" + cat.priceNote + ")" : "");
-      btn.addEventListener("click", function () { activeCategory = cat.id; renderTabs(); renderGrid(); });
-      menuTabsEl.appendChild(btn);
-    });
-  }
-  function renderGrid() {
-    menuGridEl.innerHTML = "";
-    var cat = LINA_MENU.categories.find(function (c) { return c.id === activeCategory; });
-    if (!cat) return;
-    cat.items.forEach(function (item) {
+  // Builds one menu row. Extracted verbatim from the previous inline
+  // cat.items.forEach body so every category can reuse it — the DOM,
+  // classes, image/imageConfidence handling, modal listener and cart
+  // wiring below are unchanged from that original implementation.
+  function buildMenuCard(item, cat) {
       // The card is a DIV holding two sibling buttons — "open details" and
       // "add". It used to be a single <button>; nesting an Add button inside
       // that would be invalid HTML with unpredictable click behaviour.
@@ -178,7 +165,36 @@
         });
         card.appendChild(addBtn);
       }
-      menuGridEl.appendChild(card);
+      return card;
+  }
+
+  // Renders every category sequentially as its own editorial section, so the
+  // whole menu is visible without interaction (previously one category at a
+  // time behind a tab strip). Headings and the optional price note come from
+  // the LINA_MENU data itself — never hard-coded here.
+  function renderGrid() {
+    menuGridEl.innerHTML = "";
+    LINA_MENU.categories.forEach(function (cat) {
+      var section = document.createElement("section");
+      section.className = "menu-section";
+
+      var heading = document.createElement("h2");
+      heading.className = "menu-section__title";
+      heading.textContent = cat.label;
+      section.appendChild(heading);
+
+      if (cat.priceNote) {
+        var note = document.createElement("p");
+        note.className = "menu-section__note";
+        note.textContent = cat.priceNote;
+        section.appendChild(note);
+      }
+
+      cat.items.forEach(function (item) {
+        section.appendChild(buildMenuCard(item, cat));
+      });
+
+      menuGridEl.appendChild(section);
     });
   }
   var lastMenuTrigger = null;
@@ -228,9 +244,7 @@
     });
     document.addEventListener("keydown", onKey);
   }
-  if (typeof LINA_MENU !== "undefined" && menuTabsEl && menuGridEl) {
-    activeCategory = LINA_MENU.categories[0].id;
-    renderTabs();
+  if (typeof LINA_MENU !== "undefined" && menuGridEl) {
     renderGrid();
   }
 
