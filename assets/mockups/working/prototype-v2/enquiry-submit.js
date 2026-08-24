@@ -41,12 +41,13 @@
     whatsappBtn.addEventListener("click", function () {
       var ref = refNumber.textContent;
       var message = "My Lina's enquiry reference is " + ref + ". This confirms receipt only, not a booking.";
-      // No destination number: opens WhatsApp's own contact picker so the
-      // customer chooses who (if anyone) to send it to, including
-      // themselves — Lina's WhatsApp number isn't confirmed yet (see
-      // Client Inputs Register I-006/I-014), so this deliberately never
-      // targets a business number.
-      window.open("https://wa.me/?text=" + encodeURIComponent(message), "_blank", "noopener");
+      // Targets Lina's confirmed WhatsApp number (Client Inputs Register
+      // I-006/I-014, same number used by every other WhatsApp action on
+      // this site) — this message reads as being sent TO Lina's, so it
+      // should actually reach that number, not an unconfigured contact
+      // picker. Corrected from an earlier version written before the
+      // number was confirmed.
+      window.open("https://wa.me/27764834344?text=" + encodeURIComponent(message), "_blank", "noopener");
     });
   }
 
@@ -111,7 +112,7 @@
             status.textContent = "You already sent this enquiry — here's your existing reference.";
             refLede.textContent = "Your existing enquiry reference:";
           } else {
-            status.textContent = "Enquiry received — thank you. Lina will follow up personally.";
+            status.textContent = "Enquiry received — thank you. The enquiry will be followed up by phone or email with a quote.";
             refLede.textContent = "Your enquiry has been received. Enquiry reference:";
           }
           status.setAttribute("data-state", "success");
