@@ -43,16 +43,22 @@
 </nav>
 
 <main>
-  <!-- Typographic masthead — a web interpretation of the approved Lina's
-       menu artwork's header. Deliberately image-free: the menu itself is
-       the visual subject, so no chef or food photograph is used here. -->
+  <!-- Typographic masthead with Chef Lina as the right-hand human anchor.
+       She is the page's identity host, so she is NOT lazy-loaded — she is
+       part of the initial above-the-fold composition. -->
   <section class="menu-hero" aria-label="Today's menu">
-    <div class="menu-masthead">
-      <p class="menu-masthead__brand">Lina's</p>
-      <p class="menu-masthead__tagline">Freshly Prepared &bull; Made With Passion</p>
-      <span class="menu-masthead__rule" aria-hidden="true"></span>
-      <h1 class="menu-masthead__title">Menu</h1>
-      <p class="menu-masthead__services">Mobile Kitchen &bull; Private Catering &bull; Events</p>
+    <div class="menu-hero__grid">
+      <div class="menu-masthead">
+        <p class="menu-masthead__brand">Lina's</p>
+        <p class="menu-masthead__tagline">Freshly Prepared &bull; Made With Passion</p>
+        <span class="menu-masthead__rule" aria-hidden="true"></span>
+        <h1 class="menu-masthead__title">Menu</h1>
+        <p class="menu-masthead__services">Mobile Kitchen &bull; Private Catering &bull; Events</p>
+      </div>
+      <div class="menu-hero__chef">
+        <img src="/assets/mockups/working/media/lina-welcome-hero-working-v1-20260802.webp"
+             alt="Chef Lina presenting a Lina's platter" width="1000" height="1333">
+      </div>
     </div>
   </section>
 
@@ -68,6 +74,25 @@
         </ul>
       </div>
     </noscript>
+    <!-- Decorative dish cut-outs, placed in the gutters beside the 760px menu
+         column so they can never overlap a row. Purely presentational:
+         aria-hidden, empty alt, pointer-events:none — the menu itself carries
+         all the meaning. Scale varies to build a zigzag that leads the eye
+         down the page. -->
+    <div class="menu-decor" aria-hidden="true">
+      <img class="menu-decor__dish menu-decor__dish--a"
+           src="/assets/mockups/working/media/lina-dish-rice-working-v1-20260802.webp"
+           alt="" loading="lazy" width="800" height="800">
+      <img class="menu-decor__dish menu-decor__dish--b"
+           src="/assets/mockups/working/media/lina-dish-steak-pap-working-v1-20260802.webp"
+           alt="" loading="lazy" width="800" height="800">
+      <img class="menu-decor__dish menu-decor__dish--c"
+           src="/assets/mockups/working/media/lina-dish-catering-bowl-working-v1-20260802.webp"
+           alt="" loading="lazy" width="800" height="800">
+      <img class="menu-decor__dish menu-decor__dish--d"
+           src="/assets/mockups/working/media/lina-dish-tripe-dumpling-working-v1-20260802.webp"
+           alt="" loading="lazy" width="800" height="800">
+    </div>
     <div class="menu__grid" id="menuGrid"></div>
   </section>
 

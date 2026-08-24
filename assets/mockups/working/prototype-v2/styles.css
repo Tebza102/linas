@@ -490,6 +490,10 @@ a { color: inherit; }
   --menu-white: #F7F5F1;
   --menu-red: #B2373E;
   --menu-red-deep: #8B2921;
+  /* Charcoal now carries the page's structure and typography; red is an
+     accent reserved for conversion actions. Not a new brand colour — a
+     darker neutral in the same black/white/red system. */
+  --menu-charcoal: #2A2A2A;
   --menu-ink: rgba(0, 0, 0, 0.82);
   --menu-ink-dim: rgba(0, 0, 0, 0.55);
   --menu-ink-faint: rgba(0, 0, 0, 0.14);
@@ -529,26 +533,62 @@ a { color: inherit; }
 .menu-page .nav-toggle:focus-visible span { background: #ffffff; }
 .menu-page .site-header :focus-visible { outline-color: #ffffff; }
 
-/* Typographic masthead — a web interpretation of the approved Lina's menu
-   artwork's header. No hero image at all: on a menu sheet the type IS the
-   composition, and the artwork's chef photograph is deliberately not
-   reproduced here (see Decision Log). */
+/* Typographic masthead, now paired with Chef Lina as the right-hand human
+   anchor. Palette deliberately shifted from red-led to charcoal-led: red is
+   reserved for conversion actions and one small editorial accent, so the
+   page reads calm and premium rather than uniformly red. */
 .menu-page .menu-hero {
   padding: 128px var(--edge) var(--space-8);
 }
 @media (min-width: 900px) {
-  .menu-page .menu-hero { padding: 152px var(--edge) var(--space-12); }
+  .menu-page .menu-hero { padding: 152px var(--edge) var(--space-8); }
+}
+.menu-page .menu-hero__grid {
+  max-width: 1180px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-6);
+}
+@media (min-width: 900px) {
+  .menu-page .menu-hero__grid {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-12);
+    text-align: left;
+  }
+}
+/* Unboxed: the cut-out sits directly on the page rather than inside a
+   rectangle, so she reads as part of the composition. */
+.menu-page .menu-hero__chef {
+  flex: none;
+  width: min(300px, 72vw);
+  line-height: 0;
+}
+@media (min-width: 900px) {
+  .menu-page .menu-hero__chef { width: clamp(300px, 32vw, 420px); }
+}
+.menu-page .menu-hero__chef img {
+  width: 100%;
+  height: auto;
+  display: block;
 }
 .menu-page .menu-masthead {
   max-width: 760px;
   margin: 0 auto;
   text-align: center;
 }
+@media (min-width: 900px) {
+  .menu-page .menu-masthead { margin: 0; text-align: left; }
+  .menu-page .menu-masthead__rule { margin-left: 0; margin-right: 0; }
+}
 .menu-page .menu-masthead__brand {
   font-family: var(--font-display);
   font-size: clamp(30px, 5.5vw, 46px);
   line-height: 1;
-  color: var(--menu-red);
+  color: var(--menu-charcoal);
   margin: 0;
   letter-spacing: 0.02em;
 }
@@ -576,7 +616,7 @@ a { color: inherit; }
   line-height: 0.95;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: var(--menu-red);
+  color: var(--menu-charcoal);
   margin: 0;
 }
 .menu-page .menu-masthead__services {
@@ -590,13 +630,58 @@ a { color: inherit; }
 }
 
 /* Tightened from the shared .section rhythm so the masthead and the first
-   category read as one continuous menu sheet rather than two blocks. */
+   category read as one continuous menu sheet rather than two blocks.
+   position:relative anchors the decorative dish layer below. */
 .menu-page .menu-categories {
-  max-width: 1100px;
+  position: relative;
+  /* Wider than the 760px menu column so the decorative dishes have real
+     gutters to sit in without ever reaching the rows. */
+  max-width: 1240px;
   margin: 0 auto;
   padding-top: var(--space-4);
   padding-bottom: var(--space-8);
 }
+
+/* ---------- Decorative dish cut-outs ----------
+   Absolutely positioned in the gutters OUTSIDE the 760px menu column, so a
+   dish can never sit over a row. pointer-events:none guarantees they can
+   never intercept a tap meant for an Add button or a menu row. Sizes vary
+   deliberately (largest first, smallest last) to lead the eye downward. */
+.menu-page .menu-decor {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+.menu-page .menu-decor__dish {
+  position: absolute;
+  width: 0;              /* hidden by default; only shown where there is room */
+  height: auto;
+  display: none;
+  opacity: 0.96;
+  filter: drop-shadow(0 12px 20px rgba(0, 0, 0, 0.10));
+}
+/* The menu column is 760px wide and centred, so gutters only become usable
+   at ~1080px+. Below that the page stays purely typographic. */
+/* Offsets stay positive so nothing is cropped by the decor layer's own
+   overflow:hidden — that clip is what keeps a dish from ever pushing the
+   page into horizontal overflow at awkward widths. */
+@media (min-width: 1080px) {
+  .menu-page .menu-decor__dish { display: block; }
+  .menu-page .menu-decor__dish--a { width: 150px; top: 40px;   left: 4px; }
+  .menu-page .menu-decor__dish--b { width: 132px; top: 320px;  right: 4px; }
+  .menu-page .menu-decor__dish--c { width: 120px; top: 660px;  left: 12px; }
+  .menu-page .menu-decor__dish--d { width: 104px; top: 1000px; right: 16px; }
+}
+@media (min-width: 1320px) {
+  .menu-page .menu-decor__dish--a { width: 190px; top: 24px;   left: 0; }
+  .menu-page .menu-decor__dish--b { width: 165px; top: 300px;  right: 0; }
+  .menu-page .menu-decor__dish--c { width: 145px; top: 660px;  left: 8px; }
+  .menu-page .menu-decor__dish--d { width: 128px; top: 1010px; right: 12px; }
+}
+/* The menu column must always sit above the decoration. */
+.menu-page .menu__grid { position: relative; z-index: 1; }
 
 /* Category sections — every category renders sequentially on one sheet
    (script.js renderGrid), each with the artwork's red editorial heading
@@ -616,10 +701,10 @@ a { color: inherit; }
   font-size: clamp(20px, 3.2vw, 27px);
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--menu-red);
+  color: var(--menu-charcoal);
   margin: 0;
   padding-bottom: var(--space-2);
-  border-bottom: 1px solid var(--menu-red);
+  border-bottom: 1px solid rgba(42, 42, 42, 0.22);
 }
 .menu-page .menu-section__note {
   font-family: var(--font-body);
@@ -696,7 +781,7 @@ a { color: inherit; }
   font-family: var(--font-body);
   font-size: clamp(14px, 2vw, 16px);
   font-weight: 700;
-  color: var(--menu-red);
+  color: var(--menu-charcoal);
   white-space: nowrap;
   font-variant-numeric: tabular-nums;
 }
@@ -725,11 +810,15 @@ a { color: inherit; }
 /* Conversion strip — references the approved artwork's red action band.
    Both actions reuse existing integrations (data-whatsapp-trigger and the
    /contact enquiry journey); no new route, URL or ordering mechanism. */
+/* De-weighted from a full-bleed red band to a warm neutral field: the
+   actions stay unmistakably branded, but the page no longer ends on a
+   second large area of red before the black closing section. */
 .menu-page .menu-cta {
-  background: var(--menu-red);
-  color: var(--menu-white);
+  background: var(--menu-white);
+  color: var(--menu-charcoal);
   padding: var(--space-12) var(--edge);
   margin-top: var(--space-8);
+  border-top: 1px solid rgba(42, 42, 42, 0.12);
 }
 .menu-page .menu-cta__inner {
   max-width: 760px;
@@ -739,7 +828,7 @@ a { color: inherit; }
 .menu-page .menu-cta__lede {
   font-family: var(--font-display);
   font-size: clamp(19px, 3vw, 26px);
-  color: var(--menu-white);
+  color: var(--menu-charcoal);
   margin: 0 0 var(--space-8);
 }
 .menu-page .menu-cta__actions {
@@ -757,7 +846,7 @@ a { color: inherit; }
   min-height: 56px;
   padding: 14px 26px;
   border-radius: 2px;
-  border: 1px solid var(--menu-white);
+  border: 1px solid var(--menu-red);
   font-family: var(--font-body);
   font-size: 13px;
   font-weight: 700;
@@ -767,25 +856,27 @@ a { color: inherit; }
   cursor: pointer;
   transition: background 200ms ease, color 200ms ease;
 }
+/* WhatsApp stays the solid-red primary; the other two are red-outlined so
+   all three read as Lina's actions without three solid red blocks. */
 .menu-page .menu-cta__action--primary {
-  background: var(--menu-white);
-  color: var(--menu-red);
+  background: var(--menu-red);
+  color: var(--menu-white);
 }
 .menu-page .menu-cta__action--secondary {
   background: transparent;
-  color: var(--menu-white);
+  color: var(--menu-red);
 }
 .menu-page .menu-cta__action--primary:hover,
 .menu-page .menu-cta__action--primary:focus-visible {
-  background: transparent;
+  background: var(--menu-red-deep);
   color: var(--menu-white);
 }
 .menu-page .menu-cta__action--secondary:hover,
 .menu-page .menu-cta__action--secondary:focus-visible {
-  background: var(--menu-white);
-  color: var(--menu-red);
+  background: var(--menu-red);
+  color: var(--menu-white);
 }
-.menu-page .menu-cta :focus-visible { outline-color: var(--menu-white); }
+.menu-page .menu-cta :focus-visible { outline-color: var(--menu-red); }
 .menu-page .menu-cta__action-note {
   font-size: 11px;
   font-weight: 400;
@@ -842,6 +933,53 @@ a { color: inherit; }
   .menu-page .menu-card__body { gap: var(--space-3); }
   .menu-page .menu-card__add { margin-left: auto; }
   .menu-page .menu-cta__action { min-width: 0; width: 100%; }
+  /* The floating WhatsApp FAB is hidden on THIS page at small-mobile only:
+     it sat over an Add-to-order button, and on a page whose whole purpose is
+     ordering, a control must never be obscured by a floating element. Safe
+     because /menu already carries a prominent in-page "WhatsApp Us" action
+     in its conversion strip using the same data-whatsapp-trigger handler.
+     Scoped to .menu-page, so every other page keeps its FAB unchanged, and
+     the sticky CART button is deliberately left visible — it is the order
+     control, not decoration.
+     The `body.` prefix is required, not stylistic: the later consolidation
+     block sets `.menu-page #stickyWhatsapp.sticky-whatsapp--icon{display:flex}`,
+     whose ID selector would otherwise win. */
+  body.menu-page #stickyWhatsapp.sticky-whatsapp--icon { display: none; }
+
+  /* View order becomes a full-width bottom bar on small mobile instead of a
+     floating corner button. The corner position collided head-on with the
+     right-aligned Add controls — same edge, same thumb zone — so the fix is
+     to take the cart out of that column entirely rather than shrink or move
+     it sideways onto something else.
+     The `body.` + ID prefix is required for the same reason as the FAB rule
+     above: the base `.sticky-cart` rule sets right/bottom/border-radius, and
+     a bare class override would tie rather than win.
+     Nothing about the cart's behaviour changes — cart.js still creates it,
+     still toggles [hidden] on count, still opens the same panel. This is
+     presentation only. */
+  body.menu-page #stickyCart.sticky-cart {
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    border-radius: 0;
+    justify-content: center;
+    min-height: 56px;
+    /* Lift the label clear of the OS gesture/home area on devices that have
+       one; resolves to 0 everywhere else, so no wasted space on older
+       phones. */
+    padding-bottom: calc(var(--space-3) + env(safe-area-inset-bottom, 0px));
+    box-shadow: 0 -4px 16px rgba(0,0,0,0.18);
+  }
+
+  /* Reserve real scrolling space beneath the bar. Without this the closing
+     section's last line can never be brought fully above a fixed bar — it
+     stays permanently trapped at the end of the document. The black field
+     simply extends behind the bar, so the bar reads as part of it rather
+     than floating on top. Bar height + normal spacing + safe-area inset. */
+  body.menu-page .menu-end {
+    padding-bottom: calc(var(--space-16) + 56px + var(--space-4) + env(safe-area-inset-bottom, 0px));
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
