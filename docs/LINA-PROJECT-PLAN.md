@@ -41,6 +41,10 @@
 
 **Interim — prototype build complete (28 Jul):** The Direction C static front-end prototype (`assets/mockups/working/prototype/`) is built and verified — see Decision Log D-010. This is a client-review artifact only: no backend, database, admin dashboard, or deployment. Still **provisional**, not a substitute for this milestone's actual client-approval step.
 
+**Interim — poster-led homepage first direction (2 Aug):** A new first-screen-only homepage direction was built on `feat/poster-led-luxury-refinement`, on top of the live production site (which stays behind the Coming Soon gate throughout, per D-024) — see Decision Log D-025 for the full build, the four logged brand-system divergences (homepage-only `#B2373E`, white/red-led composition, the logo's red backing plate, the labelled MENU control), and the `Green-plate.png` exclusion. Every existing backend/operational feature is untouched and re-verified (90/90 unit tests, 51/51 rules tests, 0 vulnerabilities, unchanged from baseline). This is a client-review artifact only, previewed but **not committed, pushed, merged or deployed** — awaiting explicit approval of the visual direction, same provisional status as the note above.
+
+**Interim — poster-led homepage rebuilt as a split editorial hero (2 Aug, same day):** D-025's numbered-index direction was superseded, not iterated on, per explicit instruction with a reference image — see Decision Log D-026. Same first-screen-only scope, same untouched backend, same "not committed/pushed/merged/deployed" status; the four D-025 divergences carry forward unchanged. Re-verified after the rebuild: 90/90 unit tests, 51/51 rules tests, 0 vulnerabilities, zero overflow/console errors at 1440/1280/768/390px. This is now the current homepage preview — still awaiting explicit approval of the visual direction.
+
 ## Milestone 4 — Brand application and sales assets
 **Target:** 29–30 July
 - Brand application sheet.
@@ -113,6 +117,18 @@ Deferred in full, not started:
 
 ## Outstanding infrastructure item (recorded 31 Jul, per Decision Log D-021)
 - **Composite Firestore indexes for `orders`/`orderActivities` are defined in `firestore.indexes.json` but not yet deployed to the live `lina-s` project** — a separate action from the rules deploy (which is done). It does not affect order creation, the Today board, or any dashboard/report figure; it will only affect the order-detail panel's activity-history lookup, which will show a Firestore "requires an index" error until resolved. Deploy with `firebase deploy --only firestore:indexes --project lina-s` (needs the same explicit approval as any live-infrastructure change), or create the specific index via the auto-generated link Firestore returns in that error.
+
+## Interactive digital menu review asset (3 Aug 2026)
+
+**Status:** Complete as a REVIEW artifact; see Decision Log D-029.
+
+- Eight-page A4 interactive PDF produced under `assets/menu/working/digital-menu-v1.0/`.
+- Editable HTML/CSS/config source and repeatable zero-package Chrome export script retained.
+- Existing website menu data is reused; no duplicate price catalogue was introduced.
+- All 18 items/prices reconcile and all 61 PDF actions pass endpoint/protocol validation.
+- Mobile-kitchen meal actions use item-specific WhatsApp messages; catering actions use `/contact`.
+- No website, backend, Firebase, authentication, route, package, environment or deployment file changed.
+- The PDF remains `REVIEW` because production customer routes are still governed by the Coming Soon gate and client approval of this exported asset is not yet recorded.
 
 ## Daily status template
 **Date:**  
