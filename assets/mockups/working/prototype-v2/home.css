@@ -25,6 +25,14 @@
   --home-ink-dim: rgba(0, 0, 0, 0.5);
   --home-ink-faint: rgba(0, 0, 0, 0.14);
 }
+/* Page-wide focus-ring token, matching the same pattern already used on
+   every other scoped page (.menu-page/.catering-page/.about-page/.contact-page
+   :focus-visible in styles.css) — the homepage was missing its equivalent, so
+   unstyled interactive elements fell back to the global --red (#A43129)
+   instead of this page's own --home-red (#B2373E). The header's own white
+   focus ring (styles.css, body.home .site-header :focus-visible) is more
+   specific and continues to win inside the header, unaffected by this. */
+.home :focus-visible { outline-color: var(--home-red); }
 
 /* ---------- Header — homepage only override ----------
    Clean white bar with a thin dividing rule (the black cinematic header
