@@ -1,86 +1,48 @@
-// Lina's — Poster-led homepage, first-screen content configuration.
+// Lina's — Homepage first-screen content configuration.
 //
-// Single source of truth for every piece of copy, the hero sequence, the
-// destination links/reveal images and the header CTA used on the
-// homepage first screen. home.js reads only from this object — nothing
-// is hardcoded in index.html or home.js.
+// Single source of truth for the hero copy, the two CTA destinations and
+// the chef portrait used on the homepage first screen. home.js reads only
+// from this object — nothing is hardcoded in index.html or home.js.
 //
-// Copy is reused verbatim from the existing approved hero copy — no new
+// Copy is reused verbatim from the previously approved hero copy — no new
 // factual claims are introduced (CLAUDE.md: never invent client facts,
-// prices, service areas).
+// prices, service areas). The headline is restructured (not reworded) to
+// carry the italic connector word the new design calls for.
 //
-// hero[0] ("chef") is a fully isolated background-removed cutout of Chef
-// Lina holding a plated meal, supplied 2026-08-02 ("Lina's Welcome.png",
-// verified genuine alpha — see Decision Log D-028).
-// hero[1] ("chefAction") is the original confirmed chef photo (full
-// frame, real trailer-interior background, not a cutout) — the only
-// other chef-identifying image (lina-chef-trailer-frame) stays excluded
-// per Decision Log D-023 (a phone number is burned into its pixels).
-// hero[2] ("dish") is a background-removed dish cutout from the same
-// 2026-08-02 batch.
+// heroImage reuses the existing confirmed chef cutout (background-removed,
+// verified genuine alpha — see Decision Log D-028), the same file already
+// used for the chef portrait on menu.html. No new asset was supplied for
+// this task, so no new file was added.
 //
-// The "Order Today" destination's WhatsApp link is the exact, already
-// verified URL/message used identically across every existing page's
-// footer (contact.html, catering.html, etc.) — reused verbatim per
-// Decision Log D-029, not invented or altered.
+// lina-hero-chef-cutout-working-v1-20260802.webp (used in the Offerings
+// section below, and its filename's misleading) is NOT actually a
+// background-removed cutout — visual check shows a full rectangular photo
+// with the trailer counter, red panel and "CHEF LINA" text baked in. It
+// is deliberately NOT used here for that reason.
+//
+// The "Order Today" / WhatsApp destination that used to live in this
+// object is not lost: the floating WhatsApp button (#stickyWhatsapp,
+// unchanged by this task) and the Offerings section's own WhatsApp link
+// both still use the same verified wa.me URL — see D-029.
 var LINA_HOME_MEDIA = {
   copy: {
     tagline: "Freshly prepared. Made with care.",
     eyebrow: "Lina's",
-    headlineLines: ["Chef-led catering", "and mobile-kitchen", "experiences."],
+    headline: {
+      line1: "Chef-Led Catering",
+      connector: "and",
+      line2: "Mobile-Kitchen Experiences"
+    },
     supporting: "Weddings, funerals, corporate events and private catering — plus a real mobile kitchen serving plates to order."
   },
 
   cta: {
-    primary: { label: "Request a Quote", href: "/contact" }
+    primary: { label: "Request a Quote", href: "/contact" },
+    secondary: { label: "Explore the Menu", href: "/menu" }
   },
 
-  hero: [
-    {
-      id: "chef",
-      src: "/assets/mockups/working/media/lina-welcome-hero-working-v1-20260802.webp",
-      alt: "Chef Lina smiling and presenting a plated meal"
-    },
-    {
-      id: "chefAction",
-      src: "/assets/mockups/working/media/lina-hero-poster-working-v1-20260728.jpg",
-      alt: "Chef Lina inside her mobile kitchen trailer, presenting a plated meal"
-    },
-    {
-      id: "dish",
-      src: "/assets/mockups/working/media/lina-dish-steak-pap-working-v1-20260802.webp",
-      alt: "T-bone steak with pap, a signature plate from Lina's menu"
-    }
-  ],
-
-  destinations: [
-    {
-      id: "menu",
-      label: "Explore Our Menu",
-      href: "/menu",
-      image: {
-        src: "/assets/mockups/working/media/lina-dish-steak-pap-working-v1-20260802.webp",
-        alt: "T-bone steak with pap, a signature plate from Lina's menu"
-      }
-    },
-    {
-      id: "order",
-      label: "Order Today",
-      href: "https://wa.me/27764834344?text=Hello%20Lina's%2C%20I%20would%20like%20to%20enquire%20about%20your%20catering%20or%20mobile%20kitchen%20services.",
-      external: true,
-      image: {
-        src: "/assets/mockups/working/media/lina-dish-tripe-dumpling-working-v1-20260802.webp",
-        alt: "Tripe and dumpling in a takeaway container"
-      }
-    },
-    {
-      id: "event",
-      label: "Plan an Event",
-      href: "/catering",
-      image: {
-        src: "/assets/mockups/working/media/lina-welcome-hero-working-v1-20260802.webp",
-        alt: "Chef Lina smiling and presenting a plated meal"
-      }
-    }
-  ]
+  heroImage: {
+    src: "/assets/mockups/working/media/lina-welcome-hero-working-v1-20260802.webp",
+    alt: "Chef Lina smiling and presenting a plated meal"
+  }
 };

@@ -8,8 +8,11 @@
  * home.js. Everything else in this file is scoped to `.offerings`.
  *
  * Colour/type tokens are all reused from the existing `.home` scope in
- * home.css and the site-wide tokens in styles.css — no new hue, no new
- * font. Reduced motion is handled globally already (styles.css collapses
+ * home.css — no new hue, no new font. Headings/body copy use
+ * --home-font-display/--home-font-body (Fraunces/Inter, loaded by
+ * index.html for the homepage only), matching the hero above, rather than
+ * the shared --font-display/--font-body tokens styles.css defines for
+ * every other page. Reduced motion is handled globally already (styles.css collapses
  * every animation/transition duration to ~0 under
  * prefers-reduced-motion), plus this file adds its own explicit skip so
  * the section never even reaches its pre-reveal hidden state for those
@@ -51,7 +54,7 @@
   text-align: center;
 }
 .offerings__eyebrow {
-  font-family: var(--font-body);
+  font-family: var(--home-font-body);
   font-size: 13px;
   font-weight: 600;
   letter-spacing: 0.08em;
@@ -60,7 +63,7 @@
   margin: 0 0 var(--space-2);
 }
 .offerings__heading {
-  font-family: var(--font-display);
+  font-family: var(--home-font-display);
   font-size: clamp(28px, 4vw, 42px);
   line-height: 1.2;
   color: var(--home-ink);
@@ -121,13 +124,13 @@
 /* ---------- Text + CTA ---------- */
 .offerings__text { display: flex; flex-direction: column; gap: var(--space-2); }
 .offerings__item-heading {
-  font-family: var(--font-display);
+  font-family: var(--home-font-display);
   font-size: clamp(20px, 2.5vw, 26px);
   color: var(--home-ink);
   margin: 0;
 }
 .offerings__item-body {
-  font-family: var(--font-body);
+  font-family: var(--home-font-body);
   font-size: 15px;
   line-height: 1.5;
   color: var(--home-ink-dim);
@@ -138,7 +141,7 @@
   align-items: center;
   gap: var(--space-2);
   align-self: flex-start;
-  font-family: var(--font-body);
+  font-family: var(--home-font-body);
   font-size: 14px;
   font-weight: 600;
   letter-spacing: 0.02em;

@@ -1,90 +1,156 @@
-/* Lina's — Poster-led homepage, first screen only.
+/* Lina's — Homepage first screen only.
  *
  * Loaded after styles.css and scoped entirely under body.home / .home-*
  * selectors, so it can only ever affect index.html and never bleeds into
  * the six internal pages, which keep the existing black cinematic system
- * untouched. Local tokens (--home-white/--home-red) are defined here
- * rather than added to styles.css's :root, for the same isolation reason —
- * this page's colour balance (white/red-led, black as a lower-band accent)
- * deliberately reverses the site-wide black-led system (D-011/D-013) and
- * is logged as a homepage-only divergence, not a silent change.
+ * untouched. Local tokens (--home-*) are defined here rather than added to
+ * styles.css's :root, for the same isolation reason — this page's colour
+ * balance (white/red-led) deliberately reverses the site-wide black-led
+ * system (D-011/D-013) and is logged as a homepage-only divergence.
  *
- * Direction: one-screen chef-led animated gateway. A single icon-only
- * navigation trigger (the existing drawer, unstyled here beyond the
- * trigger itself), a slow auto-cycling crossfade hero (chef -> chef at
- * work -> signature dish -> chef...), and three interactive destinations
- * that reveal their own image on desktop hover/focus or mobile tap. No
- * ribbon, no homepage footer — the hero is the entire homepage.
+ * Direction: a static poster hero — chef portrait, editorial headline with
+ * an italic connector word, two CTAs — replacing the previous auto-cycling
+ * chef-led gateway (superseded per Decision Log). Below the hero, the
+ * existing Offerings section (offerings.css) is untouched by this file.
+ *
+ * --home-font-display/--home-font-body are deliberately separate from the
+ * shared --font-display/--font-body tokens in styles.css: redefining those
+ * shared tokens under .home would also silently retint the Offerings
+ * section below (offerings.css reads the same shared vars), which this
+ * task does not touch. Fraunces/Inter are therefore applied only to the
+ * specific rules in this file that opt into them.
  */
 
 .home {
-  --home-white: #F7F5F1;  /* same warm white already approved on coming-soon.css */
-  --home-red: #B2373E;    /* brief's primary red — homepage only, see Decision Log */
-  --home-red-deep: #8B2921;
-  --home-ink: rgba(0, 0, 0, 0.82);
-  --home-ink-dim: rgba(0, 0, 0, 0.5);
-  --home-ink-faint: rgba(0, 0, 0, 0.14);
+  --home-white: #FFFFFF;
+  --home-white-dim: #F7F7F5;
+  --home-red: #A30100;    /* brief's primary red — homepage only, see Decision Log (unreconciled against other sampled reds) */
+  --home-red-deep: #7A0100;
+  --home-ink: #1A1512;
+  --home-ink-dim: rgba(26, 21, 18, 0.64);
+  --home-ink-faint: rgba(26, 21, 18, 0.16);
+  --home-font-display: 'Fraunces', Georgia, "Iowan Old Style", serif;
+  --home-font-body: 'Inter', -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  background: var(--home-white);
 }
-/* Page-wide focus-ring token, matching the same pattern already used on
-   every other scoped page (.menu-page/.catering-page/.about-page/.contact-page
-   :focus-visible in styles.css) — the homepage was missing its equivalent, so
-   unstyled interactive elements fell back to the global --red (#A43129)
-   instead of this page's own --home-red (#B2373E). The header's own white
-   focus ring (styles.css, body.home .site-header :focus-visible) is more
-   specific and continues to win inside the header, unaffected by this. */
 .home :focus-visible { outline-color: var(--home-red); }
 
-/* ---------- Header — homepage only override ----------
-   Clean white bar with a thin dividing rule (the black cinematic header
-   used on every other page is only appropriate over a full-bleed dark
-   photo). The approved logo (Linas_Logo_nb_wl.svg) is transparent with
-   white line-art, made for dark surfaces (it already sits on the
-   coming-soon page's red top bar and black footer). On this page's white
-   header the same white-on-transparent artwork would be invisible, so it
-   gets a small red backing plate — the exact red already sampled from the
-   logo file itself for the coming-soon top bar. The logo graphic itself
-   is untouched: same file, same proportions, nothing redesigned,
-   rearranged or separated. */
-.home .site-header {
+/* ============================================================
+   Header — sticky (not fixed: fixed positioning was confirmed to fail
+   silently in some mobile WebView contexts), white, compacts on scroll.
+   Because home.css loads after styles.css, "body.home ..." selectors add
+   one extra element-type selector purely to win specificity over the base
+   .site-header rules, without editing styles.css.
+   ============================================================ */
+body.home .site-header {
+  position: sticky;
+  top: 0;
   background: var(--home-white);
-  border-bottom: 1px solid var(--home-ink-faint);
+  border-bottom: 1px solid transparent;
   gap: var(--space-6);
+  padding: var(--space-4) var(--edge);
+  transition: padding 200ms ease, border-color 200ms ease;
 }
-.home .site-header__mark {
+body.home .site-header.is-compact {
+  padding: var(--space-2) var(--edge);
+  border-bottom-color: var(--home-red);
+}
+/* linas-logo-nb-wl.svg is confirmed white-only line art on a transparent
+   background (its <feColorMatrix> forces RGB to pure white) — made for
+   dark surfaces. No new logo asset was supplied for this task, and this
+   is the same file the header already uses site-wide, so on this white
+   header it needs the same small red backing plate the previous homepage
+   version used for the same reason — otherwise it's invisible, confirmed
+   by screenshot during this task, not a hypothetical. */
+body.home .site-header__mark {
   background: var(--home-red);
   padding: 8px 14px;
   border-radius: 2px;
   line-height: 0;
   flex: none;
 }
-.home .site-header__logo {
+body.home .site-header__logo {
+  display: block;
   height: 36px;
+  width: auto;
+  max-width: 100%;
+  object-fit: contain;
+  filter: none;
+  transition: height 200ms ease;
 }
 @media (min-width: 640px) {
-  .home .site-header__logo { height: 44px; }
+  body.home .site-header__logo { height: 68px; }
 }
+body.home .site-header.is-compact .site-header__logo { height: 44px; }
 
-.site-header__right {
+body.home .site-header__right {
   display: flex;
   align-items: center;
   gap: var(--space-3);
   margin-left: auto;
 }
+
+/* ---------- Desktop inline nav (>=900px) ---------- */
+.home-header__nav {
+  display: none;
+}
+@media (min-width: 900px) {
+  .home-header__nav {
+    display: flex;
+    align-items: center;
+    gap: var(--space-6);
+    margin: 0 auto 0 var(--space-8);
+  }
+  .home-header__nav a {
+    position: relative;
+    font-family: var(--home-font-body);
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--home-ink);
+    text-decoration: none;
+    padding: var(--space-1) 0;
+  }
+  /* Underline slides in via scaleX, not a bare width/opacity change. */
+  .home-header__nav a::after {
+    content: "";
+    position: absolute;
+    left: 0; right: 0; bottom: -2px;
+    height: 1px;
+    background: var(--home-red);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 220ms ease;
+  }
+  .home-header__nav a:hover,
+  .home-header__nav a:focus-visible {
+    color: var(--home-red);
+  }
+  .home-header__nav a:hover::after,
+  .home-header__nav a:focus-visible::after,
+  .home-header__nav a[aria-current="page"]::after {
+    transform: scaleX(1);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .home-header__nav a::after { transition: none; }
+}
+
 .home-nav__cta {
   display: none;
 }
-@media (min-width: 640px) {
+@media (min-width: 900px) {
   .home-nav__cta {
     display: inline-block;
     background: var(--home-red);
     color: var(--home-white);
-    font-family: var(--font-body);
+    font-family: var(--home-font-body);
     font-size: 13px;
     font-weight: 600;
     letter-spacing: 0.02em;
     text-decoration: none;
     padding: 10px 20px;
     border-radius: 2px;
+    transition: background 180ms ease;
   }
   .home-nav__cta:hover,
   .home-nav__cta:focus-visible {
@@ -92,13 +158,12 @@
   }
 }
 
-/* ---------- Icon-only navigation trigger ----------
-   The single global website-navigation control. Same #navToggle id, same
-   click handler, same drawer/focus-trap/Escape logic in script.js — only
-   the button's own content and appearance change here: no visible "Menu"
-   text (the word is reserved for "Explore Our Menu", the food action),
-   an accessible aria-label instead, and a plain three-line icon. */
-.home .nav-toggle--icon {
+/* ---------- Hamburger — mobile only; desktop uses the inline nav above ----------
+   `body.home` (not just `.home`) matches styles.css's own escalated
+   specificity for this exact selector set (see that file's comment above
+   its body.home block) — without it, styles.css's higher-specificity
+   red/transparent icon styling would win regardless of load order. */
+body.home .nav-toggle--icon {
   width: 44px;
   height: 44px;
   padding: 0;
@@ -109,21 +174,121 @@
   border-radius: 2px;
   background: var(--home-white);
 }
-.home .nav-toggle--icon:hover,
-.home .nav-toggle--icon:focus-visible {
+@media (min-width: 900px) {
+  body.home .nav-toggle--icon { display: none; }
+}
+body.home .nav-toggle--icon:hover,
+body.home .nav-toggle--icon:focus-visible {
   border-color: var(--home-red);
 }
-.home .nav-toggle__icon {
+body.home .nav-toggle__icon {
   width: 20px;
   height: 20px;
   color: var(--home-ink);
 }
-.home .nav-toggle--icon:hover .nav-toggle__icon,
-.home .nav-toggle--icon:focus-visible .nav-toggle__icon {
+body.home .nav-toggle--icon:hover .nav-toggle__icon,
+body.home .nav-toggle--icon:focus-visible .nav-toggle__icon {
   color: var(--home-red);
 }
+/* styles.css sets a white focus-ring for this header (correct on the old
+   red header); this page's header is now white, so it needs its own
+   visible ring colour — same specificity, home.css loads later, wins. */
+body.home .site-header :focus-visible { outline-color: var(--home-red); }
 
-/* ---------- First screen ---------- */
+/* ============================================================
+   Mobile full-screen nav overlay — reuses the exact #siteNav /
+   #navBackdrop markup and the open/close/focus-trap/Escape/close-on-link
+   logic already in script.js (shared by every page). Nothing here changes
+   that behaviour; every rule below is presentation only, scoped to
+   body.home so no other page's drawer is affected.
+   Body-scroll-lock while open uses :has() (no JS change needed) — on the
+   handful of older browsers without :has() support the overlay still
+   opens/closes/traps focus correctly; only the background-scroll lock is
+   unavailable there, a graceful, non-breaking degradation.
+   ============================================================ */
+body.home:has(#siteNav:not([hidden])) {
+  overflow: hidden;
+}
+body.home .nav-backdrop {
+  background: var(--home-white);
+}
+body.home .site-nav {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  z-index: 200;
+  background: var(--home-white);
+  border-left: none;
+  justify-content: center;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-16) var(--space-6);
+  transform: none;
+  opacity: 0;
+  transition: opacity 260ms ease;
+}
+body.home .site-nav:not([hidden]) {
+  opacity: 1;
+}
+body.home .site-nav[hidden] {
+  pointer-events: none;
+}
+body.home .site-nav__close {
+  color: var(--home-ink);
+  font-family: var(--home-font-body);
+}
+body.home .site-nav a {
+  font-family: var(--home-font-display);
+  font-size: clamp(28px, 6vw, 42px);
+  color: var(--home-ink);
+  text-align: center;
+  opacity: 0;
+  transform: translateY(16px);
+}
+body.home .site-nav a[aria-current="page"] {
+  color: var(--home-red);
+}
+body.home .site-nav a::after {
+  background: var(--home-red);
+}
+body.home .site-nav__cta {
+  color: var(--home-white) !important;
+  background: var(--home-red);
+}
+body.home .site-nav__login {
+  color: var(--home-ink-dim) !important;
+}
+body.home .site-nav__login:hover,
+body.home .site-nav__login:focus-visible {
+  color: var(--home-ink) !important;
+}
+@media not (prefers-reduced-motion: reduce) {
+  /* animation-name only resolves while :not([hidden]) matches, so toggling
+     [hidden] off and on again restarts the stagger each time the overlay
+     reopens, rather than "playing" once and freezing at the end state. */
+  body.home .site-nav:not([hidden]) a {
+    animation: homeNavItemIn 480ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+  body.home .site-nav:not([hidden]) a:nth-of-type(1) { animation-delay: 90ms; }
+  body.home .site-nav:not([hidden]) a:nth-of-type(2) { animation-delay: 150ms; }
+  body.home .site-nav:not([hidden]) a:nth-of-type(3) { animation-delay: 210ms; }
+  body.home .site-nav:not([hidden]) a:nth-of-type(4) { animation-delay: 270ms; }
+  body.home .site-nav:not([hidden]) a:nth-of-type(5) { animation-delay: 330ms; }
+  body.home .site-nav:not([hidden]) a:nth-of-type(6) { animation-delay: 390ms; }
+}
+@keyframes homeNavItemIn {
+  to { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  body.home .site-nav a { opacity: 1; transform: none; }
+}
+/* Desktop never needs the mobile overlay treatment — the inline nav above
+   handles wide viewports, and the hamburger that opens this drawer is
+   itself hidden at >=900px, so this block is unreachable there anyway. */
+
+/* ============================================================
+   First screen — hero
+   ============================================================ */
 .home-hero {
   position: relative;
   min-height: 600px;
@@ -131,11 +296,7 @@
   height: 100svh;
   display: flex;
   flex-direction: column;
-  /* Covers the header's actual rendered height (85px at <640px, 93px at
-     640-899px, since the logo grows at 640px) with a margin — a mismatch
-     here let the tagline/eyebrow render behind the opaque fixed header,
-     invisible despite being present in the DOM. */
-  padding-top: 104px;
+  justify-content: center;
   background: var(--home-white);
   color: var(--home-ink);
   overflow: hidden;
@@ -143,43 +304,35 @@
 @supports (height: 100dvh) {
   .home-hero { height: 100dvh; }
 }
-@media (min-width: 900px) {
-  .home-hero { padding-top: 96px; }
-}
 
 .home-hero__body {
-  flex: 1;
-  min-height: 0;
   display: grid;
   grid-template-columns: 1fr;
-  /* align-items: start (not center) on mobile — with flex:1 + min-height:0,
-     centering an auto-sized grid row against a container shorter than its
-     natural content height clipped the top of .home-hero__copy off-screen.
-     Centering is only safe once the two-column desktop layout gives each
-     column its own full-height track. */
   align-items: start;
-  gap: var(--space-3);
-  padding: 0 var(--edge) var(--space-4);
+  gap: var(--space-6);
+  padding: var(--space-6) var(--edge);
 }
 @media (min-width: 900px) {
   .home-hero__body {
-    grid-template-columns: 1.05fr 0.95fr;
+    /* min-width: 0 on both tracks — without it a wide source image can
+       force its column wider than the fr split intends. Confirmed real
+       during the reference mockup build, not a hypothetical. */
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
     align-items: center;
     gap: var(--space-12);
-    padding-bottom: var(--space-6);
   }
 }
 
 .home-hero__copy {
   display: flex;
   flex-direction: column;
-  min-height: 0;
+  min-width: 0;
 }
 .home-hero__tagline {
-  font-family: var(--font-body);
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.12em;
+  font-family: var(--home-font-body);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--home-red);
   margin: 0 0 var(--space-3);
@@ -188,152 +341,127 @@
   display: flex;
   align-items: center;
   gap: var(--space-3);
-  margin: 0 0 var(--space-3);
+  margin: 0 0 var(--space-4);
 }
-.home-hero__eyebrow-row::before,
-.home-hero__eyebrow-row::after {
-  content: "";
+.home-hero__rule {
   flex: 1;
   height: 1px;
   background: var(--home-ink-faint);
   max-width: 40px;
 }
 .home-hero__eyebrow {
-  font-family: var(--font-display);
+  font-family: var(--home-font-display);
   font-style: italic;
   font-size: 15px;
   color: var(--home-red);
   margin: 0;
+  white-space: nowrap;
 }
 .home-hero__title {
-  font-family: var(--font-display);
-  font-weight: 400;
+  font-family: var(--home-font-display);
+  font-weight: 600;
   text-transform: uppercase;
-  font-size: clamp(26px, 5.4vw, 44px);
-  line-height: 1.08;
+  font-size: clamp(2.25rem, 5.5vw, 3.5rem);
+  line-height: 1.05;
   letter-spacing: 0.01em;
-  margin: 0 0 var(--space-3);
+  margin: 0 0 var(--space-4);
   color: var(--home-red);
+}
+.home-hero__title-connector {
+  font-family: var(--home-font-display);
+  font-style: italic;
+  font-weight: 400;
+  text-transform: lowercase;
+  font-size: 0.5em;
+  color: var(--home-ink-dim);
+  letter-spacing: 0;
 }
 .home-hero__sub {
-  font-size: 14px;
-  line-height: 1.5;
-  max-width: 46ch;
-  margin: 0 0 var(--space-4);
+  font-family: var(--home-font-body);
+  font-size: 1.125rem;
+  line-height: 1.55;
+  max-width: 40ch;
+  margin: 0 0 var(--space-6);
   color: var(--home-ink-dim);
 }
-@media (min-width: 900px) {
-  .home-hero__title { font-size: clamp(36px, 3.8vw, 56px); margin-bottom: var(--space-4); }
-  .home-hero__sub { font-size: 16px; margin-bottom: var(--space-5); }
-}
 
-/* ---------- Interactive destinations ---------- */
-.home-destinations {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  border-top: 1px solid var(--home-ink-faint);
-}
-.home-destinations__item {
-  border-bottom: 1px solid var(--home-ink-faint);
-}
-.home-destinations__link {
-  position: relative;
+/* ---------- Hero CTAs ---------- */
+.home-hero__cta-row {
   display: flex;
-  align-items: center;
+  flex-wrap: wrap;
   gap: var(--space-3);
+}
+.home-hero__cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   min-height: 52px;
-  padding: 12px 0;
+  padding: 14px 28px;
+  border-radius: 2px;
+  font-family: var(--home-font-body);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
   text-decoration: none;
-  color: var(--home-ink-dim);
   cursor: pointer;
+  border: 1px solid var(--home-red);
+  transition: background 200ms ease, color 200ms ease, transform 120ms ease;
+  will-change: transform;
 }
-.home-destinations__link::after {
-  content: "";
-  position: absolute;
-  left: 0;
-  bottom: -1px;
-  height: 2px;
-  width: 0;
+.home-hero__cta--primary {
   background: var(--home-red);
-  transition: width 280ms ease;
+  color: var(--home-white);
 }
-.home-destinations__label {
-  font-family: var(--font-display);
-  font-size: clamp(18px, 3vw, 23px);
-  color: inherit;
-  transition: color 220ms ease;
+.home-hero__cta--primary:hover,
+.home-hero__cta--primary:focus-visible {
+  background: var(--home-red-deep);
 }
-.home-destinations__arrow {
-  margin-left: auto;
-  color: var(--home-red);
-  opacity: 0;
-  transform: translateX(-6px);
-  transition: opacity 220ms ease, transform 220ms ease;
-}
-.home-destinations__link[aria-expanded="true"] {
+.home-hero__cta--secondary {
+  background: transparent;
   color: var(--home-red);
 }
-.home-destinations__link[aria-expanded="true"]::after {
-  width: 100%;
+.home-hero__cta--secondary:hover,
+.home-hero__cta--secondary:focus-visible {
+  background: var(--home-red);
+  color: var(--home-white);
 }
-.home-destinations__link[aria-expanded="true"] .home-destinations__arrow {
-  opacity: 1;
-  transform: translateX(0);
+@media (hover: none) {
+  /* Magnetic hover is desktop-pointer-only (home.js gates the JS too);
+     this just guarantees no residual transform lingers on touch. */
+  .home-hero__cta { transform: none !important; }
 }
 
-/* ---------- Visual stage — stacked crossfade layers ----------
-   One shared stage: 3 automatic hero states plus one reveal image per
-   destination, all absolutely stacked and crossfaded via opacity. The
-   opening chef layer additionally gets a slow, continuous push-in scale.
-   Chef Lina's own cutout floats directly on the white stage; the
-   chef-at-work photo (a full frame with its own background, not a
-   cutout — no isolated "at work" cutout exists yet) is contained the
-   same way so it doesn't jump in size when it crossfades in — the
-   remaining background-vs-no-background difference is an accepted,
-   temporary property of the current source photography, not something
-   CSS can resolve without new media processing. */
+/* ---------- Chef portrait ---------- */
 .home-hero__visual {
   position: relative;
-  height: 220px;
-  overflow: hidden;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  min-width: 0;
 }
-@media (max-height: 700px) and (max-width: 899px) {
-  .home-hero__visual { height: 170px; }
+.home-hero__shadow {
+  position: absolute;
+  bottom: 4%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 62%;
+  height: 7%;
+  background: rgba(26, 21, 18, 0.18);
+  filter: blur(14px);
+  border-radius: 50%;
+}
+.home-hero__chef-img {
+  position: relative;
+  width: min(320px, 68vw);
+  height: auto;
+  filter: drop-shadow(0 18px 28px rgba(26, 21, 18, 0.16));
 }
 @media (min-width: 900px) {
-  .home-hero__visual {
-    height: 100%;
-    max-height: 560px;
-  }
-}
-.home-hero__layer {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  object-position: bottom;
-  opacity: 0;
-  transition: opacity 1.8s ease;
-}
-.home-hero__layer.is-active {
-  opacity: 1;
-}
-.home-hero__layer--push.is-active {
-  animation: homeHeroPush 10s ease-out forwards;
-}
-@keyframes homeHeroPush {
-  from { transform: scale(1); }
-  to { transform: scale(1.06); }
+  .home-hero__chef-img { width: clamp(320px, 30vw, 440px); }
 }
 
-/* Restrained entrance: one fade + gentle upward settle, staggered. The
-   existing global reduced-motion rule in styles.css (transition/animation
-   duration → ~0) already applies here with no extra media query needed —
-   it also collapses the crossfade/push-in above to an instant, stable
-   state, and home.js additionally stops the auto-cycle timer under
-   reduced motion so nothing keeps swapping in the background. */
+/* ---------- Entrance reveal ---------- */
 .home-hero__reveal {
   opacity: 0;
   transform: translateY(10px);
@@ -345,6 +473,17 @@
 .home-hero__reveal--4 { animation-delay: 160ms; }
 @keyframes homeHeroReveal {
   to { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .home-hero__reveal { opacity: 1; transform: none; animation: none; }
+}
+
+/* ---------- Small phones (<=420px) ---------- */
+@media (max-width: 420px) {
+  body.home .site-header { padding: var(--space-3) var(--space-4); }
+  body.home .site-header__logo { height: 44px; }
+  body.home .site-header.is-compact .site-header__logo { height: 36px; }
+  .home-hero__body { padding: var(--space-4) var(--space-4); }
 }
 
 /* ---------- WhatsApp — round icon button, homepage colour + shape ---------- */

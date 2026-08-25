@@ -5,16 +5,34 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Lina's — Chef-led catering &amp; mobile kitchen</title>
 <link rel="icon" href="/assets/source/brand/Linas_Favicon.jpg">
+<!-- Fraunces/Inter are loaded for THIS page only — the rest of the site
+     still runs on the shared system-font tokens in styles.css
+     (--font-display/--font-body), untouched. See Decision Log: this is a
+     deliberate homepage-only divergence, not a silent site-wide change. -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/assets/mockups/working/prototype-v2/styles.css">
 <link rel="stylesheet" href="/assets/mockups/working/prototype-v2/home.css">
 <link rel="stylesheet" href="/assets/mockups/working/prototype-v2/offerings.css">
 </head>
 <body class="home">
 
-<header class="site-header home-header-reveal">
+<header class="site-header home-header-reveal" id="homeHeader">
   <a class="site-header__mark" href="/">
     <img src="/assets/mockups/working/media/linas-logo-nb-wl.svg" alt="Lina's Mobile Food Kitchen" width="4678" height="3307" class="site-header__logo">
   </a>
+  <!-- Desktop-only inline nav (>=900px). Same five destinations as the
+       drawer below, plus the CTA — spec calls for a full inline nav on
+       desktop with the hamburger reserved for mobile. Every href reuses an
+       existing route; nothing new is introduced. -->
+  <nav class="home-header__nav" aria-label="Primary">
+    <a href="/">Home</a>
+    <a href="/catering">Catering</a>
+    <a href="/menu">Menu</a>
+    <a href="/chef-lina">Meet Chef Lina</a>
+    <a href="/contact">Find Us</a>
+  </nav>
   <div class="site-header__right">
     <a class="home-nav__cta" id="homeNavCta" href="/contact">Request a Quote</a>
     <button class="nav-toggle nav-toggle--icon" id="navToggle" aria-haspopup="true" aria-controls="siteNav" aria-label="Open website navigation">
@@ -35,25 +53,31 @@
 </nav>
 
 <main id="top">
-  <!-- Poster-led first screen — one viewport, chef-led animated gateway.
-       Content, hero sequence and destination reveal media are driven
-       entirely by home-media.js. See home.js for the auto-cycling
-       crossfade and the desktop hover / mobile two-tap destination
-       reveals. -->
+  <!-- Poster-led first screen — one static chef portrait, editorial
+       headline with an italic connector word, two CTAs. Content is driven
+       entirely by home-media.js; home.js only populates and animates it. -->
   <section class="home-hero" id="hero" aria-label="Lina's — chef-led catering and mobile kitchen">
     <div class="home-hero__body">
       <div class="home-hero__copy">
         <p class="home-hero__tagline home-hero__reveal home-hero__reveal--1" id="homeTagline"></p>
+        <!-- Rule-flanked "Lina's" wordmark echo — no separate wordmark-only
+             asset exists in the asset library, so the existing italic
+             brand-name treatment (already approved) stands in for it
+             rather than a fabricated image. -->
         <div class="home-hero__eyebrow-row home-hero__reveal home-hero__reveal--1">
+          <span class="home-hero__rule" aria-hidden="true"></span>
           <p class="home-hero__eyebrow" id="homeEyebrow"></p>
+          <span class="home-hero__rule" aria-hidden="true"></span>
         </div>
         <h1 class="home-hero__title home-hero__reveal home-hero__reveal--2" id="homeHeadline"></h1>
         <p class="home-hero__sub home-hero__reveal home-hero__reveal--3" id="homeSupporting"></p>
-
-        <ul class="home-destinations" id="homeDestinations"></ul>
+        <div class="home-hero__cta-row home-hero__reveal home-hero__reveal--3" id="homeCtaRow"></div>
       </div>
 
-      <div class="home-hero__visual home-hero__reveal home-hero__reveal--4" id="homeHeroVisual"></div>
+      <div class="home-hero__visual home-hero__reveal home-hero__reveal--4">
+        <span class="home-hero__shadow" aria-hidden="true"></span>
+        <img class="home-hero__chef-img" id="homeChefImg" alt="">
+      </div>
     </div>
   </section>
 
