@@ -1,7 +1,8 @@
 // Lina's — Coming Soon page behaviour: countdown (hidden until a launch
-// date is configured), promo region (hidden until enabled), and the
-// Private Preview password dialog. Public contact on this page is
-// WhatsApp-only — there is no enquiry form here.
+// date is configured, drives both the right panel's clock and the left
+// poster card's numeral from one shared tick()), promo region (hidden
+// until enabled), and the Private Preview password dialog. Public contact
+// on this page is WhatsApp-only — there is no enquiry form here.
 (function () {
   "use strict";
 
@@ -19,13 +20,28 @@
     var textEl = document.getElementById("countdownText");
     var timer = null;
 
+    // Poster (left panel) — the numeral is the one dynamic element on an
+    // otherwise pixel-reproduced card. It shares the exact same `days`
+    // value computed below for the right panel's clock rather than
+    // running its own date math, so the two can never disagree.
+    var posterCount = document.getElementById("posterCount");
+    var posterLaunched = document.getElementById("posterLaunched");
+    var posterNumeral = document.getElementById("posterNumeral");
+    var posterDayLabel = document.getElementById("posterDayLabel");
+
+    function showLaunched() {
+      region.querySelector(".cs-countdown__grid").hidden = true;
+      region.querySelector(".cs-countdown__label").textContent = "Lina's is launching now.";
+      textEl.textContent = "Lina's is launching now.";
+      if (posterCount) posterCount.hidden = true;
+      if (posterLaunched) posterLaunched.hidden = false;
+    }
+
     function tick() {
       var diffMs = target - Date.now();
       if (diffMs <= 0) {
         clearInterval(timer);
-        region.querySelector(".cs-countdown__grid").hidden = true;
-        region.querySelector(".cs-countdown__label").textContent = "Lina's is launching now.";
-        textEl.textContent = "Lina's is launching now.";
+        showLaunched();
         return;
       }
       var totalSeconds = Math.floor(diffMs / 1000);
@@ -38,11 +54,25 @@
       mEl.textContent = pad(minutes);
       sEl.textContent = pad(seconds);
       textEl.textContent = days + " days, " + hours + " hours, " + minutes + " minutes and " + seconds + " seconds until launch.";
+
+      if (posterNumeral) posterNumeral.textContent = days;
+      if (posterDayLabel) posterDayLabel.textContent = "DAY" + (days === 1 ? "" : "S") + " TO GO";
+      if (posterCount) posterCount.hidden = false;
+      if (posterLaunched) posterLaunched.hidden = true;
     }
 
     region.hidden = false;
     tick();
     timer = setInterval(tick, 1000);
+
+    // A backgrounded tab can throttle setInterval to well under 1/sec (or
+    // suspend it entirely) — tick() always derives its display from
+    // Date.now() fresh, so it's never wrong, but the display can sit stale
+    // for several seconds until the next throttled tick fires. Re-ticking
+    // immediately on refocus closes that gap rather than waiting on it.
+    document.addEventListener("visibilitychange", function () {
+      if (document.visibilityState === "visible") tick();
+    });
   }
 
   fetch("/api/coming-soon/config")

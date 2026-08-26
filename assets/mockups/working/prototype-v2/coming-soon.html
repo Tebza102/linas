@@ -12,70 +12,104 @@
 <meta property="og:url" content="https://linas.co.za/">
 <meta property="og:image" content="https://linas.co.za/assets/mockups/working/media/lina-hero-poster-working-v1-20260728.jpg">
 <link rel="icon" href="/assets/source/brand/Linas_Favicon.jpg">
+<!-- Fraunces is used ONLY for the poster card's numeral + "DAYS TO GO" —
+     the one place this page needs a bold display serif to approximate the
+     reference artwork's lettering. Everything else on the page keeps the
+     existing system-font stack (--cs-font-body/--cs-font-display) — this
+     page still intentionally loads no other webfonts, per its original
+     isolation principle. -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/assets/mockups/working/prototype-v2/coming-soon.css">
 </head>
 <body>
 
 <a class="skip-link" href="#main">Skip to content</a>
 
-<header class="cs-header">
-  <a class="cs-header__mark" href="/">
-    <img src="/assets/mockups/working/media/linas-logo-nb-wl.svg" alt="Lina's Mobile Food Kitchen" width="4678" height="3307" class="cs-header__logo">
-  </a>
-  <nav class="cs-header__actions" aria-label="Primary actions">
-    <a class="cs-btn cs-btn--ghost-on-red" href="https://wa.me/27764834344?text=Hello%20Lina's%2C%20I%20would%20like%20to%20enquire%20about%20your%20catering%20or%20mobile%20kitchen%20services." target="_blank" rel="noopener">WhatsApp</a>
-    <button type="button" class="cs-header__preview-link" id="privatePreviewOpen">Private Preview</button>
-  </nav>
-</header>
-
 <main id="main">
+  <div class="cs-split">
 
-  <section class="cs-hero" aria-label="Introduction">
-    <div class="cs-hero__media">
-      <img src="/assets/mockups/working/media/lina-hero-poster-working-v1-20260728.jpg" alt="Chef Lina smiling behind the counter of her mobile kitchen trailer, presenting a plate of food" class="cs-hero__image">
-    </div>
-    <div class="cs-hero__content">
-      <p class="cs-hero__eyebrow">Lina's</p>
-      <h1 class="cs-hero__title">Something delicious<br>is coming.</h1>
-      <p class="cs-hero__sub">Lina's new online experience is almost ready. Catering, mobile-kitchen meals and easier ordering are coming together in one place.</p>
-      <div class="cs-hero__actions">
-        <a class="cs-btn cs-btn--primary" href="https://wa.me/27764834344?text=Hello%20Lina's%2C%20I%20would%20like%20to%20enquire%20about%20your%20catering%20or%20mobile%20kitchen%20services." target="_blank" rel="noopener">Chat on WhatsApp</a>
+    <!-- ============================================================
+         LEFT — poster, reproduced from the reference artwork. Kept at
+         its natural portrait proportions (a centred card, not stretched
+         full-bleed). The numeral and "DAY(S) TO GO" label are the only
+         dynamic part — populated by the same tick() in coming-soon.js
+         that drives the right panel's clock, so there is one single
+         source of truth for the day count, not two competing ones.
+         Colour geometry (bar/arc/triangle) is CSS-only, no image asset.
+         ============================================================ -->
+    <div class="cs-poster" aria-hidden="true">
+      <div class="cs-poster__card">
+        <span class="cs-poster__bar"></span>
+        <span class="cs-poster__arc-mask" aria-hidden="true"></span>
+        <span class="cs-poster__arc"></span>
+        <span class="cs-poster__triangle"></span>
+
+        <div class="cs-poster__content">
+          <a class="cs-poster__mark" href="/" aria-label="Lina's — home"></a>
+
+          <div class="cs-poster__count" id="posterCount" hidden>
+            <p class="cs-poster__numeral" id="posterNumeral">0</p>
+            <p class="cs-poster__daylabel" id="posterDayLabel">DAYS TO GO</p>
+          </div>
+          <p class="cs-poster__launched" id="posterLaunched" hidden>Lina's is launching now.</p>
+
+          <p class="cs-poster__caption">Our digital home is almost ready</p>
+          <span class="cs-poster__rule"></span>
+          <p class="cs-poster__launchline">Launching 1 September 2026</p>
+          <p class="cs-poster__domain">linas.co.za</p>
+        </div>
       </div>
     </div>
-  </section>
 
-  <section class="cs-countdown" id="countdownRegion" hidden aria-label="Launch countdown">
-    <p class="cs-countdown__label">Launching in</p>
-    <div class="cs-countdown__grid" id="countdownGrid" role="timer" aria-live="off">
-      <div class="cs-countdown__unit"><span class="cs-countdown__value" id="cdDays">0</span><span class="cs-countdown__name">Days</span></div>
-      <div class="cs-countdown__unit"><span class="cs-countdown__value" id="cdHours">0</span><span class="cs-countdown__name">Hours</span></div>
-      <div class="cs-countdown__unit"><span class="cs-countdown__value" id="cdMinutes">0</span><span class="cs-countdown__name">Minutes</span></div>
-      <div class="cs-countdown__unit"><span class="cs-countdown__value" id="cdSeconds">0</span><span class="cs-countdown__name">Seconds</span></div>
+    <!-- ============================================================
+         RIGHT — everything a static poster can't do: WhatsApp, Private
+         Preview, the live ticking clock. Every existing functional
+         element from the previous single-column page is preserved here
+         (nothing dropped) — the copy/statement text just moved down
+         into this panel rather than sitting above a full-width photo.
+         ============================================================ -->
+    <div class="cs-panel">
+      <div class="cs-panel__actions">
+        <a class="cs-icon-btn cs-icon-btn--circle" href="https://wa.me/27764834344?text=Hello%20Lina's%2C%20I%20would%20like%20to%20enquire%20about%20your%20catering%20or%20mobile%20kitchen%20services." target="_blank" rel="noopener" aria-label="Chat on WhatsApp" aria-describedby="whatsappHint">
+          <svg class="cs-icon-btn__glyph" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 2C6.48 2 2 6.24 2 11.5c0 1.94.6 3.74 1.63 5.24L2 22l5.46-1.57A10.4 10.4 0 0 0 12 21c5.52 0 10-4.24 10-9.5S17.52 2 12 2Zm5.16 13.13c-.22.62-1.28 1.18-1.77 1.24-.45.06-1.02.09-1.65-.1-.38-.12-.87-.28-1.5-.55-2.64-1.15-4.36-3.83-4.5-4.01-.13-.18-1.08-1.44-1.08-2.74 0-1.3.68-1.94.92-2.2.24-.26.53-.33.7-.33h.5c.16 0 .38-.03.58.44l.72 1.77c.06.14.1.3.02.48-.08.18-.12.29-.24.44l-.36.42c-.12.12-.24.25-.1.5.13.24.6 1 1.29 1.62.9.8 1.65 1.05 1.9 1.17.24.12.38.1.53-.06l.63-.72c.2-.23.4-.19.66-.1.27.1 1.68.79 1.97.93.28.15.47.22.53.35.07.13.07.71-.15 1.33Z"/></svg>
+        </a>
+        <span id="whatsappHint" class="cs-visually-hidden">Opens WhatsApp in a new tab</span>
+        <a class="cs-icon-btn cs-icon-btn--squircle" href="https://www.instagram.com/chef__lina_moek?igsi=cDJ6aG95ZWZmbDZx" target="_blank" rel="noopener" aria-label="Follow Lina's on Instagram">
+          <svg class="cs-icon-btn__glyph" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="4.2" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="17.2" cy="6.8" r="1.15" fill="currentColor"/></svg>
+        </a>
+        <button type="button" class="cs-panel__preview-link" id="privatePreviewOpen">Private Preview</button>
+      </div>
+
+      <div class="cs-panel__intro">
+        <p class="cs-hero__eyebrow">Lina's</p>
+        <h1 class="cs-hero__title">Something delicious<br>is coming.</h1>
+        <p class="cs-hero__sub">Lina's new online experience is almost ready. Catering, mobile-kitchen meals and easier ordering are coming together in one place.</p>
+      </div>
+
+      <section class="cs-countdown" id="countdownRegion" hidden aria-label="Launch countdown">
+        <p class="cs-countdown__label">Launching in</p>
+        <div class="cs-countdown__grid" id="countdownGrid" role="timer" aria-live="off">
+          <div class="cs-countdown__unit"><span class="cs-countdown__value" id="cdDays">0</span><span class="cs-countdown__name">Days</span></div>
+          <div class="cs-countdown__unit"><span class="cs-countdown__value" id="cdHours">0</span><span class="cs-countdown__name">Hours</span></div>
+          <div class="cs-countdown__unit"><span class="cs-countdown__value" id="cdMinutes">0</span><span class="cs-countdown__name">Minutes</span></div>
+          <div class="cs-countdown__unit"><span class="cs-countdown__value" id="cdSeconds">0</span><span class="cs-countdown__name">Seconds</span></div>
+        </div>
+        <p class="cs-visually-hidden" id="countdownText" aria-live="polite"></p>
+      </section>
+
+      <section class="cs-promo" id="promoRegion" hidden aria-label="Launch special">
+        <p class="cs-promo__text" id="promoText"></p>
+      </section>
+
+      <section class="cs-statement" aria-label="A note from Lina's">
+        <p class="cs-statement__text">Chef-led catering and a mobile kitchen, built around real food and real service — online payments are on the way, but every order today is still confirmed personally on WhatsApp.</p>
+      </section>
     </div>
-    <p class="cs-visually-hidden" id="countdownText" aria-live="polite"></p>
-  </section>
 
-  <section class="cs-promo" id="promoRegion" hidden aria-label="Launch special">
-    <p class="cs-promo__text" id="promoText"></p>
-  </section>
-
-  <section class="cs-statement" aria-label="A note from Lina's">
-    <p class="cs-statement__text">Chef-led catering and a mobile kitchen, built around real food and real service — online payments are on the way, but every order today is still confirmed personally on WhatsApp.</p>
-  </section>
-
+  </div>
 </main>
-
-<footer class="cs-footer">
-  <img src="/assets/mockups/working/media/linas-logo-nb-wl.svg" alt="Lina's Mobile Food Kitchen" width="4678" height="3307" class="cs-footer__logo">
-  <dl class="cs-contact-list">
-    <div><dt>Address</dt><dd>1 Chris Street, Heidelberg, 1441</dd></div>
-    <div><dt>Mobile Kitchen</dt><dd>Unique Builders parking lot, just before Oasis Center.</dd></div>
-    <div><dt>Hours</dt><dd>Mon–Fri: 08:00–17:00<br>Saturday: 08:30–14:00<br>Sunday: Closed</dd></div>
-    <div><dt>WhatsApp</dt><dd><a href="https://wa.me/27764834344?text=Hello%20Lina's%2C%20I%20would%20like%20to%20enquire%20about%20your%20catering%20or%20mobile%20kitchen%20services." target="_blank" rel="noopener">+27 76 483 4344</a></dd></div>
-    <div><dt>Email</dt><dd><a href="mailto:enquiries@linas.co.za">enquiries@linas.co.za</a></dd></div>
-    <div><dt>Instagram</dt><dd><a href="https://instagram.com/chef_lina_moek" target="_blank" rel="noopener">@chef_lina_moek</a></dd></div>
-  </dl>
-</footer>
 
 <div class="cs-modal-backdrop" id="previewModalBackdrop" hidden>
   <div class="cs-modal" role="dialog" aria-modal="true" aria-labelledby="previewModalTitle" id="previewModal">
