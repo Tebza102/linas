@@ -41,6 +41,12 @@ const MIME_TYPES = {
   ".png": "image/png",
   ".svg": "image/svg+xml",
   ".mp4": "video/mp4",
+  ".mp3": "audio/mpeg",
+  // .mpeg here is audio, not video: assets/mockups/working/media/
+  // lina-track-3.mpeg is a genuine MP3 (verified via ffprobe) that
+  // shipped with an unusual extension. Revisit this mapping if a real
+  // .mpeg video file is ever added to the project.
+  ".mpeg": "audio/mpeg",
   ".webp": "image/webp",
   ".ico": "image/x-icon",
   ".woff": "font/woff",

@@ -136,6 +136,110 @@
       // config fetch simply leaves both regions hidden.
     });
 
+  /* ---------- Floating music control ----------
+     No autoplay, deliberately: browsers block audio-with-sound until a
+     user gesture, and fighting that reliably isn't possible — every
+     <audio> here has preload="none" and stays fully untouched by JS
+     until a visitor clicks a track button. Only one track plays at a
+     time; picking a different track pauses whichever is currently
+     playing first. */
+  (function () {
+    var toggle = document.getElementById("musicToggle");
+    var widget = document.getElementById("musicWidget");
+    var panel = document.getElementById("musicPanel");
+    var stopBtn = document.getElementById("musicStop");
+    var trackBtns = Array.prototype.slice.call(document.querySelectorAll(".cs-music__track"));
+    if (!toggle || !panel) return;
+
+    var audioEls = {
+      1: document.getElementById("audioTrack1"),
+      2: document.getElementById("audioTrack2"),
+      3: document.getElementById("audioTrack3")
+    };
+    var currentKey = null;
+
+    function openPanel() {
+      panel.hidden = false;
+      toggle.setAttribute("aria-expanded", "true");
+    }
+    function closePanel() {
+      panel.hidden = true;
+      toggle.setAttribute("aria-expanded", "false");
+    }
+    function togglePanel() {
+      if (panel.hidden) openPanel(); else closePanel();
+    }
+
+    function setPressedState() {
+      trackBtns.forEach(function (btn) {
+        btn.setAttribute("aria-pressed", String(btn.getAttribute("data-track") === currentKey));
+      });
+      stopBtn.disabled = !currentKey;
+    }
+
+    function stopCurrent() {
+      if (!currentKey) return;
+      var el = audioEls[currentKey];
+      if (el) el.pause();
+      currentKey = null;
+      setPressedState();
+    }
+
+    function playTrack(key) {
+      // Always pause whatever's currently playing first — only one track
+      // plays at a time, never layered.
+      if (currentKey && currentKey !== key) {
+        var prev = audioEls[currentKey];
+        if (prev) prev.pause();
+      }
+      var el = audioEls[key];
+      if (!el) return;
+      currentKey = key;
+      setPressedState();
+      // .play() returns a promise that rejects if the browser still
+      // refuses (e.g. no user-gesture context was actually present) —
+      // caught so a refusal never surfaces as an uncaught console error.
+      el.play().catch(function () {
+        currentKey = null;
+        setPressedState();
+      });
+    }
+
+    Object.keys(audioEls).forEach(function (key) {
+      var el = audioEls[key];
+      if (!el) return;
+      // A track finishing naturally should reset the UI the same way an
+      // explicit stop does — otherwise it stays "pressed" for audio
+      // that's no longer actually playing.
+      el.addEventListener("ended", function () {
+        if (currentKey === key) { currentKey = null; setPressedState(); }
+      });
+    });
+
+    toggle.addEventListener("click", togglePanel);
+
+    trackBtns.forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        var key = btn.getAttribute("data-track");
+        if (currentKey === key) { stopCurrent(); return; }
+        playTrack(key);
+      });
+    });
+
+    stopBtn.addEventListener("click", stopCurrent);
+
+    document.addEventListener("keydown", function (e) {
+      if (e.key === "Escape" && !panel.hidden) {
+        closePanel();
+        toggle.focus();
+      }
+    });
+
+    document.addEventListener("click", function (e) {
+      if (!panel.hidden && widget && !widget.contains(e.target)) closePanel();
+    });
+  })();
+
   /* ---------- Private Preview modal ---------- */
 
   var openBtn = document.getElementById("privatePreviewOpen");

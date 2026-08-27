@@ -323,6 +323,67 @@ img { max-width: 100%; display: block; }
 .cs-icon-btn--squircle:hover, .cs-icon-btn--squircle:focus-visible { background: rgba(178, 55, 62, 0.08); }
 .cs-icon-btn__glyph { width: 22px; height: 22px; fill: currentColor; flex: none; }
 
+/* ---------- Floating music control ----------
+   Same red-circle language as the WhatsApp icon button (reuses
+   .cs-icon-btn/.cs-icon-btn--circle directly). Closed by default; the
+   panel only ever appears after a click on the toggle, and audio only
+   ever starts after a click inside the panel — nothing here is
+   autoplay-adjacent. */
+.cs-music {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  z-index: 120;
+}
+.cs-music__panel {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 12px);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 168px;
+  padding: 10px;
+  background: var(--cs-white);
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 10px;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.18);
+}
+.cs-music__panel[hidden] { display: none; }
+.cs-music__track,
+.cs-music__stop {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 12px;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--cs-black);
+  font-family: var(--cs-font-body);
+  font-size: 14px;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+}
+.cs-music__track:hover, .cs-music__track:focus-visible,
+.cs-music__stop:hover:not(:disabled), .cs-music__stop:focus-visible {
+  background: rgba(178, 55, 62, 0.08);
+}
+.cs-music__track[aria-pressed="true"] {
+  background: var(--cs-red);
+  color: var(--cs-white);
+}
+/* The pause control is deliberately styled at the same size/weight as
+   the track buttons — sound-sensitive visitors need it exactly as easy
+   to find as play, never smaller or tucked away. */
+.cs-music__stop {
+  margin-top: 4px;
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+  padding-top: 10px;
+}
+.cs-music__stop:disabled { color: rgba(0, 0, 0, 0.35); cursor: default; }
+
 /* ---------- Hero copy (moved into the right panel) ---------- */
 .cs-hero__eyebrow {
   font-family: var(--cs-font-display); font-style: italic; color: var(--cs-red);

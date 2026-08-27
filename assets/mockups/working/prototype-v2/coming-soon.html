@@ -115,6 +115,32 @@
   </div>
 </main>
 
+<!-- Floating music control — closed by default, no autoplay. Audio only
+     ever starts from an explicit click on one of the three track buttons
+     below; nothing here plays on load or on the toggle button itself. -->
+<div class="cs-music" id="musicWidget">
+  <button type="button" class="cs-icon-btn cs-icon-btn--circle cs-music__toggle" id="musicToggle" aria-haspopup="true" aria-expanded="false" aria-controls="musicPanel" aria-label="Music player">
+    <svg class="cs-icon-btn__glyph" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 3v10.55A3.5 3.5 0 1 0 13.5 16V7h4V3h-5.5Z"/></svg>
+  </button>
+  <div class="cs-music__panel" id="musicPanel" hidden>
+    <button type="button" class="cs-music__track" data-track="1" aria-pressed="false">Track 1</button>
+    <button type="button" class="cs-music__track" data-track="2" aria-pressed="false">Track 2</button>
+    <button type="button" class="cs-music__track" data-track="3" aria-pressed="false">Track 3</button>
+    <button type="button" class="cs-music__stop" id="musicStop" aria-label="Pause music" disabled>Pause</button>
+  </div>
+</div>
+
+<!-- preload="none": none of the three files are fetched until the
+     visitor picks one — zero added weight to the page's initial load. -->
+<audio id="audioTrack1" preload="none"><source src="/assets/mockups/working/media/lina-track-1.mp3" type="audio/mpeg"></audio>
+<audio id="audioTrack2" preload="none"><source src="/assets/mockups/working/media/lina-track-2.mp3" type="audio/mpeg"></audio>
+<!-- lina-track-3.mpeg is a genuine MP3 (verified via ffprobe: MPEG layer
+     III, 48kHz stereo) despite the .mpeg extension — the explicit
+     type="audio/mpeg" below is what actually matters for playback, not
+     the filename. Not renamed here: the source file itself is untouched,
+     out of scope for this task. -->
+<audio id="audioTrack3" preload="none"><source src="/assets/mockups/working/media/lina-track-3.mpeg" type="audio/mpeg"></audio>
+
 <div class="cs-modal-backdrop" id="previewModalBackdrop" hidden>
   <div class="cs-modal" role="dialog" aria-modal="true" aria-labelledby="previewModalTitle" id="previewModal">
     <button type="button" class="cs-modal__close" id="previewModalClose" aria-label="Close">Close ✕</button>
