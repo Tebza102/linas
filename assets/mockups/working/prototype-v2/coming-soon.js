@@ -10,6 +10,29 @@
 
   function pad(n) { return String(n).padStart(2, "0"); }
 
+  // SAST is a fixed UTC+2 offset year-round (no daylight saving), so
+  // shifting an epoch ms value by +2h and reading its UTC date parts
+  // gives the correct SAST wall-clock calendar date regardless of the
+  // visitor's own browser/OS timezone — no Intl/timezone-database
+  // dependency needed.
+  var SAST_OFFSET_MS = 2 * 60 * 60 * 1000;
+  function sastDateParts(ms) {
+    var d = new Date(ms + SAST_OFFSET_MS);
+    return { y: d.getUTCFullYear(), m: d.getUTCMonth(), d: d.getUTCDate() };
+  }
+  // Whole calendar dates between "now" and the launch date, in SAST,
+  // ignoring time-of-day entirely — 27 Aug and 1 Sept are "5 days apart"
+  // from 00:00 to 23:59 SAST regardless of the current time. This is
+  // deliberately a different number from the live Hours/Minutes/Seconds
+  // ticker below, which counts down to the precise 9:00 AM instant.
+  function calendarDaysBetween(nowMs, targetMs) {
+    var a = sastDateParts(nowMs);
+    var b = sastDateParts(targetMs);
+    var aUTC = Date.UTC(a.y, a.m, a.d);
+    var bUTC = Date.UTC(b.y, b.m, b.d);
+    return Math.max(0, Math.round((bUTC - aUTC) / 86400000));
+  }
+
   function startCountdown(launchAtIso) {
     var region = document.getElementById("countdownRegion");
     var target = new Date(launchAtIso).getTime();
@@ -25,6 +48,7 @@
     // value computed below for the right panel's clock rather than
     // running its own date math, so the two can never disagree.
     var posterCount = document.getElementById("posterCount");
+    var posterToday = document.getElementById("posterToday");
     var posterLaunched = document.getElementById("posterLaunched");
     var posterNumeral = document.getElementById("posterNumeral");
     var posterDayLabel = document.getElementById("posterDayLabel");
@@ -34,18 +58,26 @@
       region.querySelector(".cs-countdown__label").textContent = "Lina's is launching now.";
       textEl.textContent = "Lina's is launching now.";
       if (posterCount) posterCount.hidden = true;
+      if (posterToday) posterToday.hidden = true;
       if (posterLaunched) posterLaunched.hidden = false;
     }
 
     function tick() {
-      var diffMs = target - Date.now();
+      var nowMs = Date.now();
+      var diffMs = target - nowMs;
       if (diffMs <= 0) {
         clearInterval(timer);
         showLaunched();
         return;
       }
       var totalSeconds = Math.floor(diffMs / 1000);
-      var days = Math.floor(totalSeconds / 86400);
+      // Days: calendar-date difference in SAST (see calendarDaysBetween) —
+      // the cross-channel headline number, matching Chef Lina's daily
+      // poster. Hours/Minutes/Seconds: unchanged, still the live countdown
+      // to the precise 9:00 AM instant. The two are intentionally
+      // independent and will not arithmetically "add up" to the same
+      // total (e.g. "5 Days, 19 Hours" is expected, not a bug).
+      var days = calendarDaysBetween(nowMs, target);
       var hours = Math.floor((totalSeconds % 86400) / 3600);
       var minutes = Math.floor((totalSeconds % 3600) / 60);
       var seconds = totalSeconds % 60;
@@ -55,10 +87,22 @@
       sEl.textContent = pad(seconds);
       textEl.textContent = days + " days, " + hours + " hours, " + minutes + " minutes and " + seconds + " seconds until launch.";
 
-      if (posterNumeral) posterNumeral.textContent = days;
-      if (posterDayLabel) posterDayLabel.textContent = "DAY" + (days === 1 ? "" : "S") + " TO GO";
-      if (posterCount) posterCount.hidden = false;
-      if (posterLaunched) posterLaunched.hidden = true;
+      if (days >= 1) {
+        if (posterNumeral) posterNumeral.textContent = days;
+        if (posterDayLabel) posterDayLabel.textContent = "DAY" + (days === 1 ? "" : "S") + " TO GO";
+        if (posterCount) posterCount.hidden = false;
+        if (posterToday) posterToday.hidden = true;
+        if (posterLaunched) posterLaunched.hidden = true;
+      } else {
+        // Same SAST calendar date as launch, but the 9:00 AM instant
+        // hasn't arrived yet (diffMs > 0, handled above) — a bare "0"
+        // numeral would read as broken, so swap to a "today" message
+        // instead. Hours/Minutes/Seconds keep ticking normally toward
+        // 9:00 AM; showLaunched() takes over once diffMs <= 0, unchanged.
+        if (posterCount) posterCount.hidden = true;
+        if (posterToday) posterToday.hidden = false;
+        if (posterLaunched) posterLaunched.hidden = true;
+      }
     }
 
     region.hidden = false;

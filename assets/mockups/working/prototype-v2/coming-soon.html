@@ -53,6 +53,10 @@
             <p class="cs-poster__numeral" id="posterNumeral">0</p>
             <p class="cs-poster__daylabel" id="posterDayLabel">DAYS TO GO</p>
           </div>
+          <!-- Same calendar date as launch (SAST), before the 9:00 AM
+               moment actually arrives — the numeral would otherwise show a
+               bare "0", which reads as broken rather than "today". -->
+          <p class="cs-poster__launched" id="posterToday" hidden>Launching today.</p>
           <p class="cs-poster__launched" id="posterLaunched" hidden>Lina's is launching now.</p>
 
           <p class="cs-poster__caption">Our digital home is almost ready</p>
