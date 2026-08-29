@@ -8,6 +8,7 @@ Before meaningful work, read these files in order:
 4. `docs/LINA-PROJECT-PLAN.md`
 5. `docs/LINA-CLIENT-INPUTS-REGISTER.md`
 6. `docs/LINA-TEST-AND-RELEASE-CHECKLIST.md`
+7. `docs/LINA-CLAUDE-AGENT-SKILL-STACK.md`
 
 The Master Product & Delivery Brief is the primary source of truth. The Decision Log records later approved changes. For public visual/UI work, `docs/LINA-DESIGN-DNA.md` is mandatory and governs implementation unless a later approved Decision Log entry explicitly supersedes it.
 
@@ -35,6 +36,37 @@ For public design implementation, apply all of these lenses before declaring wor
 - **Visual QA / release reviewer** — compare browser screenshots against the approved reference at required widths and verify that protected operational systems remain unchanged.
 
 These are review responsibilities, not permission to introduce extra features, frameworks, dependencies or visual concepts.
+
+## Mandatory Claude Code specialist stack for substantial public UI work
+
+Project-specific skills are installed under `.claude/skills/` and project-specific subagents are installed under `.claude/agents/`. Read `docs/LINA-CLAUDE-AGENT-SKILL-STACK.md` before substantial public UI work.
+
+For the approved homepage implementation, the following specialist sequence is mandatory unless a specialist is genuinely unavailable in the running Claude Code environment:
+
+1. Invoke `linas-repo-scout` first for architecture, dependency boundaries, route coupling and the smallest safe file allowlist.
+2. Invoke `linas-design-guardian` and `linas-ux-accessibility-reviewer` before finalising the Change Contract. Run them in parallel where supported.
+3. The main session consolidates those findings into the Change Contract and STOPS for explicit human approval.
+4. After the Change Contract is approved, invoke `linas-implementation-advisor` to convert the approved scope into an exact DOM/selector/asset patch plan.
+5. The main Claude Code session performs the approved file edits. Specialist agents remain read-only so there is one controlled writer and one auditable diff.
+6. Invoke `linas-visual-qa` after the static visual stage and again after responsive/interaction/motion stages where those stages materially change the result.
+7. Invoke `linas-release-guardian` before any recommendation to commit, merge or deploy.
+
+For this homepage task, do not silently skip a required specialist. If an agent or required project skill cannot be loaded or invoked, STOP and report exactly what capability is unavailable.
+
+Do not invoke every specialist mechanically for unrelated tiny changes; use the full stack for substantial public design implementation, approved-mock reproduction, responsive redesign, motion work, or changes with shared-file/regression risk. The current homepage implementation qualifies for the full stack.
+
+All installed project subagents use `model: inherit` deliberately so they use the model selected for the main Claude Code session rather than being pinned to a model ID that may become stale.
+
+### Capability check
+Before the homepage implementation begins, verify:
+- expected `.claude/agents/*.md` files exist;
+- expected `.claude/skills/*/SKILL.md` files exist;
+- Agent/Skill functionality is not disabled by local or managed settings;
+- this project `CLAUDE.md` is loaded;
+- the approved homepage reference exists at the exact approved path;
+- the current branch matches the approved launch-prep branch.
+
+If the `.claude/agents/` or `.claude/skills/` directories were created after the current Claude Code session had already started, restart Claude Code before relying on the new specialist stack.
 
 ## Approved-mock fidelity rule
 For a task that supplies an approved mock:
