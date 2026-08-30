@@ -2,9 +2,8 @@
   "use strict";
 
   var CONFIG = {
-    // No WhatsApp number confirmed yet (Client Inputs Register I-006 / I-014).
-    // Leave null until Tebogo confirms a real number — never guess one.
-    whatsappNumber: null
+    // Confirmed real number: +27 76 483 4344, international format for wa.me.
+    whatsappNumber: "27764834344"
   };
 
   var prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -45,44 +44,54 @@
     siteNav.querySelectorAll("a").forEach(function (a) { a.addEventListener("click", closeNav); });
   }
 
-  /* ---------- Hero/gateway media: only autoplay if motion is welcome ---------- */
+  /* ---------- Hero/gateway media: only autoplay if motion is welcome ----------
+     play() is retried once data arrives, since a play() issued before the
+     first frame exists can be silently dropped by some browsers. */
+  function tryPlay(v) {
+    var p = v.play();
+    if (p && p.catch) p.catch(function () {});
+  }
   document.querySelectorAll("video[data-autoplay-hero]").forEach(function (v) {
-    if (!prefersReducedMotion) {
-      var p = v.play();
-      if (p && p.catch) p.catch(function () {});
-    }
+    if (prefersReducedMotion) return;
+    tryPlay(v);
+    v.addEventListener("loadeddata", function () { if (v.paused) tryPlay(v); });
   });
 
-  /* ---------- Landing hero sequence: still (Ken Burns) -> crossfade to video ----------
-     Reduced-motion users never get the swap — they see the still image only, which is
-     the explicit "graceful fallback" this sequence is required to have. Without JS
-     (progressive enhancement), the still's pure-CSS Ken Burns still plays and the video
-     simply never appears — also a reasonable, still-premium experience. */
-  var sequenceHero = document.querySelector(".gateway--sequence");
-  if (sequenceHero && !prefersReducedMotion) {
-    var heroVideoEl = sequenceHero.querySelector(".gateway__media");
-    var swapToVideo = function () { sequenceHero.classList.add("gateway--video-active"); };
-    if (heroVideoEl) {
-      // Prefer swapping once the video actually has a frame ready, so the crossfade
-      // never reveals a blank/black frame; fall back to a fixed delay if that event
-      // is slow to arrive (e.g. slower connections).
-      var swapped = false;
-      var doSwapOnce = function () { if (!swapped) { swapped = true; swapToVideo(); } };
-      heroVideoEl.addEventListener("loadeddata", function () { setTimeout(doSwapOnce, 3800); });
-      setTimeout(doSwapOnce, 5200);
-    } else {
-      setTimeout(swapToVideo, 3800);
-    }
-  }
+  /* ---------- Hero sequence: still (Ken Burns) -> crossfade to video ----------
+     Applies to every .gateway--sequence hero (Home, Catering, Mobile Kitchen).
+     The crossfade fires only once the video is PROVEN to be playing
+     (readyState >= 2 and not paused) — never onto a paused/blank layer, so
+     no black frame and no fade-to-static-poster is possible. If autoplay is
+     refused outright, the swap simply never happens and the Ken Burns still
+     carries the hero. Still phase ~3s, crossfade 1.6s (CSS).
+     Reduced-motion users never get the swap — they see the strongest still,
+     unanimated, with all text and actions available. */
+  document.querySelectorAll(".gateway--sequence").forEach(function (hero) {
+    if (prefersReducedMotion) return;
+    var video = hero.querySelector(".gateway__media");
+    if (!video) return;
+    var swapped = false;
+    var started = Date.now();
+    var timer = setInterval(function () {
+      var elapsed = Date.now() - started;
+      if (elapsed >= 3000 && video.readyState >= 2 && !video.paused) {
+        swapped = true;
+        hero.classList.add("gateway--video-active");
+      } else if (elapsed >= 3000 && video.paused) {
+        tryPlay(video);
+      }
+      if (swapped || elapsed > 12000) clearInterval(timer);
+    }, 400);
+  });
 
   /* ---------- WhatsApp action (shared across all pages) ---------- */
   var whatsappNote = document.getElementById("whatsappNote");
   function handleWhatsAppAction(itemName) {
     if (CONFIG.whatsappNumber) {
-      var text = itemName ? "Hi Lina's, I'd like to order: " + itemName : "Hi Lina's, I'd like to place an order.";
+      var text = itemName ? "Hi Lina's, I'd like to order: " + itemName : "Hello Lina's, I would like to enquire about your catering or mobile kitchen services.";
       window.open("https://wa.me/" + CONFIG.whatsappNumber + "?text=" + encodeURIComponent(text), "_blank", "noopener");
     } else if (whatsappNote) {
-      whatsappNote.textContent = "WhatsApp ordering isn't wired to a confirmed number yet (see Client Inputs Register I-006 / I-014). Nothing was sent.";
+      whatsappNote.textContent = "WhatsApp ordering isn't connected to a number yet. Nothing was sent — please use the enquiry form instead.";
       whatsappNote.classList.add("is-visible");
     }
   }
@@ -91,9 +100,7 @@
   });
 
   /* ---------- Interactive menu (menu.html only — guarded) ---------- */
-  var menuTabsEl = document.getElementById("menuTabs");
   var menuGridEl = document.getElementById("menuGrid");
-  var activeCategory = null;
 
   function escapeHtml(s) {
     return String(s).replace(/[&<>"']/g, function (c) {
@@ -101,24 +108,19 @@
     });
   }
 
-  function renderTabs() {
-    menuTabsEl.innerHTML = "";
-    LINA_MENU.categories.forEach(function (cat) {
-      var btn = document.createElement("button");
-      btn.type = "button"; btn.className = "menu__tab"; btn.setAttribute("role", "tab");
-      btn.setAttribute("aria-selected", cat.id === activeCategory ? "true" : "false");
-      btn.textContent = cat.label + (cat.priceNote ? " (" + cat.priceNote + ")" : "");
-      btn.addEventListener("click", function () { activeCategory = cat.id; renderTabs(); renderGrid(); });
-      menuTabsEl.appendChild(btn);
-    });
-  }
-  function renderGrid() {
-    menuGridEl.innerHTML = "";
-    var cat = LINA_MENU.categories.find(function (c) { return c.id === activeCategory; });
-    if (!cat) return;
-    cat.items.forEach(function (item) {
-      var card = document.createElement("button");
-      card.type = "button"; card.className = "menu-card";
+  // Builds one menu row. Extracted verbatim from the previous inline
+  // cat.items.forEach body so every category can reuse it — the DOM,
+  // classes, image/imageConfidence handling, modal listener and cart
+  // wiring below are unchanged from that original implementation.
+  function buildMenuCard(item, cat) {
+      // The card is a DIV holding two sibling buttons — "open details" and
+      // "add". It used to be a single <button>; nesting an Add button inside
+      // that would be invalid HTML with unpredictable click behaviour.
+      var card = document.createElement("div");
+      card.className = "menu-card";
+      var openBtn = document.createElement("button");
+      openBtn.type = "button"; openBtn.className = "menu-card__open";
+      openBtn.setAttribute("aria-label", "View details for " + item.name);
       var imgWrap = document.createElement("div"); imgWrap.className = "menu-card__image";
       var imgSrc = item.image || item.categoryImage || cat.categoryImage;
       if (imgSrc) {
@@ -142,13 +144,57 @@
         initial.textContent = item.name.charAt(0);
         imgWrap.appendChild(initial);
       }
-      card.appendChild(imgWrap);
+      openBtn.appendChild(imgWrap);
       var body = document.createElement("div"); body.className = "menu-card__body";
       var name = document.createElement("p"); name.className = "menu-card__name"; name.textContent = item.name;
       var price = document.createElement("p"); price.className = "menu-card__price"; price.textContent = item.price;
-      body.appendChild(name); body.appendChild(price); card.appendChild(body);
-      card.addEventListener("click", function () { openMenuModal(item, cat); });
-      menuGridEl.appendChild(card);
+      body.appendChild(name); body.appendChild(price); openBtn.appendChild(body);
+      openBtn.addEventListener("click", function () { openMenuModal(item, cat); });
+      card.appendChild(openBtn);
+
+      // One-tap add is the point of a mobile-kitchen menu — burying it inside
+      // the details modal would defeat it. Only rendered when cart.js is
+      // present (menu page only), so other pages are unaffected.
+      if (window.LINA_CART && item.id) {
+        var addBtn = document.createElement("button");
+        addBtn.type = "button"; addBtn.className = "menu-card__add";
+        addBtn.textContent = "Add";
+        addBtn.setAttribute("aria-label", "Add " + item.name + " to your order");
+        addBtn.addEventListener("click", function () {
+          window.LINA_CART.add(item.id, 1);
+        });
+        card.appendChild(addBtn);
+      }
+      return card;
+  }
+
+  // Renders every category sequentially as its own editorial section, so the
+  // whole menu is visible without interaction (previously one category at a
+  // time behind a tab strip). Headings and the optional price note come from
+  // the LINA_MENU data itself — never hard-coded here.
+  function renderGrid() {
+    menuGridEl.innerHTML = "";
+    LINA_MENU.categories.forEach(function (cat) {
+      var section = document.createElement("section");
+      section.className = "menu-section";
+
+      var heading = document.createElement("h2");
+      heading.className = "menu-section__title";
+      heading.textContent = cat.label;
+      section.appendChild(heading);
+
+      if (cat.priceNote) {
+        var note = document.createElement("p");
+        note.className = "menu-section__note";
+        note.textContent = cat.priceNote;
+        section.appendChild(note);
+      }
+
+      cat.items.forEach(function (item) {
+        section.appendChild(buildMenuCard(item, cat));
+      });
+
+      menuGridEl.appendChild(section);
     });
   }
   var lastMenuTrigger = null;
@@ -162,7 +208,9 @@
         '<h3>' + escapeHtml(item.name) + '</h3>' +
         '<p class="menu-card__price">' + escapeHtml(item.price) + ' · ' + escapeHtml(cat.label) + '</p>' +
         '<p class="placeholder-note">Ingredient list is exactly as written on Lina’s own menu. No extra description is added.</p>' +
-        '<button class="btn btn--primary" id="modalOrderBtn" type="button">Order this on WhatsApp →</button>' +
+        '<button class="btn btn--primary" id="modalOrderBtn" type="button">' +
+          (window.LINA_CART && item.id ? "Add to order" : "Order this on WhatsApp →") +
+        '</button>' +
       '</div>';
     document.body.appendChild(modal);
     var closeBtn = modal.querySelector(".menu-modal__close");
@@ -183,12 +231,20 @@
     }
     closeBtn.addEventListener("click", close);
     modal.addEventListener("click", function (e) { if (e.target === modal) close(); });
-    orderBtn.addEventListener("click", function () { handleWhatsAppAction(item.name); });
+    orderBtn.addEventListener("click", function () {
+      // With the cart present this adds to the order; without it (any page
+      // that doesn't load cart.js) the original single-item WhatsApp action
+      // is preserved unchanged.
+      if (window.LINA_CART && item.id) {
+        window.LINA_CART.add(item.id, 1);
+        close();
+        return;
+      }
+      handleWhatsAppAction(item.name);
+    });
     document.addEventListener("keydown", onKey);
   }
-  if (typeof LINA_MENU !== "undefined" && menuTabsEl && menuGridEl) {
-    activeCategory = LINA_MENU.categories[0].id;
-    renderTabs();
+  if (typeof LINA_MENU !== "undefined" && menuGridEl) {
     renderGrid();
   }
 

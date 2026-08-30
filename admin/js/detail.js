@@ -3,6 +3,7 @@ import { db } from "./firebase-init.js";
 import {
   doc, updateDoc, collection, addDoc, query, where, orderBy, getDocs, serverTimestamp, onSnapshot
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
+import { findBookingForEnquiry, createBookingFromEnquiry } from "./create-booking.js";
 
 const STATUSES = ["New", "Contacted", "Quoted", "Confirmed", "In Progress", "Completed", "Lost/Cancelled"];
 
@@ -86,7 +87,11 @@ function notificationBlockHtml(prefix, label, isOwner) {
 
 export async function openDetail(panelEl, enquiry, ctx) {
   const { user, role, adminUsersMap, onSaved } = ctx;
-  const isOwner = role === "owner";
+  const isOwner = role === "owner" || role === "developer";
+  // Observer can view every field above but never write any of them —
+  // enforced by firestore.rules; disabled here too so the UI doesn't
+  // offer a save action that would only fail after the fact.
+  const isReadOnly = role === "observer";
 
   // A previously open panel's live listener must be torn down before we
   // attach a new one for a different (or the same) enquiry.
@@ -119,7 +124,7 @@ export async function openDetail(panelEl, enquiry, ctx) {
 
       <label style="display:grid; gap:4px; font-size:14px; margin-top:16px;">
         Status
-        <select id="statusSelect">${statusOptions}</select>
+        <select id="statusSelect" ${isReadOnly ? "disabled" : ""}>${statusOptions}</select>
       </label>
 
       <div id="quoteBlock" style="margin-top:12px; display:none;">
@@ -145,28 +150,28 @@ export async function openDetail(panelEl, enquiry, ctx) {
       <div id="lostBlock" style="margin-top:12px; display:none;">
         <label style="display:grid; gap:4px; font-size:14px;">
           Lost/cancelled reason
-          <input type="text" id="lostReason" value="${esc(enquiry.lostReason || "")}">
+          <input type="text" id="lostReason" ${isReadOnly ? "disabled" : ""} value="${esc(enquiry.lostReason || "")}">
         </label>
       </div>
 
       <label style="display:grid; gap:4px; font-size:14px; margin-top:12px;">
         Owner
-        <select id="ownerSelect">${ownerOptions}</select>
+        <select id="ownerSelect" ${isReadOnly ? "disabled" : ""}>${ownerOptions}</select>
       </label>
       <label style="display:grid; gap:4px; font-size:14px; margin-top:12px;">
         Next action
-        <input type="text" id="nextActionInput" value="${esc(enquiry.nextAction || "")}" placeholder="e.g. Call to confirm menu choices">
+        <input type="text" id="nextActionInput" ${isReadOnly ? "disabled" : ""} value="${esc(enquiry.nextAction || "")}" placeholder="e.g. Call to confirm menu choices">
       </label>
       <label style="display:grid; gap:4px; font-size:14px; margin-top:12px;">
         Follow-up date
-        <input type="date" id="followUpInput" value="${esc(enquiry.followUpDate || "")}">
+        <input type="date" id="followUpInput" ${isReadOnly ? "disabled" : ""} value="${esc(enquiry.followUpDate || "")}">
       </label>
       <label style="display:grid; gap:4px; font-size:14px; margin-top:12px;">
         Add a note
-        <textarea id="noteInput" rows="3" placeholder="Internal note (visible to admin/staff only)"></textarea>
+        <textarea id="noteInput" rows="3" ${isReadOnly ? "disabled" : ""} placeholder="Internal note (visible to admin/staff only)"></textarea>
       </label>
 
-      <button class="btn btn--primary" id="saveDetailBtn" style="margin-top:16px;">Save changes</button>
+      ${isReadOnly ? "" : '<button class="btn btn--primary" id="saveDetailBtn" style="margin-top:16px;">Save changes</button>'}
       <p class="form-status" id="detailStatus" role="status" aria-live="polite"></p>
 
       <div class="detail-field" style="margin-top:24px;">
@@ -178,6 +183,14 @@ export async function openDetail(panelEl, enquiry, ctx) {
         <dt>Enquiry storage</dt>
         <dd>Stored successfully</dd>
       </div>
+
+      ${isOwner && enquiry.status === "Confirmed" ? `
+        <div class="detail-field" id="bookingActionField">
+          <dt>Booking</dt>
+          <dd id="bookingActionText">Checking…</dd>
+          <button type="button" class="btn btn--ghost" id="createBookingBtn" style="margin-top:6px; padding:6px 14px; font-size:13px;" hidden>Create booking from enquiry</button>
+        </div>
+      ` : ""}
 
       ${notificationBlockHtml("ownerNotification", "Owner notification", isOwner)}
       ${notificationBlockHtml("customerConfirmation", "Customer confirmation", isOwner)}
@@ -284,6 +297,38 @@ export async function openDetail(panelEl, enquiry, ctx) {
   wireRetry("ownerNotification", "owner");
   wireRetry("customerConfirmation", "customer");
 
+  // Converting a Confirmed enquiry into a booking is owner-only and never
+  // automatic — check first so we never offer to create a second booking
+  // for the same enquiry.
+  if (isOwner && enquiry.status === "Confirmed") {
+    const bookingText = panelEl.querySelector("#bookingActionText");
+    const bookingBtn = panelEl.querySelector("#createBookingBtn");
+    findBookingForEnquiry(enquiry.id).then((existing) => {
+      if (existing) {
+        bookingText.textContent = "Booking already created — see the Calendar.";
+      } else {
+        bookingText.textContent = "No booking created yet for this confirmed enquiry.";
+        bookingBtn.hidden = false;
+        bookingBtn.addEventListener("click", async () => {
+          bookingBtn.disabled = true;
+          bookingText.textContent = "Creating booking…";
+          try {
+            await createBookingFromEnquiry(enquiry, user.uid);
+            bookingText.textContent = "Booking created — see the Calendar.";
+            bookingBtn.hidden = true;
+          } catch (err) {
+            console.error(err);
+            bookingText.textContent = "Could not create the booking. Please try again.";
+            bookingBtn.disabled = false;
+          }
+        });
+      }
+    }).catch((err) => {
+      console.error("Failed to check for an existing booking:", err);
+      bookingText.textContent = "Could not check booking status.";
+    });
+  }
+
   // Live updates while the panel is open: a Retry action from another open
   // tab/session appears here without needing to close and reopen the panel
   // or reload the page.
@@ -300,7 +345,10 @@ export async function openDetail(panelEl, enquiry, ctx) {
   // Mark as viewed — a separate, one-way flag from the sales-status
   // workflow (see firestore.rules' isViewOnlyUpdate). Only fires once per
   // enquiry; opening it again does nothing further.
-  if (!enquiry.viewedAt) {
+  // Observer can never write (enforced by firestore.rules) — skip the
+  // attempt entirely rather than generate an expected-but-noisy denied
+  // write on every enquiry an observer opens.
+  if (!enquiry.viewedAt && role !== "observer") {
     updateDoc(doc(db, "enquiries", enquiry.id), { viewedAt: serverTimestamp() })
       .then(() => {
         enquiry.viewedAt = new Date();
@@ -345,7 +393,8 @@ export async function openDetail(panelEl, enquiry, ctx) {
   panelEl.querySelector("#detailClose").addEventListener("click", closePanel);
   panelEl.addEventListener("click", (e) => { if (e.target === panelEl) closePanel(); });
 
-  panelEl.querySelector("#saveDetailBtn").addEventListener("click", async () => {
+  const saveDetailBtn = panelEl.querySelector("#saveDetailBtn");
+  if (saveDetailBtn) saveDetailBtn.addEventListener("click", async () => {
     const statusEl = panelEl.querySelector("#detailStatus");
     statusEl.textContent = "Saving...";
     statusEl.removeAttribute("data-state");

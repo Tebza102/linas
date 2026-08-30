@@ -3,18 +3,28 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Get a Quote — Lina's (prototype v2)</title>
-<link rel="icon" href="../../../source/brand/Linas_Favicon.jpg">
-<link rel="stylesheet" href="styles.css">
+<title>Contact & Find Us — Lina's</title>
+<!-- Metadata uses only facts already confirmed and already stated on this
+     page: the confirmed address/WhatsApp/email, and the real /contact
+     route. No response-time promise, service area or business-hours claim
+     beyond what is already confirmed and displayed on the page. -->
+<meta name="description" content="Contact Lina's for a catering quote, find the mobile kitchen, or reach us on WhatsApp. 1 Chris Street, Heidelberg, 1441.">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Lina's">
+<meta property="og:title" content="Contact & Find Us — Lina's">
+<meta property="og:description" content="Contact Lina's for a catering quote, find the mobile kitchen, or reach us on WhatsApp. 1 Chris Street, Heidelberg, 1441.">
+<meta property="og:url" content="https://linas.co.za/contact">
+<meta property="og:image" content="https://linas.co.za/assets/mockups/working/media/lina-hero-poster-working-v1-20260728.jpg">
+<meta property="og:image:alt" content="Chef Lina in her mobile kitchen, presenting a plated meal">
+<link rel="icon" href="/assets/source/brand/Linas_Favicon.jpg">
+<link rel="stylesheet" href="/assets/mockups/working/prototype-v2/styles.css">
 </head>
-<body>
+<body class="contact-page">
 
-<div class="prototype-banner" role="note">PROTOTYPE V2 — Direction D, provisional visual design, not yet finally approved by Tebogo. This form is connected to production storage: submitting it does send and store a real enquiry.</div>
 
 <header class="site-header">
-  <a class="site-header__mark" href="index.html">
-    <img src="../../../source/brand/Linas_Favicon.jpg" alt="Lina's mark" width="28" height="28">
-    <span>Lina's</span>
+  <a class="site-header__mark" href="/">
+    <img src="/assets/mockups/working/media/linas-logo-nb-wl.svg" alt="Lina's Mobile Food Kitchen" width="4678" height="3307" class="site-header__logo">
   </a>
   <div class="site-header__right">
     <button class="nav-toggle" id="navToggle" aria-haspopup="true" aria-controls="siteNav" aria-label="Open menu"><span></span><span></span><span></span></button>
@@ -24,27 +34,28 @@
 <div class="nav-backdrop" id="navBackdrop" hidden></div>
 <nav class="site-nav" id="siteNav" hidden aria-label="Site navigation">
   <button class="site-nav__close" id="navClose" aria-label="Close menu">Close ✕</button>
-  <a href="catering.html">Catering</a>
-  <a href="menu.html">Menu</a>
-  <a href="chef-lina.html">Chef Lina</a>
-  <a href="mobile-kitchen.html">Mobile Kitchen</a>
-  <a href="gallery.html">Gallery</a>
-  <a href="contact.html" class="site-nav__cta" aria-current="page">Request a Quote</a>
+  <a href="/">Home</a>
+  <a href="/catering">Catering</a>
+  <a href="/menu">Menu</a>
+  <a href="/chef-lina">About Lina's</a>
+  <a href="/contact" class="site-nav__cta" aria-current="page">Contact</a>
+  <a href="/admin/login.html" id="navLogin" class="site-nav__login">Login</a>
 </nav>
 
 <main>
-  <section class="gateway" style="height:50vh;" aria-label="Get a quote">
-    <img class="gateway__poster" style="display:block;" src="../media/lina-gallery-frame-05-signage-working-v1-20260728.jpg" alt="Lina's mobile kitchen trailer at a private catering event">
-    <div class="gateway__scrim"></div>
-    <div class="gateway__content">
-      <h1 class="gateway__title" style="font-size:clamp(32px,6vw,56px);">Tell us about your event.</h1>
-      <p class="gateway__sub">Lina reviews every enquiry personally and follows up with a quote.</p>
+  <section class="contact-hero" aria-label="Get a quote">
+    <p class="contact-hero__eyebrow">Contact &amp; Find Us</p>
+    <h1 class="contact-hero__title">Come find Lina's.</h1>
+    <p class="contact-hero__sub">Visit the mobile kitchen, contact us about an order, or tell us about your upcoming event.</p>
+    <div class="contact-hero__actions">
+      <a href="https://wa.me/27764834344?text=Hello%20Lina's%2C%20I%20would%20like%20to%20enquire%20about%20your%20catering%20or%20mobile%20kitchen%20services." target="_blank" rel="noopener" class="contact-cta contact-cta--primary">WhatsApp Lina's</a>
+      <a href="https://www.google.com/maps/search/?api=1&query=1%20Chris%20Street%2C%20Heidelberg%2C%201441" target="_blank" rel="noopener" class="contact-cta contact-cta--secondary">Get Directions</a>
     </div>
   </section>
 
   <section class="form-panel">
     <h2 class="section-title" style="color:var(--ink);">Request a quotation</h2>
-    <p class="section-lede">Lina reviews every enquiry personally. Fill this in and you'll receive a reference number once it's confirmed stored — she'll follow up by phone or email with a quote.</p>
+    <p class="section-lede">Fill this in and you'll receive a reference number once it's confirmed stored — the enquiry will be followed up by phone or email with a quote.</p>
 
     <form id="enquiryForm" novalidate>
       <label>Event type
@@ -104,34 +115,65 @@
       <div class="reference-box" id="referenceBox" hidden style="margin-top:16px; padding:16px; border-left:3px solid var(--red, #A43129); background:rgba(255,255,255,0.04);">
         <span id="referenceBoxLede">Your enquiry has been received. Enquiry reference:</span>
         <strong id="referenceNumber" style="display:block; font-size:20px; margin:4px 0 8px;"></strong>
-        <p style="font-size:13px; margin:0 0 12px;">This reference confirms receipt of your enquiry. It is not an order or booking confirmation. A confirmation has also been emailed to you.</p>
+        <p style="font-size:13px; margin:0 0 12px;">This reference confirms receipt of your enquiry. It is not an order or booking confirmation. A confirmation email is also sent where possible — this reference number is what confirms your enquiry either way.</p>
         <button type="button" class="btn btn--ghost" id="whatsappSaveBtn" style="padding:8px 16px; font-size:13px;">Save reference on WhatsApp</button>
       </div>
     </form>
   </section>
 
-  <section class="section" aria-label="Order instead">
+  <section class="section contact-order" aria-label="Order instead">
     <h2 class="section-title">Just want to order a plate?</h2>
     <p class="section-lede">Quick mobile-kitchen orders are handled over WhatsApp instead of this form.</p>
     <button type="button" class="btn btn--ghost" data-whatsapp-trigger aria-describedby="whatsappNote">Order on WhatsApp →</button>
   </section>
+
+  <section class="section contact-find" id="footer-contact" aria-label="Contact information">
+    <h2 class="section-title">Contact details</h2>
+    <div class="contact-find__grid">
+      <dl class="contact-list">
+        <div><dt>Address</dt><dd>1 Chris Street, Heidelberg, 1441</dd></div>
+        <div><dt>WhatsApp</dt><dd><a href="https://wa.me/27764834344?text=Hello%20Lina's%2C%20I%20would%20like%20to%20enquire%20about%20your%20catering%20or%20mobile%20kitchen%20services." target="_blank" rel="noopener">+27 76 483 4344</a></dd></div>
+        <div><dt>Email</dt><dd><a href="mailto:enquiries@linas.co.za">enquiries@linas.co.za</a></dd></div>
+        <div><dt>Instagram</dt><dd><a href="https://instagram.com/chef_lina_moek" target="_blank" rel="noopener">@chef_lina_moek</a></dd></div>
+      </dl>
+      <div class="contact-find__map-col">
+        <div class="contact-find__map">
+          <iframe
+            title="Map showing 1 Chris Street, Heidelberg"
+            src="https://www.google.com/maps?q=1%20Chris%20Street%2C%20Heidelberg%2C%201441&output=embed"
+            loading="lazy"
+            referrerpolicy="no-referrer-when-downgrade"></iframe>
+        </div>
+        <a href="https://www.google.com/maps/search/?api=1&query=1%20Chris%20Street%2C%20Heidelberg%2C%201441" target="_blank" rel="noopener" class="contact-find__maplink">Open in Google Maps →</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="section contact-hours" aria-label="Operating hours">
+    <h2 class="section-title">Operating Hours</h2>
+    <ul class="contact-hours__list">
+      <li>Monday–Friday — 08:00–17:00</li>
+      <li>Saturday — 08:30–14:00</li>
+      <li>Sunday — Closed</li>
+    </ul>
+  </section>
+
+  <section class="section contact-mobile-kitchen" aria-label="Mobile Kitchen">
+    <h2 class="section-title">Mobile Kitchen</h2>
+    <p class="section-lede">Find the mobile kitchen at the Unique Builders parking lot, just before Oasis Center.</p>
+  </section>
 </main>
 
-<footer class="site-footer">
-  <dl class="contact-list">
-    <div><dt>Address</dt><dd>Confirming — see Client Inputs Register I-013</dd></div>
-    <div><dt>Hours</dt><dd>Confirming — see Client Inputs Register I-007</dd></div>
-    <div><dt>WhatsApp / phone</dt><dd>Confirming — see Client Inputs Register I-006 / I-014</dd></div>
-    <div><dt>Instagram</dt><dd><a href="https://instagram.com/chef_lina_moek" target="_blank" rel="noopener">@chef_lina_moek</a></dd></div>
-  </dl>
-  <p class="placeholder-note">This is a design-review prototype (V2), not the live Lina's site.</p>
-</footer>
-
-<button class="sticky-whatsapp" id="stickyWhatsapp" data-whatsapp-trigger aria-describedby="whatsappNote">💬 WhatsApp</button>
+<button class="sticky-whatsapp sticky-whatsapp--icon" id="stickyWhatsapp" data-whatsapp-trigger aria-label="Contact Lina's on WhatsApp" aria-describedby="whatsappNote">
+  <svg class="sticky-whatsapp__icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 2C6.48 2 2 6.24 2 11.5c0 1.94.6 3.74 1.63 5.24L2 22l5.46-1.57A10.4 10.4 0 0 0 12 21c5.52 0 10-4.24 10-9.5S17.52 2 12 2Zm5.16 13.13c-.22.62-1.28 1.18-1.77 1.24-.45.06-1.02.09-1.65-.1-.38-.12-.87-.28-1.5-.55-2.64-1.15-4.36-3.83-4.5-4.01-.13-.18-1.08-1.44-1.08-2.74 0-1.3.68-1.94.92-2.2.24-.26.53-.33.7-.33h.5c.16 0 .38-.03.58.44l.72 1.77c.06.14.1.3.02.48-.08.18-.12.29-.24.44l-.36.42c-.12.12-.24.25-.1.5.13.24.6 1 1.29 1.62.9.8 1.65 1.05 1.9 1.17.24.12.38.1.53-.06l.63-.72c.2-.23.4-.19.66-.1.27.1 1.68.79 1.97.93.28.15.47.22.53.35.07.13.07.71-.15 1.33Z"/></svg>
+  <span class="sticky-whatsapp__label">WhatsApp</span>
+</button>
 <p class="whatsapp-note" id="whatsappNote" role="status" aria-live="polite"></p>
 
-<script src="menu-data.js"></script>
-<script src="script.js"></script>
-<script src="enquiry-submit.js"></script>
+<script src="/assets/mockups/working/prototype-v2/menu-data.js"></script>
+<script src="/assets/mockups/working/prototype-v2/script.js"></script>
+<script src="/assets/mockups/working/prototype-v2/enquiry-submit.js"></script>
+<script type="module" src="/assets/mockups/working/prototype-v2/public-admin-link.js"></script>
+<script src="/assets/mockups/working/prototype-v2/preview-exit.js" defer></script>
 </body>
 </html>

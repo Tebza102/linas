@@ -3,18 +3,17 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Mobile Kitchen — Lina's (prototype v2)</title>
-<link rel="icon" href="../../../source/brand/Linas_Favicon.jpg">
-<link rel="stylesheet" href="styles.css">
+<meta name="robots" content="noindex, nofollow">
+<title>Mobile Kitchen — Lina's</title>
+<link rel="icon" href="/assets/source/brand/Linas_Favicon.jpg">
+<link rel="stylesheet" href="/assets/mockups/working/prototype-v2/styles.css">
 </head>
 <body>
 
-<div class="prototype-banner" role="note">PROTOTYPE V2 — Direction D, provisional. Not yet approved by Tebogo.</div>
 
 <header class="site-header">
-  <a class="site-header__mark" href="index.html">
-    <img src="../../../source/brand/Linas_Favicon.jpg" alt="Lina's mark" width="28" height="28">
-    <span>Lina's</span>
+  <a class="site-header__mark" href="/">
+    <img src="/assets/mockups/working/media/linas-logo-nb-wl.svg" alt="Lina's Mobile Food Kitchen" width="4678" height="3307" class="site-header__logo">
   </a>
   <div class="site-header__right">
     <button class="nav-toggle" id="navToggle" aria-haspopup="true" aria-controls="siteNav" aria-label="Open menu"><span></span><span></span><span></span></button>
@@ -24,19 +23,20 @@
 <div class="nav-backdrop" id="navBackdrop" hidden></div>
 <nav class="site-nav" id="siteNav" hidden aria-label="Site navigation">
   <button class="site-nav__close" id="navClose" aria-label="Close menu">Close ✕</button>
-  <a href="catering.html">Catering</a>
-  <a href="menu.html">Menu</a>
-  <a href="chef-lina.html">Chef Lina</a>
-  <a href="mobile-kitchen.html" aria-current="page">Mobile Kitchen</a>
-  <a href="gallery.html">Gallery</a>
-  <a href="contact.html" class="site-nav__cta">Request a Quote</a>
+  <a href="/">Home</a>
+  <a href="/catering">Catering</a>
+  <a href="/menu">Menu</a>
+  <a href="/chef-lina">About Lina's</a>
+  <a href="/contact" class="site-nav__cta">Contact</a>
+  <a href="/admin/login.html" id="navLogin" class="site-nav__login">Login</a>
 </nav>
 
 <main>
-  <section class="gateway" style="height:85vh;" aria-label="The mobile kitchen">
+  <section class="gateway gateway--sequence" style="height:85vh;" aria-label="The mobile kitchen">
+    <img class="gateway__still" src="/assets/mockups/working/media/lina-preparation-frame-working-v1-20260728.jpg" alt="">
     <video class="gateway__media" data-autoplay-hero
-      poster="../media/lina-preparation-frame-working-v1-20260728.jpg" muted loop playsinline preload="metadata">
-      <source src="../media/lina-mobilekitchen-preview-working-v1-20260728.mp4" type="video/mp4">
+      poster="/assets/mockups/working/media/lina-preparation-frame-working-v1-20260728.jpg" muted loop playsinline preload="auto">
+      <source src="/assets/mockups/working/media/lina-mobilekitchen-preview-working-v1-20260728.mp4" type="video/mp4">
     </video>
     <div class="gateway__scrim"></div>
     <div class="gateway__content">
@@ -48,31 +48,22 @@
 
   <section class="split split--reverse" aria-label="At a private event">
     <div class="split__media">
-      <img src="../media/lina-gallery-frame-05-signage-working-v1-20260728.jpg" alt="Lina's mobile kitchen trailer with signage, set up at a private catering event" loading="lazy">
+      <img src="/assets/mockups/working/media/lina-gallery-frame-05-signage-working-v1-20260728.jpg" alt="Lina's mobile kitchen trailer with signage, set up at a private catering event" loading="lazy">
     </div>
     <div class="split__text">
       <h2 class="section-title" style="font-size:clamp(28px,4.5vw,44px);">Real trailer. Real events.</h2>
       <p>This trailer is Lina's current, working mobile kitchen — not a concept render. It's what shows up to weddings, funerals, corporate functions and private events today.</p>
-      <p class="placeholder-note">Exact trailer specification and service-area radius pending Tebogo (Client Inputs Register I-008). Growing this mobile-kitchen capability further is part of Lina's future plans — that ambition is not yet public-facing content and is not stated as a completed fact here. Nothing beyond confirmed, current capability is claimed on this page.</p>
-      <a href="contact.html" class="btn btn--primary" style="align-self:flex-start;">Request a Quote →</a>
+      <a href="/contact" class="btn btn--primary" style="align-self:flex-start;">Request a Quote →</a>
     </div>
   </section>
 </main>
 
-<footer class="site-footer">
-  <dl class="contact-list">
-    <div><dt>Address</dt><dd>Confirming — see Client Inputs Register I-013</dd></div>
-    <div><dt>Hours</dt><dd>Confirming — see Client Inputs Register I-007</dd></div>
-    <div><dt>WhatsApp / phone</dt><dd>Confirming — see Client Inputs Register I-006 / I-014</dd></div>
-    <div><dt>Instagram</dt><dd><a href="https://instagram.com/chef_lina_moek" target="_blank" rel="noopener">@chef_lina_moek</a></dd></div>
-  </dl>
-  <p class="placeholder-note">This is a design-review prototype (V2), not the live Lina's site.</p>
-</footer>
-
 <button class="sticky-whatsapp" id="stickyWhatsapp" data-whatsapp-trigger aria-describedby="whatsappNote">💬 WhatsApp</button>
 <p class="whatsapp-note" id="whatsappNote" role="status" aria-live="polite"></p>
 
-<script src="menu-data.js"></script>
-<script src="script.js"></script>
+<script src="/assets/mockups/working/prototype-v2/menu-data.js"></script>
+<script src="/assets/mockups/working/prototype-v2/script.js"></script>
+<script type="module" src="/assets/mockups/working/prototype-v2/public-admin-link.js"></script>
+<script src="/assets/mockups/working/prototype-v2/preview-exit.js" defer></script>
 </body>
 </html>

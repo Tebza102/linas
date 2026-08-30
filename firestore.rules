@@ -27,16 +27,32 @@ service cloud.firestore {
     function isOwner() {
       return isSignedIn() && role() == 'owner';
     }
-    // "Staff" check also accepts an owner, since an owner has every staff
-    // permission plus more.
+    // Developer has full system access — every owner-only capability in
+    // this file also applies to developer (the two differ only in how
+    // they're labelled in the admin UI, not in what they can do).
+    function isDeveloper() {
+      return isSignedIn() && role() == 'developer';
+    }
+    function isOwnerOrDev() {
+      return isOwner() || isDeveloper();
+    }
+    // Read-only observer: may view business data but can never write it —
+    // enforced here, not just by hiding buttons in the UI.
+    function isObserver() {
+      return isSignedIn() && role() == 'observer';
+    }
+    // "Staff" check also accepts owner/developer, since they have every
+    // staff permission plus more. Kept as `isStaff()` rather than renamed
+    // to minimise the diff against every existing call site below.
     function isStaff() {
-      return isSignedIn() && (role() == 'owner' || role() == 'staff');
+      return isSignedIn() && (role() == 'owner' || role() == 'developer' || role() == 'staff');
     }
 
     match /enquiries/{enquiryId} {
       // Staff can only read enquiries assigned to them or unassigned ones
-      // (so they can see new leads to pick up); owners can read everything.
-      allow read: if isOwner()
+      // (so they can see new leads to pick up); owner/developer/observer
+      // can read everything (observer is read-only, enforced below).
+      allow read: if isOwnerOrDev() || isObserver()
         || (isStaff()
             && (resource.data.assignedOwnerId == request.auth.uid
                 || resource.data.assignedOwnerId == null));
@@ -65,7 +81,7 @@ service cloud.firestore {
         return request.resource.data.diff(resource.data).affectedKeys().hasOnly([
              'status', 'assignedOwnerId', 'nextAction', 'followUpDate',
              'quotedAmount', 'confirmedAmount', 'confirmedAt', 'lostReason',
-             'completedAt', 'updatedAt'
+             'completedAt', 'updatedAt', 'estimatedValue', 'quotationDate'
            ])
         && request.resource.data.updatedAt == request.time
         && request.resource.data.status in [
@@ -89,14 +105,15 @@ service cloud.firestore {
         && (request.resource.data.status != 'Lost/Cancelled'
             || (request.resource.data.lostReason is string
                 && request.resource.data.lostReason.size() > 0))
-        // Recording a quoted/confirmed value is an owner-only action —
-        // staff can move status forward, but cannot themselves set the
-        // money fields (matches the Owner/Admin-only "record quotation and
-        // confirmed values" capability).
+        // Recording a quoted/confirmed/estimated value is an owner/developer
+        // action — staff can move status forward, but cannot themselves
+        // set money fields.
         && (
              !('quotedAmount' in request.resource.data.diff(resource.data).affectedKeys())
              && !('confirmedAmount' in request.resource.data.diff(resource.data).affectedKeys())
-             || isOwner()
+             && !('estimatedValue' in request.resource.data.diff(resource.data).affectedKeys())
+             && !('quotationDate' in request.resource.data.diff(resource.data).affectedKeys())
+             || isOwnerOrDev()
            );
       }
 
@@ -107,7 +124,7 @@ service cloud.firestore {
     }
 
     match /enquiryActivities/{activityId} {
-      allow read: if isStaff();
+      allow read: if isStaff() || isObserver();
       // Only the server or an authenticated staff/owner action can log an
       // activity record, and only as themselves. Activity history is
       // immutable once written — no update, no delete.
@@ -119,25 +136,259 @@ service cloud.firestore {
     }
 
     match /adminUsers/{uid} {
-      // Any authenticated admin/staff can read the directory (needed to
-      // show "assigned to" names and an assignment picker).
-      allow read: if isStaff();
+      // Any authenticated admin/staff/observer can read the directory
+      // (needed to show "assigned to" names and an assignment picker; the
+      // Users module itself is further restricted to owner/developer in
+      // the admin UI and by the update rule below).
+      allow read: if isStaff() || isObserver();
       // Admin user records are created only by the controlled bootstrap
       // script (Admin SDK, bypasses rules) — never by a client.
       allow create: if false;
-      // Owners manage other users' role/active state, but nobody — not
-      // even an owner — can change their OWN role or active field. This
-      // blocks self role-escalation and self-reactivation.
-      allow update: if isOwner()
-        && request.auth.uid != uid
-        && request.resource.data.uid == resource.data.uid
-        && request.resource.data.email == resource.data.email;
+      // Owner/developer manage other users' role/active state, but nobody
+      // — not even an owner or developer — can change their OWN role or
+      // active field. This blocks self role-escalation and self-reactivation.
+      // A signed-in user may always update their own lastLoginAt only
+      // (used by auth-guard.js) — never any other field on their own doc.
+      function isOwnSelfLoginUpdate() {
+        return request.auth.uid == uid
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['lastLoginAt']);
+      }
+      allow update: if isOwnSelfLoginUpdate()
+        || (isOwnerOrDev()
+            && request.auth.uid != uid
+            && request.resource.data.uid == resource.data.uid
+            && request.resource.data.email == resource.data.email);
       allow delete: if false;
     }
 
     match /settings/{docId} {
       allow read: if isStaff();
-      allow write: if isOwner();
+      allow write: if isOwnerOrDev();
+    }
+
+    // Bookings are ONLY confirmed/tentative customer calendar events —
+    // simplified from an earlier, broader kitchen-operations design (see
+    // Decision Log) to match the sales/marketing priority for this phase.
+    // No preparation/kitchen fields, no non-customer entry types.
+    match /bookings/{bookingId} {
+      allow read: if isOwnerOrDev() || isObserver()
+        || (isStaff()
+            && (resource.data.assignedPerson == request.auth.uid
+                || resource.data.assignedPerson == null));
+
+      // Converting a Confirmed enquiry into a booking is an owner/developer action.
+      allow create: if isOwnerOrDev()
+        && request.resource.data.createdBy == request.auth.uid
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.updatedAt == request.time
+        && request.resource.data.eventType in [
+             'Wedding', 'Funeral', 'Corporate event', 'Private function',
+             'Mobile kitchen service', 'Food delivery/order', 'Other'
+           ]
+        && request.resource.data.bookingStatus in [
+             'Tentative', 'Awaiting deposit', 'Confirmed', 'Completed', 'Cancelled'
+           ];
+
+      // Staff may add internal notes only — never the booking status,
+      // dates, or customer details.
+      function isStaffBookingUpdate() {
+        return request.resource.data.diff(resource.data).affectedKeys().hasOnly(['internalNotes', 'updatedAt'])
+          && request.resource.data.updatedAt == request.time;
+      }
+      function isOwnerBookingUpdate() {
+        return request.resource.data.updatedAt == request.time
+          && request.resource.data.createdBy == resource.data.createdBy
+          && request.resource.data.createdAt == resource.data.createdAt
+          && request.resource.data.bookingStatus in [
+               'Tentative', 'Awaiting deposit', 'Confirmed', 'Completed', 'Cancelled'
+             ];
+      }
+      allow update: if (isOwnerOrDev() && isOwnerBookingUpdate()) || (isStaff() && isStaffBookingUpdate());
+
+      allow delete: if isOwnerOrDev();
+    }
+
+    // Marketing content calendar (Instagram/Facebook/Google Business
+    // Profile/Website/WhatsApp posts). Owner has full control; staff may
+    // only move a piece of content they're assigned through its status —
+    // never edit its actual content, caption or schedule.
+    match /contentItems/{contentId} {
+      allow read: if isStaff() || isObserver();
+
+      allow create: if isOwnerOrDev()
+        && request.resource.data.createdBy == request.auth.uid
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.updatedAt == request.time
+        && request.resource.data.platform in ['Instagram', 'Facebook', 'Google Business Profile', 'Website', 'WhatsApp']
+        && request.resource.data.status in ['Idea', 'Draft', 'Ready', 'Scheduled', 'Published', 'Cancelled'];
+
+      function isStaffContentUpdate() {
+        return request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'updatedAt', 'publishedDate'])
+          && request.resource.data.updatedAt == request.time
+          && request.resource.data.status in ['Idea', 'Draft', 'Ready', 'Scheduled', 'Published', 'Cancelled']
+          && resource.data.assignedPerson == request.auth.uid;
+      }
+      function isOwnerContentUpdate() {
+        return request.resource.data.updatedAt == request.time
+          && request.resource.data.createdBy == resource.data.createdBy
+          && request.resource.data.createdAt == resource.data.createdAt
+          && request.resource.data.platform in ['Instagram', 'Facebook', 'Google Business Profile', 'Website', 'WhatsApp']
+          && request.resource.data.status in ['Idea', 'Draft', 'Ready', 'Scheduled', 'Published', 'Cancelled'];
+      }
+      allow update: if (isOwnerOrDev() && isOwnerContentUpdate()) || (isStaff() && isStaffContentUpdate());
+      allow delete: if isOwnerOrDev();
+    }
+
+    // Campaigns are owner/developer-managed; staff and observer can read
+    // them for lead context (e.g. seeing which campaign a lead came from)
+    // but never edit them.
+    match /campaigns/{campaignId} {
+      allow read: if isStaff() || isObserver();
+      allow create: if isOwnerOrDev()
+        && request.resource.data.createdBy == request.auth.uid
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.updatedAt == request.time
+        && request.resource.data.status in ['Planned', 'Active', 'Paused', 'Completed'];
+      allow update: if isOwnerOrDev()
+        && request.resource.data.updatedAt == request.time
+        && request.resource.data.createdBy == resource.data.createdBy
+        && request.resource.data.createdAt == resource.data.createdAt
+        && request.resource.data.status in ['Planned', 'Active', 'Paused', 'Completed'];
+      allow delete: if isOwnerOrDev();
+    }
+
+    // Quotations and invoices are financial records — owner/developer can
+    // read and write end to end; observer can view but never write; staff
+    // has no access to financial records at all.
+    match /quotations/{quoteId} {
+      allow read: if isOwnerOrDev() || isObserver();
+      allow create: if isOwnerOrDev()
+        && request.resource.data.createdBy == request.auth.uid
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.updatedAt == request.time
+        && request.resource.data.status in ['Draft', 'Sent', 'Accepted', 'Declined', 'Expired', 'Revised'];
+      allow update: if isOwnerOrDev()
+        && request.resource.data.updatedAt == request.time
+        && request.resource.data.createdBy == resource.data.createdBy
+        && request.resource.data.createdAt == resource.data.createdAt
+        && request.resource.data.enquiryId == resource.data.enquiryId
+        && request.resource.data.status in ['Draft', 'Sent', 'Accepted', 'Declined', 'Expired', 'Revised'];
+      allow delete: if isOwnerOrDev();
+    }
+
+    match /invoices/{invoiceId} {
+      allow read: if isOwnerOrDev() || isObserver();
+      allow create: if isOwnerOrDev()
+        && request.resource.data.createdBy == request.auth.uid
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.updatedAt == request.time
+        && request.resource.data.status in ['Draft', 'Sent', 'Partially Paid', 'Paid', 'Overdue', 'Cancelled'];
+      allow update: if isOwnerOrDev()
+        && request.resource.data.updatedAt == request.time
+        && request.resource.data.createdBy == resource.data.createdBy
+        && request.resource.data.createdAt == resource.data.createdAt
+        && request.resource.data.enquiryId == resource.data.enquiryId
+        && request.resource.data.status in ['Draft', 'Sent', 'Partially Paid', 'Paid', 'Overdue', 'Cancelled'];
+      allow delete: if isOwnerOrDev();
+    }
+
+    // Mobile-kitchen orders placed through the public cart.
+    //
+    // Created ONLY by /api/orders/create (Admin SDK, bypasses these rules) —
+    // the server is the sole writer because prices, totals and reference
+    // numbers must all be computed somewhere the customer cannot reach.
+    //
+    // Never hard-deleted: an order that was cancelled or not collected is a
+    // real business event and stays on the record with that status.
+    //
+    // NOTE ON SCOPE: these rules enforce what would corrupt the books — the
+    // status enum, terminal immutability, a required reason for the two
+    // negative outcomes, and the immutability of money and line items. The
+    // full transition GRAPH (which status may follow which) is enforced in
+    // admin/js/orders.js instead; expressing it here would be a long, brittle
+    // chain of per-status conditions for no additional safety. That split is
+    // deliberate, not an oversight.
+    function isValidOrderStatus(s) {
+      return s in ['Pending WhatsApp', 'Confirmed', 'Preparing',
+                   'Ready for Collection', 'Collected', 'Cancelled', 'Not Collected'];
+    }
+    function isValidPaymentStatus(s) {
+      return s in ['Pending', 'Paid', 'Failed', 'Refunded'];
+    }
+    function isTerminalOrderStatus(s) {
+      return s in ['Collected', 'Cancelled', 'Not Collected'];
+    }
+
+    match /orders/{orderId} {
+      allow read: if isOwnerOrDev() || isObserver();
+      allow create: if false;
+      allow delete: if false;
+
+      // A terminal order is frozen except for internal notes and payment
+      // reconciliation — a refund can legitimately follow collection.
+      function isTerminalUpdate() {
+        return request.resource.data.status == resource.data.status
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+               'internalNotes', 'paymentStatus', 'paymentMethod',
+               'paymentReference', 'paymentUpdatedAt', 'updatedAt'
+             ]);
+      }
+
+      // Requirements that apply ONLY when the status actually changes.
+      // Kept separate from the general update check on purpose: folding these
+      // into a flat conjunction would demand a fresh collectedAt every time
+      // someone edits a note on an already-Collected order, and the write
+      // would fail for no good reason.
+      function isStatusTransition() {
+        return request.resource.data.statusUpdatedAt == request.time
+          && (request.resource.data.status != 'Collected'
+              || request.resource.data.collectedAt == request.time)
+          && (request.resource.data.status != 'Cancelled'
+              || request.resource.data.cancelledAt == request.time)
+          && (request.resource.data.status != 'Not Collected'
+              || request.resource.data.notCollectedAt == request.time)
+          // Cancelling or writing off an order always needs a stated reason —
+          // "why did this not become a sale" must never be blank.
+          && (!(request.resource.data.status in ['Cancelled', 'Not Collected'])
+              || (request.resource.data.statusReason is string
+                  && request.resource.data.statusReason.size() > 0));
+      }
+
+      function isOrderUpdate() {
+        // items / subtotalCents / referenceNumber / submissionId / popiaConsent
+        // are immutable purely by their ABSENCE from this list. popiaConsent
+        // in particular must never be settable by an admin backfilling
+        // customer details — consent is the customer's to give.
+        return request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+             'status', 'statusReason', 'statusUpdatedAt', 'statusUpdatedBy',
+             'paymentStatus', 'paymentMethod', 'paymentReference', 'paymentUpdatedAt',
+             'internalNotes', 'customerName', 'customerPhone',
+             'confirmedAt', 'preparingAt', 'readyAt', 'collectedAt',
+             'cancelledAt', 'notCollectedAt', 'updatedAt'
+           ])
+          && request.resource.data.updatedAt == request.time
+          && isValidOrderStatus(request.resource.data.status)
+          && isValidPaymentStatus(request.resource.data.paymentStatus)
+          && (isTerminalOrderStatus(resource.data.status)
+                ? isTerminalUpdate()
+                : (request.resource.data.status == resource.data.status
+                   || isStatusTransition()));
+      }
+
+      allow update: if isOwnerOrDev() && isOrderUpdate();
+    }
+
+    // Immutable audit trail for orders, mirroring enquiryActivities. Written
+    // by the server on creation and by an admin on every status change (in
+    // the same batch as the order update, so status can never move without
+    // its audit entry).
+    match /orderActivities/{activityId} {
+      allow read: if isOwnerOrDev() || isObserver();
+      allow create: if isOwnerOrDev()
+        && request.resource.data.createdBy == request.auth.uid
+        && request.resource.data.createdAt == request.time;
+      allow update: if false;
+      allow delete: if false;
     }
 
     // Per-day reference-number counters are written only by the server

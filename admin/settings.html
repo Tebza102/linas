@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Settings — Lina's Admin</title>
+<link rel="icon" href="../assets/source/brand/Linas_Favicon.jpg">
+<link rel="stylesheet" href="css/admin.css">
+</head>
+<body>
+<div class="mobile-topbar">
+  <button type="button" class="mobile-menu-toggle" id="mobileMenuToggle" aria-label="Open menu">☰</button>
+  <span class="mobile-topbar__title">Settings</span>
+</div>
+
+<main class="admin-main">
+  <h1 class="admin-title">Settings</h1>
+  <div id="accessDenied" hidden class="empty-state">Settings are limited to owner/admin accounts.</div>
+
+  <div id="settingsBody" hidden style="max-width:480px;">
+    <div class="panel-card" style="margin-bottom:var(--space-6);">
+      <h2>Business growth goal</h2>
+      <label style="display:grid; gap:4px; font-size:14px; margin-top:8px;">Target (R)
+        <input type="number" id="goalInput" min="0" step="1000">
+      </label>
+      <button type="button" class="btn btn--primary" id="saveGoalBtn" style="margin-top:12px;">Save</button>
+      <p class="form-status" id="goalSaveStatus" role="status" aria-live="polite"></p>
+      <p style="font-size:13px; color:var(--white-dim); margin-top:8px;">Shown as progress on the Overview and Reports pages.</p>
+    </div>
+
+    <div class="panel-card">
+      <h2>Account</h2>
+      <p style="font-size:14px;">Signed in as <strong id="accountEmail"></strong> (<span id="accountRole"></span>).</p>
+      <p style="font-size:13px; color:var(--white-dim);">Admin/staff accounts are created only through the controlled bootstrap process — there is no self-registration.</p>
+    </div>
+  </div>
+</main>
+
+<script type="module" src="js/settings.js"></script>
+</body>
+</html>

@@ -8,7 +8,10 @@ const ENQUIRY_TYPES = [
   "Wedding", "Funeral", "Corporate event", "Private function", "Mobile-kitchen order"
 ];
 const CONTACT_METHODS = ["Phone", "Email", "WhatsApp"];
-const SOURCES = ["Website", "Instagram", "WhatsApp", "Referral", "Other"];
+const SOURCES = [
+  "Website", "Instagram", "Facebook", "WhatsApp", "Google",
+  "Referral", "Direct outreach", "Campaign", "Other"
+];
 
 // Fields the public form may legitimately submit. Anything else in the
 // request body is silently dropped, never persisted.
@@ -17,7 +20,12 @@ const ALLOWED_INPUT_FIELDS = [
   "occasion", "eventDate", "eventTime", "location", "guestCount",
   "serviceRequirements", "menuRequirements", "dietaryRequirements",
   "deliveryOrCollection", "equipmentOrStaffing", "budgetGuidance", "message",
-  "source", "campaign", "popiaConsent", "submissionId"
+  "source", "campaign", "popiaConsent", "submissionId",
+  // Lead-source/campaign tracking (Digital Business Platform sales/
+  // marketing priority) — all captured automatically from the form/URL,
+  // never typed manually by staff.
+  "campaignId", "campaignName", "campaignCode", "landingPage",
+  "referralPartner", "utmSource", "utmMedium", "utmCampaign"
 ];
 
 class ValidationError extends Error {
@@ -153,6 +161,14 @@ function validateEnquirySubmission(body) {
     message: optionalString("message", 2000),
     source,
     campaign: optionalString("campaign", 100),
+    campaignId: optionalString("campaignId", 100),
+    campaignName: optionalString("campaignName", 200),
+    campaignCode: optionalString("campaignCode", 100),
+    landingPage: optionalString("landingPage", 300),
+    referralPartner: optionalString("referralPartner", 200),
+    utmSource: optionalString("utmSource", 100),
+    utmMedium: optionalString("utmMedium", 100),
+    utmCampaign: optionalString("utmCampaign", 100),
     popiaConsent: true,
     submissionId
   };

@@ -1,0 +1,320 @@
+/* ============================================================
+ * "Our Offerings" — corrected homepage section (Home page only).
+ *
+ * Loaded after home.css, so equal-specificity selectors here win the
+ * cascade over home.css's rules — used deliberately below to add a
+ * small set of hero-reveal refinements (header/logo fade-in, hero-image
+ * scale, per-item destination stagger) without editing home.css or
+ * home.js. Everything else in this file is scoped to `.offerings`.
+ *
+ * Colour/type tokens are all reused from the existing `.home` scope in
+ * home.css — no new hue, no new font. Headings/body copy use
+ * --home-font-display/--home-font-body (Fraunces/Inter, loaded by
+ * index.html for the homepage only), matching the hero above, rather than
+ * the shared --font-display/--font-body tokens styles.css defines for
+ * every other page. Reduced motion is handled globally already (styles.css collapses
+ * every animation/transition duration to ~0 under
+ * prefers-reduced-motion), plus this file adds its own explicit skip so
+ * the section never even reaches its pre-reveal hidden state for those
+ * users — see the reduced-motion block at the bottom.
+ * ============================================================ */
+
+/* ---------- Hero-reveal refinements (targets existing home.css elements) ---------- */
+.home .site-header.home-header-reveal {
+  opacity: 0;
+  transform: translateY(-10px);
+  animation: homeHeroReveal 550ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+.home-hero__title.home-hero__reveal--2 {
+  transform: translateY(20px);
+  animation-duration: 800ms;
+}
+.home-hero__visual.home-hero__reveal--4 {
+  transform: translateY(20px) scale(0.985);
+  animation-duration: 950ms;
+  animation-delay: 350ms;
+}
+.home-destinations__item {
+  opacity: 0;
+  transform: translateY(8px);
+  animation: homeHeroReveal 500ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+.home-destinations__item:nth-child(1) { animation-delay: 480ms; }
+.home-destinations__item:nth-child(2) { animation-delay: 560ms; }
+.home-destinations__item:nth-child(3) { animation-delay: 640ms; }
+
+/* ---------- Section shell — continues the hero's warm cream ---------- */
+.offerings {
+  background: var(--home-white);
+  padding: var(--space-16) var(--edge) var(--space-16);
+}
+.offerings__intro {
+  max-width: 640px;
+  margin: 0 auto var(--space-8);
+  text-align: center;
+}
+.offerings__eyebrow {
+  font-family: var(--home-font-body);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--home-red);
+  margin: 0 0 var(--space-2);
+}
+.offerings__heading {
+  font-family: var(--home-font-display);
+  font-size: clamp(28px, 4vw, 42px);
+  line-height: 1.2;
+  color: var(--home-ink);
+  margin: 0 0 var(--space-4);
+}
+.offerings__rule {
+  display: block;
+  width: 48px;
+  height: 2px;
+  background: var(--home-red);
+  margin: 0 auto;
+}
+
+/* ---------- Grid ---------- */
+.offerings__grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-8);
+  max-width: 1100px;
+  margin: 0 auto;
+}
+.offerings__item {
+  display: flex;
+  flex-direction: column;
+}
+
+/* ---------- Media — asset-specific fit/position ---------- */
+.offerings__media {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  background: var(--home-white);
+  border-radius: 4px;
+  margin-bottom: var(--space-4);
+}
+.offerings__media img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  transition: transform 600ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.offerings__media--catering img {
+  object-fit: contain;
+  object-position: center bottom;
+}
+.offerings__media--mobile-kitchen img {
+  object-fit: cover;
+  object-position: 68% 70%; /* the prepared-food bowl, not the empty board/rail above it */
+}
+.offerings__media--menu img {
+  object-fit: cover;
+  object-position: center center; /* the plate is already centred in the source photo */
+}
+@media (hover: hover) and (pointer: fine) {
+  .offerings__item:hover .offerings__media img { transform: scale(1.025); }
+}
+
+/* ---------- Text + CTA ---------- */
+.offerings__text { display: flex; flex-direction: column; gap: var(--space-2); }
+.offerings__item-heading {
+  font-family: var(--home-font-display);
+  font-size: clamp(20px, 2.5vw, 26px);
+  color: var(--home-ink);
+  margin: 0;
+}
+.offerings__item-body {
+  font-family: var(--home-font-body);
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--home-ink-dim);
+  margin: 0 0 var(--space-2);
+}
+.offerings__cta {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  align-self: flex-start;
+  font-family: var(--home-font-body);
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-decoration: none;
+  color: var(--home-white);
+  background: var(--home-red);
+  padding: 12px 20px;
+  border-radius: 2px;
+  transition: background 200ms ease, transform 200ms ease;
+}
+.offerings__cta:hover,
+.offerings__cta:focus-visible {
+  background: var(--home-red-deep);
+}
+.offerings__cta:hover { transform: translateY(-2px); }
+.offerings__cta:active { transform: translateY(0); }
+.offerings__cta:focus-visible {
+  outline: 3px solid var(--home-red);
+  outline-offset: 2px;
+}
+.offerings__cta-arrow,
+.offerings__cta-icon {
+  width: 16px;
+  height: 16px;
+  fill: currentColor;
+  transition: transform 200ms ease;
+}
+.offerings__cta:hover .offerings__cta-arrow { transform: translateX(4px); }
+
+/* ---------- Entry reveal — progressive enhancement ----------
+ * Base state (above) is fully visible with no JS at all — required for
+ * the JS-disabled fallback. `.js-armed` (added by offerings.js only
+ * once it has confirmed prefers-reduced-motion is off) sets the
+ * pre-reveal hidden state; `.is-visible` (added by the IntersectionObserver
+ * callback, once, on first approach) transitions everything to its
+ * final resting state. If JS never runs, `.js-armed` is never added, so
+ * the section simply renders in its final state from the first paint. */
+.offerings.js-armed .offerings__eyebrow,
+.offerings.js-armed .offerings__heading,
+.offerings.js-armed .offerings__item {
+  opacity: 0;
+}
+.offerings.js-armed .offerings__eyebrow { transform: translateY(16px); }
+.offerings.js-armed .offerings__heading { transform: translateY(20px); }
+.offerings.js-armed .offerings__rule { transform: scaleX(0); }
+.offerings.js-armed .offerings__item { transform: translateY(24px); }
+.offerings.js-armed .offerings__media { clip-path: inset(8%); }
+.offerings.js-armed .offerings__media img { transform: scale(1.025); }
+
+.offerings.is-visible .offerings__eyebrow,
+.offerings.is-visible .offerings__heading,
+.offerings.is-visible .offerings__rule,
+.offerings.is-visible .offerings__item,
+.offerings.is-visible .offerings__media,
+.offerings.is-visible .offerings__media img {
+  opacity: 1;
+  transform: none;
+  clip-path: inset(0);
+}
+.offerings.is-visible .offerings__eyebrow {
+  transition: opacity 600ms cubic-bezier(0.22, 1, 0.36, 1), transform 600ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.offerings.is-visible .offerings__heading {
+  transition: opacity 700ms cubic-bezier(0.22, 1, 0.36, 1) 120ms, transform 700ms cubic-bezier(0.22, 1, 0.36, 1) 120ms;
+}
+.offerings.is-visible .offerings__rule {
+  transition: transform 500ms cubic-bezier(0.22, 1, 0.36, 1) 260ms;
+}
+.offerings.is-visible .offerings__item:nth-child(1),
+.offerings.is-visible .offerings__item:nth-child(1) .offerings__media,
+.offerings.is-visible .offerings__item:nth-child(1) .offerings__media img {
+  transition: opacity 700ms cubic-bezier(0.22, 1, 0.36, 1) 360ms, transform 700ms cubic-bezier(0.22, 1, 0.36, 1) 360ms, clip-path 800ms cubic-bezier(0.22, 1, 0.36, 1) 360ms;
+}
+.offerings.is-visible .offerings__item:nth-child(2),
+.offerings.is-visible .offerings__item:nth-child(2) .offerings__media,
+.offerings.is-visible .offerings__item:nth-child(2) .offerings__media img {
+  transition: opacity 700ms cubic-bezier(0.22, 1, 0.36, 1) 450ms, transform 700ms cubic-bezier(0.22, 1, 0.36, 1) 450ms, clip-path 800ms cubic-bezier(0.22, 1, 0.36, 1) 450ms;
+}
+.offerings.is-visible .offerings__item:nth-child(3),
+.offerings.is-visible .offerings__item:nth-child(3) .offerings__media,
+.offerings.is-visible .offerings__item:nth-child(3) .offerings__media img {
+  transition: opacity 700ms cubic-bezier(0.22, 1, 0.36, 1) 540ms, transform 700ms cubic-bezier(0.22, 1, 0.36, 1) 540ms, clip-path 800ms cubic-bezier(0.22, 1, 0.36, 1) 540ms;
+}
+
+/* ---------- will-change — only while a reveal is actually pending ---------- */
+.offerings.js-armed:not(.is-visible) .offerings__eyebrow,
+.offerings.js-armed:not(.is-visible) .offerings__heading,
+.offerings.js-armed:not(.is-visible) .offerings__item {
+  will-change: opacity, transform;
+}
+
+/* ---------- Tablet ---------- */
+@media (min-width: 768px) and (max-width: 1024px) {
+  .offerings__text { padding: 0 var(--space-2); }
+}
+
+/* ---------- Mobile — single column, alternating image side, lighter motion ---------- */
+@media (max-width: 899px) {
+  .offerings__grid {
+    grid-template-columns: 1fr;
+    gap: var(--space-12);
+  }
+  .offerings__item {
+    display: grid;
+    grid-template-columns: 40% 1fr;
+    gap: var(--space-4);
+    align-items: center;
+  }
+  .offerings__item:nth-child(2) { direction: rtl; }
+  .offerings__item:nth-child(2) .offerings__text { direction: ltr; }
+  .offerings__media { margin-bottom: 0; aspect-ratio: 1 / 1; }
+}
+@media (max-width: 479px) {
+  /* Side-by-side gets too cramped below ~480px — stack image above text instead. */
+  .offerings__item,
+  .offerings__item:nth-child(2) {
+    display: flex;
+    flex-direction: column;
+    direction: ltr;
+  }
+  .offerings__media { aspect-ratio: 4 / 3; }
+}
+@media (max-width: 767px) {
+  .offerings { padding: var(--space-12) var(--edge) var(--space-12); }
+  /* Lighter motion: shorter travel, shorter durations, no clip-path (avoids
+     compositing cost on lower-powered mobile GPUs), no image-scale reveal. */
+  .offerings.js-armed .offerings__eyebrow { transform: translateY(10px); }
+  .offerings.js-armed .offerings__heading { transform: translateY(14px); }
+  .offerings.js-armed .offerings__item { transform: translateY(14px); }
+  .offerings.js-armed .offerings__media { clip-path: none; }
+  .offerings.js-armed .offerings__media img { transform: none; }
+  .offerings.is-visible .offerings__eyebrow,
+  .offerings.is-visible .offerings__heading,
+  .offerings.is-visible .offerings__item:nth-child(1),
+  .offerings.is-visible .offerings__item:nth-child(1) .offerings__media,
+  .offerings.is-visible .offerings__item:nth-child(1) .offerings__media img,
+  .offerings.is-visible .offerings__item:nth-child(2),
+  .offerings.is-visible .offerings__item:nth-child(2) .offerings__media,
+  .offerings.is-visible .offerings__item:nth-child(2) .offerings__media img,
+  .offerings.is-visible .offerings__item:nth-child(3),
+  .offerings.is-visible .offerings__item:nth-child(3) .offerings__media,
+  .offerings.is-visible .offerings__item:nth-child(3) .offerings__media img {
+    transition-duration: 550ms;
+  }
+  .offerings.is-visible .offerings__item:nth-child(1),
+  .offerings.is-visible .offerings__item:nth-child(1) .offerings__media,
+  .offerings.is-visible .offerings__item:nth-child(1) .offerings__media img { transition-delay: 220ms; }
+  .offerings.is-visible .offerings__item:nth-child(2),
+  .offerings.is-visible .offerings__item:nth-child(2) .offerings__media,
+  .offerings.is-visible .offerings__item:nth-child(2) .offerings__media img { transition-delay: 290ms; }
+  .offerings.is-visible .offerings__item:nth-child(3),
+  .offerings.is-visible .offerings__item:nth-child(3) .offerings__media,
+  .offerings.is-visible .offerings__item:nth-child(3) .offerings__media img { transition-delay: 360ms; }
+}
+
+/* ---------- Reduced motion — belt-and-braces on top of the global rule in styles.css ---------- */
+@media (prefers-reduced-motion: reduce) {
+  .home .site-header.home-header-reveal,
+  .home-hero__title.home-hero__reveal--2,
+  .home-hero__visual.home-hero__reveal--4,
+  .home-destinations__item {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+  .offerings.js-armed .offerings__eyebrow,
+  .offerings.js-armed .offerings__heading,
+  .offerings.js-armed .offerings__rule,
+  .offerings.js-armed .offerings__item,
+  .offerings.js-armed .offerings__media,
+  .offerings.js-armed .offerings__media img {
+    opacity: 1 !important;
+    transform: none !important;
+    clip-path: none !important;
+  }
+}

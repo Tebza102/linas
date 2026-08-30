@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Reports — Lina's Admin</title>
+<link rel="icon" href="../assets/source/brand/Linas_Favicon.jpg">
+<link rel="stylesheet" href="css/admin.css">
+</head>
+<body>
+<div class="mobile-topbar">
+  <button type="button" class="mobile-menu-toggle" id="mobileMenuToggle" aria-label="Open menu">☰</button>
+  <span class="mobile-topbar__title">Reports</span>
+</div>
+
+<main class="admin-main">
+  <h1 class="admin-title">Reports</h1>
+  <p style="color:var(--white-dim); font-size:13px; margin-top:-16px; margin-bottom:var(--space-6);">Test records and cancelled sales are excluded from every figure below.</p>
+
+  <div class="kpi-grid" id="kpiGrid"></div>
+
+  <div class="panel-grid">
+    <div class="panel-card"><h2>Enquiries by source</h2><ul class="panel-list" id="bySourceList"></ul></div>
+    <div class="panel-card"><h2>Qualified leads by source</h2><ul class="panel-list" id="qualifiedBySourceList"></ul></div>
+    <div class="panel-card"><h2>Quotations by source</h2><ul class="panel-list" id="quotesBySourceList"></ul></div>
+    <div class="panel-card"><h2>Confirmed sales by source</h2><ul class="panel-list" id="confirmedBySourceList"></ul></div>
+    <div class="panel-card"><h2>Revenue by source</h2><ul class="panel-list" id="revenueBySourceList"></ul></div>
+    <div class="panel-card"><h2>Overdue follow-ups</h2><ul class="panel-list" id="overdueList"></ul></div>
+    <div class="panel-card"><h2>Lost reasons</h2><ul class="panel-list" id="lostReasonsList"></ul></div>
+    <div class="panel-card"><h2>Campaign performance</h2><ul class="panel-list" id="campaignPerfList"></ul></div>
+  </div>
+
+  <h2 style="font-family:var(--font-display); font-size:20px;">Progress toward the R350,000 goal</h2>
+  <div class="goal-bar"><div class="goal-bar__fill" id="goalFill" style="width:0%"></div></div>
+  <p id="goalCaption" style="font-size:13px; color:var(--white-dim);"></p>
+
+  <!-- Orders are a separate revenue stream from catering enquiries, with
+       different units and a different definition of a sale. Reported
+       separately, and exported separately, so neither figure contaminates
+       the other. -->
+  <section id="ordersSection" hidden style="margin-top:var(--space-12);">
+    <h2 style="font-family:var(--font-display); font-size:20px;">Mobile kitchen orders</h2>
+    <p style="font-size:13px; color:var(--white-dim);">
+      Counted as a sale only once marked <strong>Collected</strong>. Test records are excluded.
+    </p>
+    <div class="kpi-grid" id="orderKpiGrid"></div>
+    <div class="panel-grid">
+      <div class="panel-card"><h2>Orders by status</h2><ul class="panel-list" id="ordersByStatusList"></ul></div>
+      <div class="panel-card"><h2>Best-selling items (collected orders)</h2><ul class="panel-list" id="topItemsList"></ul></div>
+      <div class="panel-card"><h2>Why orders did not complete</h2><ul class="panel-list" id="orderLostList"></ul></div>
+    </div>
+  </section>
+
+  <p style="margin-top:var(--space-8); display:flex; gap:var(--space-3); flex-wrap:wrap;">
+    <button type="button" class="btn btn--ghost" id="exportCsvBtn" style="padding:8px 16px; font-size:13px;">Export enquiries CSV</button>
+    <button type="button" class="btn btn--ghost" id="exportOrdersCsvBtn" style="padding:8px 16px; font-size:13px;" hidden>Export orders CSV</button>
+  </p>
+</main>
+
+<script type="module" src="js/reports.js"></script>
+</body>
+</html>

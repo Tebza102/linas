@@ -3,63 +3,165 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Lina's — Chef-led catering &amp; mobile kitchen (prototype v2)</title>
-<link rel="icon" href="../../../source/brand/Linas_Favicon.jpg">
-<link rel="stylesheet" href="styles.css">
+<title>Lina's — Chef-led catering &amp; mobile kitchen</title>
+<link rel="icon" href="/assets/source/brand/Linas_Favicon.jpg">
+<!-- Fraunces/Inter are loaded for THIS page only — the rest of the site
+     still runs on the shared system-font tokens in styles.css
+     (--font-display/--font-body), untouched. See Decision Log: this is a
+     deliberate homepage-only divergence, not a silent site-wide change. -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/mockups/working/prototype-v2/styles.css">
+<link rel="stylesheet" href="/assets/mockups/working/prototype-v2/home.css">
 </head>
-<body>
+<body class="home">
 
-<div class="prototype-banner" role="note">PROTOTYPE V2 — Direction D, provisional visual design, not yet finally approved by Tebogo. The "Request a Quote" enquiry form does store real enquiries.</div>
-
-<header class="site-header">
-  <a class="site-header__mark" href="index.html">
-    <img src="../../../source/brand/Linas_Favicon.jpg" alt="Lina's mark" width="28" height="28">
-    <span>Lina's</span>
+<header class="site-header home-header-reveal" id="homeHeader">
+  <a class="site-header__mark" href="/">
+    <img src="/assets/brand/working/lina-logo-red-unboxed-working-v1-20260830.svg" alt="Lina's Mobile Food Kitchen" width="4678" height="3307" class="site-header__logo">
   </a>
+  <!-- Desktop-only inline nav (>=900px). Same five destinations as the
+       drawer below, plus the CTA — spec calls for a full inline nav on
+       desktop with the hamburger reserved for mobile. Every href reuses an
+       existing route; nothing new is introduced. -->
+  <nav class="home-header__nav" aria-label="Primary">
+    <a href="/" aria-current="page">Home</a>
+    <a href="/catering">Catering</a>
+    <a href="/menu">Menu</a>
+    <a href="/chef-lina">Meet Chef Lina</a>
+    <a href="/contact">Find Us</a>
+  </nav>
   <div class="site-header__right">
-    <button class="nav-toggle" id="navToggle" aria-haspopup="true" aria-controls="siteNav" aria-label="Open menu"><span></span><span></span><span></span></button>
+    <a class="home-nav__cta" id="homeNavCta" href="/contact">Request a Quote</a>
+    <button class="nav-toggle nav-toggle--icon" id="navToggle" aria-haspopup="true" aria-controls="siteNav" aria-label="Open website navigation">
+      <svg class="nav-toggle__icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M3 6h18M3 12h18M3 18h18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+    </button>
   </div>
 </header>
 
 <div class="nav-backdrop" id="navBackdrop" hidden></div>
 <nav class="site-nav" id="siteNav" hidden aria-label="Site navigation">
   <button class="site-nav__close" id="navClose" aria-label="Close menu">Close ✕</button>
-  <a href="catering.html">Catering</a>
-  <a href="menu.html">Menu</a>
-  <a href="chef-lina.html">Chef Lina</a>
-  <a href="mobile-kitchen.html">Mobile Kitchen</a>
-  <a href="gallery.html">Gallery</a>
-  <a href="contact.html" class="site-nav__cta">Request a Quote</a>
+  <a href="/" aria-current="page">Home</a>
+  <a href="/catering">Catering</a>
+  <a href="/menu">Menu</a>
+  <a href="/chef-lina">About Lina's</a>
+  <a href="/contact" class="site-nav__cta">Contact</a>
+  <a href="/admin/login.html" id="navLogin" class="site-nav__login">Login</a>
 </nav>
 
 <main id="top">
-  <!-- One-screen cinematic gateway. Opens on the confirmed chef still (slow Ken
-       Burns), then crossfades into food-preparation motion once it has settled
-       — see script.js heroSequence(). Reduced-motion users see the still only. -->
-  <section class="gateway gateway--sequence" id="hero" aria-label="Lina's — chef-led catering and mobile kitchen">
-    <img class="gateway__still" id="heroStill" src="../media/lina-hero-poster-working-v1-20260728.jpg" alt="Chef Lina inside her mobile kitchen trailer, presenting a plated meal">
-    <video class="gateway__media" id="heroVideo" data-autoplay-hero
-      poster="../media/lina-hero-poster-working-v1-20260728.jpg" muted loop playsinline preload="metadata">
-      <source src="../media/lina-hero-preview-working-v1-20260728.mp4" type="video/mp4">
-    </video>
-    <div class="gateway__scrim"></div>
+  <!-- Approved 2026-08-29 homepage direction — static chef portrait, plain
+       editorial headline, two CTAs, a quiet three-item proof strip. Content
+       is driven entirely by home-media.js; home.js only populates and
+       animates it. -->
+  <section class="home-hero" id="hero" aria-label="Lina's — chef-led catering and mobile kitchen">
+    <div class="home-hero__body">
+      <div class="home-hero__copy">
+        <p class="home-hero__tagline home-hero__reveal home-hero__reveal--1" id="homeTagline"></p>
+        <!-- Rule-flanked "Lina's" wordmark echo — no separate wordmark-only
+             asset exists in the asset library, so the existing italic
+             brand-name treatment (already approved) stands in for it
+             rather than a fabricated image. -->
+        <div class="home-hero__eyebrow-row home-hero__reveal home-hero__reveal--1">
+          <span class="home-hero__rule" aria-hidden="true"></span>
+          <p class="home-hero__eyebrow" id="homeEyebrow"></p>
+          <span class="home-hero__rule" aria-hidden="true"></span>
+        </div>
+        <h1 class="home-hero__title home-hero__reveal home-hero__reveal--2" id="homeHeadline"></h1>
+        <p class="home-hero__sub home-hero__reveal home-hero__reveal--3" id="homeSupporting"></p>
+        <div class="home-hero__cta-row home-hero__reveal home-hero__reveal--3" id="homeCtaRow"></div>
 
-    <div class="gateway__content">
-      <p class="gateway__eyebrow gateway__reveal gateway__reveal--1">Chef Lina</p>
-      <h1 class="gateway__title gateway__reveal gateway__reveal--2">Chef-led catering &amp; mobile-kitchen experiences.</h1>
-      <p class="gateway__sub gateway__reveal gateway__reveal--3">Weddings, funerals, corporate events and private catering — plus a real mobile kitchen serving plates to order. Placeholder positioning line, pending Tebogo's approval.</p>
-      <div class="gateway__actions gateway__reveal gateway__reveal--4">
-        <a href="contact.html" class="btn btn--primary">Request a Quote</a>
-        <a href="menu.html" class="btn btn--ghost">Explore the Menu</a>
+        <ul class="home-hero__proof home-hero__reveal home-hero__reveal--3" aria-label="Why choose Lina's">
+          <li class="home-hero__proof-item">
+            <svg class="home-hero__proof-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 2c-1.66 0-3 1.34-3 3 0 .35.06.68.16 1A4.5 4.5 0 0 0 5 10.5c0 1.93 1.25 3.56 3 4.15V19a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-4.35c1.75-.59 3-2.22 3-4.15a4.5 4.5 0 0 0-4.16-4.5c.1-.32.16-.65.16-1 0-1.66-1.34-3-3-3Z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M9 20h6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+            <span><strong>Chef-Led</strong>Quality you can taste</span>
+          </li>
+          <li class="home-hero__proof-item">
+            <svg class="home-hero__proof-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M3 7h11v9H3z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><path d="M14 10h4l3 3v3h-7z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/><circle cx="7" cy="18" r="1.5" fill="none" stroke="currentColor" stroke-width="1.5"/><circle cx="17.5" cy="18" r="1.5" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+            <span><strong>Mobile Kitchen</strong>Fresh, on-site service</span>
+          </li>
+          <li class="home-hero__proof-item">
+            <svg class="home-hero__proof-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 20s-7-4.35-9-8.5C1.5 8 3.4 5 6.5 5c1.9 0 3.4 1.1 4.2 2.4C11.5 6.1 13 5 14.9 5 18 5 20 8 20 11.5 18 15.65 12 20 12 20Z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>
+            <span><strong>Made with Care</strong>Every plate, every time</span>
+          </li>
+        </ul>
+      </div>
+
+      <div class="home-hero__visual home-hero__reveal home-hero__reveal--4">
+        <img class="home-hero__chef-img" id="homeChefImg" alt="">
       </div>
     </div>
   </section>
+
+  <section class="home-menu" id="summerMenu" aria-label="Summer menu highlights">
+    <div class="home-menu__intro">
+      <p class="home-menu__eyebrow">Summer Menu</p>
+      <h2 class="home-menu__heading">Our summer menu.</h2>
+      <span class="home-menu__rule" aria-hidden="true"></span>
+      <p class="home-menu__body">A taste of what we do best. Every dish is prepared with premium ingredients and cooked to order.</p>
+      <a href="/menu" class="home-menu__view-all">View Full Menu <span class="home-menu__cta-arrow" aria-hidden="true">→</span></a>
+    </div>
+    <div class="home-menu__grid" id="homeMenuGrid">
+      <a class="home-menu__card" href="/menu">
+        <div class="home-menu__media">
+          <img src="/assets/mockups/working/media/lina-home-featured-chicken-working-v1-20260830.png" alt="Featured Lina's dish: crispy chicken" loading="lazy">
+        </div>
+        <div class="home-menu__card-text">
+          <h3 class="home-menu__card-name">Crispy Chicken</h3>
+        </div>
+      </a>
+      <a class="home-menu__card" href="/menu">
+        <div class="home-menu__media">
+          <img src="/assets/mockups/working/media/lina-home-featured-shrimp-tacos-working-v1-20260830.png" alt="Featured Lina's dish: garlic shrimp tacos" loading="lazy">
+        </div>
+        <div class="home-menu__card-text">
+          <h3 class="home-menu__card-name">Garlic Shrimp Tacos</h3>
+        </div>
+      </a>
+      <a class="home-menu__card" href="/menu">
+        <div class="home-menu__media">
+          <img src="/assets/mockups/working/media/lina-home-featured-burger-working-v1-20260830.png" alt="Featured Lina's dish: Lina's smash burger" loading="lazy">
+        </div>
+        <div class="home-menu__card-text">
+          <h3 class="home-menu__card-name">Lina's Smash Burger</h3>
+        </div>
+      </a>
+    </div>
+  </section>
+
+  <section class="home-cta-band" aria-label="Book Lina's for your event">
+    <div class="home-cta-band__text">
+      <p class="home-cta-band__eyebrow">Ready to Book?</p>
+      <h2 class="home-cta-band__heading">Let's make your event unforgettable.</h2>
+    </div>
+    <p class="home-cta-band__body">Tell us about your event and we'll handle the rest — delicious food, seamless service, and peace of mind.</p>
+    <a href="/contact" class="home-cta-band__cta">Request a Quote <span class="home-cta-band__cta-arrow" aria-hidden="true">→</span></a>
+    <div class="home-cta-band__contact-group">
+      <a href="tel:+27764834344" class="home-cta-band__contact">
+        <svg class="home-cta-band__contact-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M6.6 10.8c1.4 2.8 3.8 5.2 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1C10.5 21 3 13.5 3 4c0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.2.2 2.4.6 3.6.1.4 0 .8-.2 1L6.6 10.8Z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>
+        <span>Call or WhatsApp<br><strong>076 483 4344</strong></span>
+      </a>
+      <a href="mailto:enquiries@linas.co.za" class="home-cta-band__contact home-cta-band__contact--email">enquiries@linas.co.za</a>
+    </div>
+  </section>
+  <ul class="home-cta-band__tags" aria-label="Occasions we cater for">
+    <li>Weddings</li><li>Funerals</li><li>Corporate Events</li><li>Private Catering</li><li>Plates to Order</li>
+  </ul>
 </main>
 
-<button class="sticky-whatsapp" id="stickyWhatsapp" data-whatsapp-trigger aria-describedby="whatsappNote">💬 WhatsApp</button>
+<button class="sticky-whatsapp sticky-whatsapp--icon" id="stickyWhatsapp" data-whatsapp-trigger aria-label="Contact Lina's on WhatsApp" aria-describedby="whatsappNote">
+  <svg class="sticky-whatsapp__icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 2C6.48 2 2 6.24 2 11.5c0 1.94.6 3.74 1.63 5.24L2 22l5.46-1.57A10.4 10.4 0 0 0 12 21c5.52 0 10-4.24 10-9.5S17.52 2 12 2Zm5.16 13.13c-.22.62-1.28 1.18-1.77 1.24-.45.06-1.02.09-1.65-.1-.38-.12-.87-.28-1.5-.55-2.64-1.15-4.36-3.83-4.5-4.01-.13-.18-1.08-1.44-1.08-2.74 0-1.3.68-1.94.92-2.2.24-.26.53-.33.7-.33h.5c.16 0 .38-.03.58.44l.72 1.77c.06.14.1.3.02.48-.08.18-.12.29-.24.44l-.36.42c-.12.12-.24.25-.1.5.13.24.6 1 1.29 1.62.9.8 1.65 1.05 1.9 1.17.24.12.38.1.53-.06l.63-.72c.2-.23.4-.19.66-.1.27.1 1.68.79 1.97.93.28.15.47.22.53.35.07.13.07.71-.15 1.33Z"/></svg>
+  <span class="sticky-whatsapp__label">WhatsApp</span>
+</button>
 <p class="whatsapp-note" id="whatsappNote" role="status" aria-live="polite"></p>
 
-<script src="menu-data.js"></script>
-<script src="script.js"></script>
+<script src="/assets/mockups/working/prototype-v2/menu-data.js"></script>
+<script src="/assets/mockups/working/prototype-v2/home-media.js"></script>
+<script src="/assets/mockups/working/prototype-v2/script.js"></script>
+<script src="/assets/mockups/working/prototype-v2/home.js"></script>
+<script type="module" src="/assets/mockups/working/prototype-v2/public-admin-link.js"></script>
+<script src="/assets/mockups/working/prototype-v2/preview-exit.js" defer></script>
 </body>
 </html>

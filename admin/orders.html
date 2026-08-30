@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Orders — Lina's Admin</title>
+<link rel="icon" href="../assets/source/brand/Linas_Favicon.jpg">
+<link rel="stylesheet" href="css/admin.css">
+</head>
+<body>
+<div class="mobile-topbar">
+  <button type="button" class="mobile-menu-toggle" id="mobileMenuToggle" aria-label="Open menu">☰</button>
+  <span class="mobile-topbar__title">Orders</span>
+</div>
+
+<main class="admin-main">
+  <h1 class="admin-title">Orders</h1>
+  <div id="accessDenied" hidden class="empty-state">Orders are limited to owner, developer and observer accounts.</div>
+
+  <div id="ordersBody" hidden>
+    <div class="admin-toolbar" role="tablist" aria-label="Order views">
+      <button type="button" class="btn btn--primary" id="viewToday" role="tab" aria-selected="true">Today</button>
+      <button type="button" class="btn btn--ghost" id="viewAll" role="tab" aria-selected="false">All orders</button>
+    </div>
+
+    <!-- Today: the operational board Lina works from during a trading day. -->
+    <section id="todayPanel">
+      <div class="kpi-grid" id="todayKpis"></div>
+      <div class="panel-grid" id="todayGroups"></div>
+    </section>
+
+    <!-- All orders: history and search. -->
+    <section id="allPanel" hidden>
+      <div class="admin-toolbar">
+        <input type="search" id="searchInput" placeholder="Search reference, name or phone" aria-label="Search orders">
+        <select id="statusFilter" aria-label="Filter by status"><option value="">All statuses</option></select>
+        <input type="date" id="dateFrom" aria-label="From date">
+        <input type="date" id="dateTo" aria-label="To date">
+        <button type="button" class="btn btn--ghost" id="clearFilters" style="padding:8px 16px; font-size:13px;">Clear</button>
+      </div>
+      <p class="empty-state" id="allSummary"></p>
+      <div id="ordersList"></div>
+    </section>
+  </div>
+</main>
+
+<div class="detail-panel" id="detailPanel" hidden role="dialog" aria-modal="true" aria-label="Order details"></div>
+
+<script type="module" src="js/orders.js"></script>
+</body>
+</html>

@@ -23,16 +23,31 @@
     ? window.crypto.randomUUID()
     : "sid-" + Date.now() + "-" + Math.random().toString(36).slice(2);
 
+  // Captured automatically from the URL so staff never have to backfill
+  // campaign/tracking fields by hand on every enquiry.
+  var params = new URLSearchParams(location.search);
+  var tracking = {
+    utmSource: params.get("utm_source") || undefined,
+    utmMedium: params.get("utm_medium") || undefined,
+    utmCampaign: params.get("utm_campaign") || undefined,
+    campaignId: params.get("campaign_id") || undefined,
+    campaignName: params.get("campaign_name") || undefined,
+    campaignCode: params.get("campaign_code") || undefined,
+    referralPartner: params.get("ref") || undefined,
+    landingPage: (location.pathname + location.search).slice(0, 300)
+  };
+
   if (whatsappBtn) {
     whatsappBtn.addEventListener("click", function () {
       var ref = refNumber.textContent;
       var message = "My Lina's enquiry reference is " + ref + ". This confirms receipt only, not a booking.";
-      // No destination number: opens WhatsApp's own contact picker so the
-      // customer chooses who (if anyone) to send it to, including
-      // themselves — Lina's WhatsApp number isn't confirmed yet (see
-      // Client Inputs Register I-006/I-014), so this deliberately never
-      // targets a business number.
-      window.open("https://wa.me/?text=" + encodeURIComponent(message), "_blank", "noopener");
+      // Targets Lina's confirmed WhatsApp number (Client Inputs Register
+      // I-006/I-014, same number used by every other WhatsApp action on
+      // this site) — this message reads as being sent TO Lina's, so it
+      // should actually reach that number, not an unconfigured contact
+      // picker. Corrected from an earlier version written before the
+      // number was confirmed.
+      window.open("https://wa.me/27764834344?text=" + encodeURIComponent(message), "_blank", "noopener");
     });
   }
 
@@ -51,20 +66,34 @@
     status.removeAttribute("data-state");
     refBox.hidden = true;
 
+    // Optional fields are guarded with `&&` because not every page using
+    // this script has the full quote-request field set — the Coming Soon
+    // page's short enquiry form only has the fields the validator actually
+    // requires plus a note, and omits date/location/guests/requirements
+    // entirely rather than asking for detail a "just tell me you're
+    // interested" enquiry doesn't need.
     var payload = {
       customerName: form.name.value.trim(),
       phone: form.phone.value.trim(),
       email: form.email.value.trim(),
       enquiryType: form.occasion.value,
-      eventDate: form.date.value || undefined,
-      location: form.location.value.trim() || undefined,
-      guestCount: form.guests.value || undefined,
-      serviceRequirements: form.requirements.value.trim() || undefined,
-      message: form.notes.value.trim() || undefined,
+      eventDate: (form.date && form.date.value) || undefined,
+      location: (form.location && form.location.value.trim()) || undefined,
+      guestCount: (form.guests && form.guests.value) || undefined,
+      serviceRequirements: (form.requirements && form.requirements.value.trim()) || undefined,
+      message: (form.notes && form.notes.value.trim()) || undefined,
       source: form.source.value || "Website",
       popiaConsent: form.consent.checked,
       company: form.company.value, // honeypot — real visitors never fill this
-      submissionId: submissionId
+      submissionId: submissionId,
+      utmSource: tracking.utmSource,
+      utmMedium: tracking.utmMedium,
+      utmCampaign: tracking.utmCampaign,
+      campaignId: tracking.campaignId,
+      campaignName: tracking.campaignName,
+      campaignCode: tracking.campaignCode,
+      referralPartner: tracking.referralPartner,
+      landingPage: tracking.landingPage
     };
 
     fetch("/api/enquiries/create", {
@@ -83,7 +112,7 @@
             status.textContent = "You already sent this enquiry — here's your existing reference.";
             refLede.textContent = "Your existing enquiry reference:";
           } else {
-            status.textContent = "Enquiry received — thank you. Lina will follow up personally.";
+            status.textContent = "Enquiry received — thank you. The enquiry will be followed up by phone or email with a quote.";
             refLede.textContent = "Your enquiry has been received. Enquiry reference:";
           }
           status.setAttribute("data-state", "success");

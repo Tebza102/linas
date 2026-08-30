@@ -8,15 +8,10 @@
 <link rel="stylesheet" href="css/admin.css">
 </head>
 <body>
-<header class="admin-header">
-  <span class="admin-header__mark">Lina's Admin</span>
-  <nav class="admin-header__nav" aria-label="Admin navigation">
-    <a href="inbox.html" aria-current="page">Inbox</a>
-    <a href="dashboard.html">Dashboard</a>
-    <span class="admin-header__user" id="userLabel"></span>
-    <button type="button" class="btn btn--ghost" id="logoutBtn" style="padding:6px 14px; font-size:12px;">Sign out</button>
-  </nav>
-</header>
+<div class="mobile-topbar">
+  <button type="button" class="mobile-menu-toggle" id="mobileMenuToggle" aria-label="Open menu">☰</button>
+  <span class="mobile-topbar__title">Leads / Enquiries</span>
+</div>
 
 <main class="admin-main">
   <h1 class="admin-title">Enquiry Inbox <span class="unread-badge" id="unreadCount" aria-live="polite"></span></h1>

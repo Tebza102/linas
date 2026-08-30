@@ -1,0 +1,462 @@
+/* Lina's — Coming Soon page.
+ *
+ * Deliberately a standalone stylesheet, not an edit to styles.css: this
+ * page needs its own approved colour balance and must never risk bleeding
+ * a rule into the live site's CSS or vice versa. --cs-font-body/
+ * --cs-font-display are still system-font stacks, duplicated from
+ * styles.css rather than linked, for the same isolation reason.
+ *
+ * One deliberate exception: --cs-font-numeral (Fraunces) is loaded via
+ * Google Fonts in coming-soon.html, used ONLY for the poster card's
+ * numeral and "DAYS TO GO" — the one place this page needs a bold
+ * display serif to approximate the reference artwork's bespoke lettering.
+ * It is a close approximation, not a pixel-exact match of that custom
+ * glyph — flagged in the Change Contract, not a silent choice.
+ *
+ * --cs-poster-red was pixel-sampled directly from
+ * assets/mockups/working/client-review-coming-soon/lina-countdown-3-days-4k.png
+ * (2456x3840) via a canvas getImageData average over 238 interior pixels
+ * of the numeral glyph, cross-checked against a separate 176-pixel sample
+ * of the bar's interior — both agreed within a few RGB units. The bar/
+ * arc/triangle geometry below (widths, the arc's centre/radius) was
+ * likewise measured from that file (row/column colour-transition scans
+ * and a least-squares circle fit on the arc's stroke pixels in true
+ * pixel space), not eyeballed.
+ */
+
+*, *::before, *::after { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+
+:root {
+  --cs-red: #B2373E;
+  --cs-red-topbar: #B2373E;
+  --cs-black: #000000;
+  --cs-black-soft: #111111;
+  /* Pure white, not cream — matches the poster panel and the site's
+     confirmed white surface (same fix already applied to the homepage). */
+  --cs-warm-white: #FFFFFF;
+  --cs-white: #FFFFFF;
+  --cs-text-on-white: rgba(0, 0, 0, 0.64);
+  --cs-text-on-black: rgba(255, 255, 255, 0.70);
+
+  --cs-font-display: Georgia, "Iowan Old Style", "Palatino Linotype", "Times New Roman", serif;
+  --cs-font-body: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --cs-font-numeral: 'Fraunces', Georgia, "Iowan Old Style", serif;
+
+  /* Pixel-sampled — see file header. */
+  --cs-poster-red: #C71C1E;
+
+  --cs-edge: 24px;
+}
+@media (min-width: 1024px) {
+  :root { --cs-edge: 64px; }
+}
+
+body {
+  font-family: var(--cs-font-body);
+  background: var(--cs-warm-white);
+  color: var(--cs-black);
+  -webkit-font-smoothing: antialiased;
+}
+
+img { max-width: 100%; display: block; }
+
+.skip-link {
+  position: absolute; left: -9999px; top: 0;
+  background: var(--cs-white); color: var(--cs-black);
+  padding: 12px 20px; z-index: 100;
+}
+.skip-link:focus { left: 12px; top: 12px; }
+
+.cs-visually-hidden {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+}
+
+/* ============================================================
+   Split layout — poster (left) + supporting panel (right).
+   Mobile: stacked, poster first, natural proportions (not stretched).
+   ============================================================ */
+.cs-split {
+  display: grid;
+  grid-template-columns: 1fr;
+  background: var(--cs-warm-white);
+}
+@media (min-width: 900px) {
+  .cs-split {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    align-items: stretch;
+  }
+}
+
+/* ---------- Left — poster ---------- */
+.cs-poster {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cs-poster__card {
+  position: relative;
+  width: 100%;
+  /* Natural portrait proportions from the reference artwork (2456:3840,
+     roughly 16:25) — capped so it always reads as a discrete card, never
+     fluid-stretched to fill a wide viewport. */
+  max-width: 420px;
+  aspect-ratio: 2456 / 3840;
+  background: var(--cs-white);
+  overflow: hidden;
+}
+
+/* Background geometry — solid left bar, a large white circle notched into
+   its lower portion (the "moon crescent" the reference actually uses,
+   confirmed by tracing the bar's own right edge: it recedes from full
+   width at y=36% down to nearly 0 by y=39%, bulges back out to a peak
+   around y=63%, then recedes to 0 again by y=90% — that curve IS the
+   circle, not a separate decorative stroke sitting apart from the bar),
+   plus a thin red ring traced along the same circle, plus the solid
+   diagonal triangle bottom-right. All CSS, no image asset. Every value
+   below is measured from the reference file (see file header): bar width
+   from the median colour-transition column across 50 rows; the triangle's
+   top/left edges from full-resolution edge scans; the circle from a
+   least-squares fit (true pixel space — the card isn't square, so
+   fitting on mismatched x/W,y/H fractions would distort a real circle
+   into an ellipse) over the full traced crescent edge, y 40%-76%. */
+.cs-poster__bar {
+  position: absolute;
+  top: 0; left: 0; bottom: 0;
+  width: 17.9%;
+  background: var(--cs-poster-red);
+}
+/* Circle centre measured at (-30.1% of width, 63.9% of height from top)
+   with radius 50.3% of width — left/bottom below are the CIRCLE BOX's
+   edges (centre minus radius), which is what CSS left/bottom need, not
+   the centre itself. Both the mask and the ring share this exact
+   geometry; the mask sits behind the bar's colour and above nothing,
+   the ring paints on top of the mask. */
+.cs-poster__arc-mask {
+  position: absolute;
+  left: -80.4%;
+  bottom: 3.9%;
+  width: 100.6%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: var(--cs-white);
+}
+.cs-poster__arc {
+  position: absolute;
+  left: -80.4%;
+  bottom: 3.9%;
+  width: 100.6%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  border: 2px solid var(--cs-poster-red);
+}
+.cs-poster__triangle {
+  position: absolute;
+  right: 0; bottom: 0;
+  width: 27.5%;
+  height: 20.2%;
+  background: var(--cs-poster-red);
+  clip-path: polygon(100% 0, 100% 100%, 0 100%);
+}
+
+.cs-poster__content {
+  position: relative;
+  z-index: 1;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  justify-content: flex-start;
+  gap: 4%;
+  padding: 7% 10% 8%;
+}
+
+.cs-poster__mark {
+  display: block;
+  width: 34%;
+  aspect-ratio: 3508.5 / 2480.25;
+  background-color: var(--cs-poster-red);
+  -webkit-mask: url(/assets/mockups/working/media/linas-logo-nb-wl.svg) no-repeat center / contain;
+  mask: url(/assets/mockups/working/media/linas-logo-nb-wl.svg) no-repeat center / contain;
+}
+
+.cs-poster__count {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+  justify-content: center;
+  min-height: 0;
+}
+.cs-poster__count[hidden] { display: none; }
+.cs-poster__numeral {
+  font-family: var(--cs-font-numeral);
+  font-weight: 600;
+  font-size: clamp(64px, 22vw, 128px);
+  line-height: 0.85;
+  color: var(--cs-poster-red);
+  margin: 0;
+}
+.cs-poster__daylabel {
+  font-family: var(--cs-font-numeral);
+  font-weight: 600;
+  font-size: clamp(20px, 6vw, 32px);
+  letter-spacing: 0.03em;
+  color: var(--cs-black);
+  margin: 6% 0 0;
+}
+.cs-poster__launched[hidden] { display: none; }
+.cs-poster__launched {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--cs-font-numeral);
+  font-weight: 600;
+  font-size: clamp(20px, 5vw, 28px);
+  color: var(--cs-black);
+  margin: 0;
+  padding: 0 4%;
+}
+.cs-poster__caption {
+  font-family: var(--cs-font-body);
+  font-weight: 700;
+  font-size: clamp(11px, 2.6vw, 14px);
+  letter-spacing: 0.02em;
+  color: var(--cs-black);
+  margin: 0;
+}
+.cs-poster__rule {
+  display: block;
+  width: 22%;
+  height: 1px;
+  background: var(--cs-poster-red);
+}
+.cs-poster__launchline {
+  font-family: var(--cs-font-body);
+  font-weight: 700;
+  font-size: clamp(11px, 2.8vw, 15px);
+  color: var(--cs-poster-red);
+  margin: 0;
+}
+.cs-poster__domain {
+  font-family: var(--cs-font-body);
+  font-weight: 700;
+  font-size: clamp(13px, 3.4vw, 18px);
+  color: var(--cs-black);
+  margin: 0;
+}
+
+/* ---------- Right — supporting panel ----------
+   The statement is now the page's last visible content (the footer that
+   used to sit below both panels was removed at Tebogo's request — a
+   deliberate content decision, not a layout oversight). Bottom padding
+   bumped up from the old 48/56px so the page has a real closing margin
+   instead of quietly relying on the footer's own top padding to create
+   that space, which no longer exists. */
+.cs-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  padding: 40px var(--cs-edge) 64px;
+}
+@media (min-width: 900px) {
+  .cs-panel { padding: 56px 56px 80px 40px; justify-content: center; }
+}
+
+.cs-panel__actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.cs-panel__preview-link {
+  background: none; border: none; color: var(--cs-text-on-white);
+  font-family: var(--cs-font-body); font-size: 13px; text-decoration: underline;
+  cursor: pointer; padding: 8px 4px;
+}
+.cs-panel__preview-link:hover, .cs-panel__preview-link:focus-visible { color: var(--cs-black); }
+
+/* ---------- Buttons ---------- */
+.cs-btn {
+  display: inline-block; font-family: var(--cs-font-body); font-size: 15px; font-weight: 600;
+  padding: 12px 24px; border-radius: 2px; text-decoration: none; text-align: center;
+  border: 1px solid transparent; cursor: pointer; min-height: 44px; line-height: 1.2;
+}
+.cs-btn--primary { background: var(--cs-red); color: var(--cs-white); }
+.cs-btn--primary:hover, .cs-btn--primary:focus-visible { background: #8B2921; }
+.cs-btn--outline { background: transparent; color: var(--cs-black); border-color: var(--cs-black); }
+.cs-btn--outline:hover, .cs-btn--outline:focus-visible { background: var(--cs-black); color: var(--cs-white); }
+.cs-btn--ghost { background: transparent; color: var(--cs-red); border-color: var(--cs-red); }
+.cs-btn--ghost:hover, .cs-btn--ghost:focus-visible { background: var(--cs-red); color: var(--cs-white); }
+
+/* ---------- Action-row icon buttons — WhatsApp (circle) + Instagram (squircle) ----------
+   Both use var(--cs-red) — the exact same value, not two different reds —
+   a solid fill and an outline of the same colour read as different
+   visual weights once rendered (normal perception, not a bug); the
+   underlying colour is identical, verified in code, not just by eye. */
+.cs-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  flex: none;
+  text-decoration: none;
+  cursor: pointer;
+}
+.cs-icon-btn--circle {
+  border-radius: 50%;
+  background: var(--cs-red);
+  color: var(--cs-white);
+}
+.cs-icon-btn--circle:hover, .cs-icon-btn--circle:focus-visible { background: #8B2921; }
+.cs-icon-btn--squircle {
+  border-radius: 12px;
+  background: transparent;
+  border: 1.8px solid var(--cs-red);
+  color: var(--cs-red);
+}
+.cs-icon-btn--squircle:hover, .cs-icon-btn--squircle:focus-visible { background: rgba(178, 55, 62, 0.08); }
+.cs-icon-btn__glyph { width: 22px; height: 22px; fill: currentColor; flex: none; }
+
+/* ---------- Floating music control ----------
+   Same red-circle language as the WhatsApp icon button (reuses
+   .cs-icon-btn/.cs-icon-btn--circle directly). Closed by default; the
+   panel only ever appears after a click on the toggle, and audio only
+   ever starts after a click inside the panel — nothing here is
+   autoplay-adjacent. */
+.cs-music {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  z-index: 120;
+}
+.cs-music__panel {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + 12px);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 168px;
+  padding: 10px;
+  background: var(--cs-white);
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 10px;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.18);
+}
+.cs-music__panel[hidden] { display: none; }
+.cs-music__track,
+.cs-music__stop {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 12px;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--cs-black);
+  font-family: var(--cs-font-body);
+  font-size: 14px;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+}
+.cs-music__track:hover, .cs-music__track:focus-visible,
+.cs-music__stop:hover:not(:disabled), .cs-music__stop:focus-visible {
+  background: rgba(178, 55, 62, 0.08);
+}
+.cs-music__track[aria-pressed="true"] {
+  background: var(--cs-red);
+  color: var(--cs-white);
+}
+/* The pause control is deliberately styled at the same size/weight as
+   the track buttons — sound-sensitive visitors need it exactly as easy
+   to find as play, never smaller or tucked away. */
+.cs-music__stop {
+  margin-top: 4px;
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+  padding-top: 10px;
+}
+.cs-music__stop:disabled { color: rgba(0, 0, 0, 0.35); cursor: default; }
+
+/* ---------- Hero copy (moved into the right panel) ---------- */
+.cs-hero__eyebrow {
+  font-family: var(--cs-font-display); font-style: italic; color: var(--cs-red);
+  font-size: 17px; margin: 0 0 6px; letter-spacing: 0.02em;
+}
+.cs-hero__title {
+  font-family: var(--cs-font-display); color: var(--cs-red);
+  font-size: clamp(28px, 4.4vw, 40px); line-height: 1.1; margin: 0 0 12px; font-weight: 400;
+}
+.cs-hero__sub {
+  font-size: 16px; line-height: 1.6; color: var(--cs-text-on-white);
+  max-width: 46ch; margin: 0;
+}
+
+/* ---------- Countdown (right panel, hidden until a launch date exists) ---------- */
+.cs-countdown { background: var(--cs-white); text-align: left; padding: 24px 0; border-top: 1px solid rgba(0,0,0,0.08); border-bottom: 1px solid rgba(0,0,0,0.08); }
+.cs-countdown__label { font-family: var(--cs-font-display); font-size: 18px; color: var(--cs-black); margin: 0 0 16px; }
+.cs-countdown__grid { display: flex; gap: 24px; flex-wrap: wrap; }
+.cs-countdown__unit { display: flex; flex-direction: column; align-items: center; min-width: 56px; }
+.cs-countdown__value { font-family: var(--cs-font-display); font-size: 34px; color: var(--cs-red); line-height: 1; }
+.cs-countdown__name { font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--cs-text-on-white); margin-top: 6px; }
+
+/* ---------- Promo (hidden while disabled) ---------- */
+.cs-promo { background: var(--cs-red); color: var(--cs-white); text-align: center; padding: 20px var(--cs-edge); margin: 0 calc(var(--cs-edge) * -1); }
+.cs-promo__text { margin: 0; font-size: 15px; font-weight: 600; }
+
+/* .cs-form__status is shared with the Private Preview modal below — kept
+   here since it has no enquiry-specific styling of its own. */
+.cs-form__status { min-height: 20px; font-size: 14px; margin: 0; }
+.cs-form__status[data-state="error"] { color: var(--cs-red); }
+.cs-form__status[data-state="success"] { color: #2E6B3E; }
+
+/* ---------- Statement ---------- */
+.cs-statement { padding: 0; }
+.cs-statement__text {
+  font-family: var(--cs-font-display); font-size: clamp(16px, 1.8vw, 19px); line-height: 1.6;
+  color: var(--cs-text-on-white); max-width: 52ch; margin: 0;
+}
+
+/* ---------- Private Preview modal ---------- */
+.cs-modal-backdrop {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.55);
+  display: flex; align-items: center; justify-content: center; padding: 20px; z-index: 200;
+}
+/* [hidden] and .cs-modal-backdrop have equal CSS specificity, and this
+   stylesheet loads after the UA sheet — without this override, the class's
+   `display: flex` would win and the modal would render even while hidden. */
+.cs-modal-backdrop[hidden] { display: none; }
+.cs-modal {
+  background: var(--cs-white); max-width: 420px; width: 100%; padding: 32px;
+  border-radius: 2px; position: relative;
+}
+.cs-modal h2 { font-family: var(--cs-font-display); font-size: 22px; margin: 0 0 12px; color: var(--cs-black); }
+.cs-modal p { font-size: 14px; color: var(--cs-text-on-white); line-height: 1.5; margin: 0 0 20px; }
+.cs-modal__close {
+  position: absolute; top: 16px; right: 16px; background: none; border: none;
+  font-size: 14px; cursor: pointer; color: var(--cs-text-on-white); padding: 6px;
+}
+.cs-modal label { display: block; font-size: 14px; margin-bottom: 6px; color: var(--cs-black); }
+.cs-password-field { display: flex; gap: 8px; }
+.cs-password-field input {
+  flex: 1; font-size: 16px; padding: 12px 14px; border: 1px solid rgba(0,0,0,0.2);
+  border-radius: 2px; min-height: 44px;
+}
+.cs-password-toggle {
+  background: none; border: 1px solid rgba(0,0,0,0.2); border-radius: 2px;
+  padding: 0 14px; font-size: 13px; cursor: pointer; min-height: 44px;
+}
+.cs-modal__actions { display: flex; gap: 12px; justify-content: flex-end; margin-top: 20px; }
+.cs-modal[aria-busy="true"] .cs-btn--primary { opacity: 0.6; pointer-events: none; }
+
+@media (max-width: 480px) {
+  .cs-modal { padding: 24px; }
+  .cs-modal__actions { flex-direction: column-reverse; }
+  .cs-modal__actions .cs-btn { width: 100%; }
+}

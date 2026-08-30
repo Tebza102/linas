@@ -1,6 +1,7 @@
 // Lina's admin portal — enquiry inbox list.
-import { requireAuth, logout } from "./auth-guard.js";
+import { requireAuth } from "./auth-guard.js";
 import { db } from "./firebase-init.js";
+import { initLayout } from "./layout.js";
 import {
   collection, query, where, orderBy, getDocs, onSnapshot
 } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js";
@@ -32,8 +33,7 @@ function todayIso() { return new Date().toISOString().slice(0, 10); }
 
 async function main() {
   const { user, role } = await requireAuth();
-  document.getElementById("userLabel").textContent = `${user.email} (${role})`;
-  document.getElementById("logoutBtn").addEventListener("click", logout);
+  initLayout({ user, role, active: "leads" });
 
   // Populate filter dropdowns.
   const statusFilter = document.getElementById("statusFilter");
@@ -76,7 +76,7 @@ async function main() {
     // Scope the base query by role. Staff only ever fetch enquiries that
     // are assigned to them or unassigned — matches firestore.rules exactly,
     // so this query never gets a permission-denied on a matching read.
-    const q = role === "owner"
+    const q = (role === "owner" || role === "developer" || role === "observer")
       ? query(collection(db, "enquiries"), orderBy("createdAt", "desc"))
       : query(collection(db, "enquiries"), where("assignedOwnerId", "in", [user.uid, null]), orderBy("createdAt", "desc"));
 
@@ -103,8 +103,9 @@ async function main() {
   }
 
   // No page-reload / polling needed for changes: this same listener also
-  // picks up webhook-driven notification-status updates and detail-panel
-  // saves automatically, since they're all just Firestore writes.
+  // picks up server-side notification-status updates (from the SMTP send
+  // in api/_lib/send-notification-email.js) and detail-panel saves
+  // automatically, since they're all just Firestore writes.
   subscribe();
 
   setInterval(() => {

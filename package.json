@@ -11,12 +11,12 @@
     "prototype:check": "node --check scripts/serve-prototype.js && node --check assets/mockups/working/prototype/menu-data.js && node --check assets/mockups/working/prototype/script.js",
     "demo": "node scripts/serve-demo.js",
     "demo:check": "node --check scripts/serve-demo.js && node --check scripts/lina-demo-db.js && node --check assets/mockups/working/demo/demo.js",
-    "admin:check": "node --check api/enquiries/create.js && node --check api/enquiries/retry-notification.js && node --check api/_lib/firebase-admin.js && node --check api/_lib/validate-enquiry.js && node --check api/_lib/send-notification-email.js && node --check api/_lib/mail.js && node --check scripts/firebase-admin-bootstrap.js && node --check scripts/serve-local-test.js && node --check admin/js/firebase-init.js && node --check admin/js/auth-guard.js && node --check admin/js/inbox.js && node --check admin/js/detail.js && node --check admin/js/dashboard.js",
+    "admin:check": "node --check api/enquiries/create.js && node --check api/enquiries/retry-notification.js && node --check api/admin/invite-user.js && node --check api/_lib/firebase-admin.js && node --check api/_lib/validate-enquiry.js && node --check api/_lib/send-notification-email.js && node --check api/_lib/mail.js && node --check scripts/firebase-admin-bootstrap.js && node --check scripts/serve-local-test.js && node --check admin/js/firebase-init.js && node --check admin/js/auth-guard.js && node --check admin/js/layout.js && node --check admin/js/inbox.js && node --check admin/js/detail.js && node --check admin/js/dashboard.js && node --check admin/js/pipeline.js && node --check admin/js/calendar.js && node --check admin/js/create-booking.js && node --check admin/js/marketing.js && node --check admin/js/quotations.js && node --check admin/js/invoices.js && node --check admin/js/reports.js && node --check admin/js/settings.js && node --check admin/js/users.js && node --check admin/js/charts.js && node --check admin/js/order-constants.js && node --check admin/js/orders.js && node --check api/orders/create.js && node --check api/_lib/rate-limit.js && node --check api/_lib/menu-catalog.js && node --check api/_lib/validate-order.js && node --check api/_lib/order-message.js && node --check api/_lib/preview-token.js && node --check api/_lib/preview-paths.js && node --check api/preview/unlock.js && node --check api/preview/developer-unlock.js && node --check api/preview/logout.js && node --check api/coming-soon/config.js && node --check scripts/serve-local-test.js && node --check assets/mockups/working/prototype-v2/menu-data.js && node --check assets/mockups/working/prototype-v2/coming-soon.js && node --check assets/mockups/working/prototype-v2/preview-exit.js && node --check assets/mockups/working/prototype-v2/cart.js && node --check assets/mockups/working/prototype-v2/script.js && node --check assets/mockups/working/prototype-v2/enquiry-submit.js && node --check assets/mockups/working/prototype-v2/public-admin-link.js",
     "admin:bootstrap": "node scripts/firebase-admin-bootstrap.js",
     "emulators": "firebase emulators:start --only firestore,auth",
     "test:rules": "node --test firebase-tests/firestore.rules.test.js",
     "test:rules:auto": "node firebase-tests/run-with-emulator.js",
-    "test:unit": "node --test firebase-tests/validate-enquiry.test.js",
+    "test:unit": "node --test firebase-tests/validate-enquiry.test.js firebase-tests/menu-catalog-parity.test.js firebase-tests/validate-order.test.js firebase-tests/order-message.test.js firebase-tests/preview-token.test.js firebase-tests/preview-gate.test.js firebase-tests/coming-soon-config.test.js",
     "firebase:deploy:rules": "firebase deploy --only firestore:rules,firestore:indexes"
   },
   "devDependencies": {
@@ -26,6 +26,7 @@
     "firebase-admin": "^12.7.0"
   },
   "dependencies": {
+    "@vercel/functions": "^3.7.6",
     "nodemailer": "^9.0.3"
   }
 }
