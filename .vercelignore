@@ -31,6 +31,16 @@
 !/assets/mockups
 !/assets/source
 !/assets/menu
+!/assets/brand
+
+# The homepage header logo (index.html <img>). Everything else under
+# assets/brand/working (draft/rejected recolours, working files) stays
+# denied — only this one shipped asset is re-admitted.
+/assets/brand/*
+!/assets/brand/working
+
+/assets/brand/working/*
+!/assets/brand/working/lina-logo-red-unboxed-working-v1-20260830.svg
 
 /assets/mockups/*
 !/assets/mockups/working
@@ -95,6 +105,12 @@
 !/assets/mockups/working/media/lina-track-1.mp3
 !/assets/mockups/working/media/lina-track-2.mp3
 !/assets/mockups/working/media/lina-track-3.mpeg
+
+# Homepage hero/Summer Menu images (2026-08-30 poster-led redesign).
+!/assets/mockups/working/media/lina-home-chef-approved-v1-20260830.png
+!/assets/mockups/working/media/lina-home-featured-chicken-working-v1-20260830.png
+!/assets/mockups/working/media/lina-home-featured-shrimp-tacos-working-v1-20260830.png
+!/assets/mockups/working/media/lina-home-featured-burger-working-v1-20260830.png
 
 /assets/source/*
 !/assets/source/brand
