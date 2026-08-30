@@ -1,8 +1,8 @@
 // Lina's — Poster-led homepage, first screen.
 //
 // Reads only from LINA_HOME_MEDIA (home-media.js): populates the header
-// CTA, the hero copy (including the headline's italic connector word),
-// the two hero CTA buttons and the chef portrait. Also owns three small
+// CTA, the hero copy (plain headline string, no connector word), the two
+// hero CTA buttons and the chef portrait. Also owns three small
 // homepage-only behaviours: the sticky header's scroll-compact state, and
 // a magnetic-hover effect on the primary CTA button only.
 //
@@ -43,16 +43,7 @@
 
   var headlineEl = document.getElementById("homeHeadline");
   if (headlineEl && media.copy.headline) {
-    var h = media.copy.headline;
-    headlineEl.innerHTML = "";
-    headlineEl.appendChild(document.createTextNode(h.line1));
-    headlineEl.appendChild(document.createElement("br"));
-    var connector = document.createElement("em");
-    connector.className = "home-hero__title-connector";
-    connector.textContent = h.connector;
-    headlineEl.appendChild(connector);
-    headlineEl.appendChild(document.createElement("br"));
-    headlineEl.appendChild(document.createTextNode(h.line2));
+    headlineEl.textContent = media.copy.headline;
   }
 
   var subEl = document.getElementById("homeSupporting");
@@ -120,5 +111,29 @@
     primaryBtn.addEventListener("pointerleave", function () {
       primaryBtn.style.transform = "";
     });
+  }
+
+  /* ---------- Scroll reveal: Summer Menu + Act 3 band ----------
+     Progressive enhancement only: home.css hides these sections' content
+     exclusively under html.has-motion, added here. If this script never
+     runs, .has-motion never appears and everything stays at its default
+     fully-visible state — no flash of invisible content. Each section is
+     revealed once (on first viewport entry) and then unobserved; the
+     visitor's own scrolling never re-triggers or reverses it. */
+  document.documentElement.classList.add("has-motion");
+  var revealSections = document.querySelectorAll(".home-menu, .home-cta-band");
+  if (revealSections.length) {
+    if (typeof IntersectionObserver === "undefined") {
+      revealSections.forEach(function (el) { el.classList.add("is-visible"); });
+    } else {
+      var revealObserver = new IntersectionObserver(function (entries) {
+        entries.forEach(function (entry) {
+          if (!entry.isIntersecting) return;
+          entry.target.classList.add("is-visible");
+          revealObserver.unobserve(entry.target);
+        });
+      }, { threshold: 0.15, rootMargin: "0px 0px -8% 0px" });
+      revealSections.forEach(function (el) { revealObserver.observe(el); });
+    }
   }
 })();

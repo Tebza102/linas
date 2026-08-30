@@ -6,33 +6,23 @@
 //
 // Copy is reused verbatim from the previously approved hero copy — no new
 // factual claims are introduced (CLAUDE.md: never invent client facts,
-// prices, service areas). The headline is restructured (not reworded) to
-// carry the italic connector word the new design calls for.
+// prices, service areas). The headline is a plain string per the approved
+// 2026-08-29 mock (no italic connector word — that treatment is retired).
 //
-// heroImage reuses the existing confirmed chef cutout (background-removed,
-// verified genuine alpha — see Decision Log D-028), the same file already
-// used for the chef portrait on menu.html. No new asset was supplied for
-// this task, so no new file was added.
+// heroImage points at the human-approved Chef Lina hero asset
+// (lina-home-chef-approved-v1-20260830.png, 1535x2047, locked — never
+// cropped/regenerated/edited, only presented via CSS object-fit:contain so
+// the full supplied photograph is always visible, never destructively
+// cropped).
 //
-// lina-hero-chef-cutout-working-v1-20260802.webp (used in the Offerings
-// section below, and its filename's misleading) is NOT actually a
-// background-removed cutout — visual check shows a full rectangular photo
-// with the trailer counter, red panel and "CHEF LINA" text baked in. It
-// is deliberately NOT used here for that reason.
-//
-// The "Order Today" / WhatsApp destination that used to live in this
-// object is not lost: the floating WhatsApp button (#stickyWhatsapp,
-// unchanged by this task) and the Offerings section's own WhatsApp link
-// both still use the same verified wa.me URL — see D-029.
+// The Summer Menu section and Act 3 conversion band (added this round) use
+// static markup directly in index.html rather than this config object,
+// since their content does not change based on any state.
 var LINA_HOME_MEDIA = {
   copy: {
     tagline: "Freshly prepared. Made with care.",
     eyebrow: "Lina's",
-    headline: {
-      line1: "Chef-Led Catering",
-      connector: "and",
-      line2: "Mobile-Kitchen Experiences"
-    },
+    headline: "Chef-Led Catering & Mobile-Kitchen Experiences",
     supporting: "Weddings, funerals, corporate events and private catering — plus a real mobile kitchen serving plates to order."
   },
 
@@ -42,7 +32,7 @@ var LINA_HOME_MEDIA = {
   },
 
   heroImage: {
-    src: "/assets/mockups/working/media/lina-welcome-hero-working-v1-20260802.webp",
+    src: "/assets/mockups/working/media/lina-home-chef-approved-v1-20260830.png",
     alt: "Chef Lina smiling and presenting a plated meal"
   }
 };

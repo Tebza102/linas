@@ -8,27 +8,28 @@
  * balance (white/red-led) deliberately reverses the site-wide black-led
  * system (D-011/D-013) and is logged as a homepage-only divergence.
  *
- * Direction: a static poster hero — chef portrait, editorial headline with
- * an italic connector word, two CTAs — replacing the previous auto-cycling
- * chef-led gateway (superseded per Decision Log). Below the hero, the
- * existing Offerings section (offerings.css) is untouched by this file.
+ * Direction: approved 2026-08-29 homepage target — static poster hero (plain
+ * editorial headline, two CTAs, a quiet three-item proof strip), an Act 2
+ * "Summer Menu" featured-food section, and an Act 3 conversion band. The
+ * former "Our Offerings" section (offerings.css/offerings.js) is retired
+ * from this page — those files are left on disk, unreferenced, untouched.
  *
  * --home-font-display/--home-font-body are deliberately separate from the
- * shared --font-display/--font-body tokens in styles.css: redefining those
- * shared tokens under .home would also silently retint the Offerings
- * section below (offerings.css reads the same shared vars), which this
- * task does not touch. Fraunces/Inter are therefore applied only to the
- * specific rules in this file that opt into them.
+ * shared --font-display/--font-body tokens in styles.css, to keep this
+ * page's isolation guarantee intact regardless of what else later reads the
+ * shared vars. Fraunces/Inter are applied only to the specific rules in
+ * this file that opt into them (an existing, previously logged divergence
+ * — no new font dependency is introduced by this round's changes).
  */
 
 .home {
   --home-white: #FFFFFF;
   --home-white-dim: #F7F7F5;
-  --home-red: #A30100;    /* brief's primary red — homepage only, see Decision Log (unreconciled against other sampled reds) */
-  --home-red-deep: #7A0100;
-  --home-ink: #1A1512;
-  --home-ink-dim: rgba(26, 21, 18, 0.64);
-  --home-ink-faint: rgba(26, 21, 18, 0.16);
+  --home-red: #B2373E;    /* approved public-site red — docs/LINA-DESIGN-DNA.md */
+  --home-red-deep: #962E34;
+  --home-ink: #201512;
+  --home-ink-dim: rgba(32, 21, 18, 0.72);
+  --home-ink-faint: rgba(32, 21, 18, 0.12);
   --home-font-display: 'Fraunces', Georgia, "Iowan Old Style", serif;
   --home-font-body: 'Inter', -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   background: var(--home-white);
@@ -55,17 +56,12 @@ body.home .site-header.is-compact {
   padding: var(--space-2) var(--edge);
   border-bottom-color: var(--home-red);
 }
-/* linas-logo-nb-wl.svg is confirmed white-only line art on a transparent
-   background (its <feColorMatrix> forces RGB to pure white) — made for
-   dark surfaces. No new logo asset was supplied for this task, and this
-   is the same file the header already uses site-wide, so on this white
-   header it needs the same small red backing plate the previous homepage
-   version used for the same reason — otherwise it's invisible, confirmed
-   by screenshot during this task, not a hypothetical. */
+/* lina-logo-red-unboxed-working-v1-20260830.svg is a mechanical recolour of
+   the approved Linas_Logo_nb_wl.svg linework (white -> #B2373E, same
+   geometry/proportions, transparent background) — see Decision Log. It
+   reads directly on white with no backing plate, per the approved mock. */
 body.home .site-header__mark {
-  background: var(--home-red);
-  padding: 8px 14px;
-  border-radius: 2px;
+  padding: 0;
   line-height: 0;
   flex: none;
 }
@@ -289,28 +285,23 @@ body.home .site-nav__login:focus-visible {
 /* ============================================================
    First screen — hero
    ============================================================ */
+/* Content-driven height — a fixed 100svh hero with vertically-centred
+   content was reserving a full viewport regardless of actual content
+   height, producing a large dead gap before Summer Menu on most screens.
+   Corrected per human review: the hero is now exactly as tall as its own
+   content plus deliberate (not forced) top/bottom breathing room. */
 .home-hero {
   position: relative;
-  min-height: 600px;
-  height: 100vh;
-  height: 100svh;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
   background: var(--home-white);
   color: var(--home-ink);
-  overflow: hidden;
-}
-@supports (height: 100dvh) {
-  .home-hero { height: 100dvh; }
 }
 
 .home-hero__body {
   display: grid;
   grid-template-columns: 1fr;
   align-items: start;
-  gap: var(--space-6);
-  padding: var(--space-6) var(--edge);
+  gap: var(--space-8);
+  padding: var(--space-12) var(--edge);
 }
 @media (min-width: 900px) {
   .home-hero__body {
@@ -318,8 +309,10 @@ body.home .site-nav__login:focus-visible {
        force its column wider than the fr split intends. Confirmed real
        during the reference mockup build, not a hypothetical. */
     grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
-    align-items: center;
+    align-items: start;
     gap: var(--space-12);
+    padding: var(--space-8) var(--edge);
+    padding-bottom: var(--space-4);
   }
 }
 
@@ -361,20 +354,12 @@ body.home .site-nav__login:focus-visible {
   font-family: var(--home-font-display);
   font-weight: 600;
   text-transform: uppercase;
-  font-size: clamp(2.25rem, 5.5vw, 3.5rem);
-  line-height: 1.05;
+  font-size: clamp(1.85rem, 6.5vw, 3.5rem);
+  line-height: 1.08;
   letter-spacing: 0.01em;
   margin: 0 0 var(--space-4);
   color: var(--home-red);
-}
-.home-hero__title-connector {
-  font-family: var(--home-font-display);
-  font-style: italic;
-  font-weight: 400;
-  text-transform: lowercase;
-  font-size: 0.5em;
-  color: var(--home-ink-dim);
-  letter-spacing: 0;
+  max-width: 19ch;
 }
 .home-hero__sub {
   font-family: var(--home-font-body);
@@ -399,10 +384,10 @@ body.home .site-nav__login:focus-visible {
   padding: 14px 28px;
   border-radius: 2px;
   font-family: var(--home-font-body);
-  font-size: 0.8125rem;
+  font-size: 0.9375rem;
   font-weight: 600;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+  letter-spacing: 0;
+  text-transform: none;
   text-decoration: none;
   cursor: pointer;
   border: 1px solid var(--home-red);
@@ -431,51 +416,426 @@ body.home .site-nav__login:focus-visible {
      this just guarantees no residual transform lingers on touch. */
   .home-hero__cta { transform: none !important; }
 }
+/* Mobile CTAs were disproportionately large next to the reduced mobile
+   headline — scaled down while holding the 44px accessibility floor. */
+@media (max-width: 640px) {
+  .home-hero__cta-row { gap: var(--space-2); }
+  .home-hero__cta {
+    min-height: 44px;
+    padding: 10px 20px;
+    font-size: 0.8125rem;
+  }
+}
 
-/* ---------- Chef portrait ---------- */
+/* ---------- Chef portrait ----------
+   Human-approved locked asset (lina-home-chef-approved-v1-20260830.png,
+   1535x2047) — the supplied photograph must never be cropped, so the
+   container is aspect-ratio-locked to the source image's own proportions
+   and object-fit:contain is used (not cover). This structurally guarantees
+   the complete image is always visible at every width, with no crop
+   possible regardless of viewport. Sized down from the previous
+   full-bleed-cover treatment and top-aligned so the chef reads near the
+   same vertical level as the hero headline, per human review. */
 .home-hero__visual {
   position: relative;
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
   min-width: 0;
-}
-.home-hero__shadow {
-  position: absolute;
-  bottom: 4%;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 62%;
-  height: 7%;
-  background: rgba(26, 21, 18, 0.18);
-  filter: blur(14px);
-  border-radius: 50%;
-}
-.home-hero__chef-img {
-  position: relative;
-  width: min(320px, 68vw);
-  height: auto;
-  filter: drop-shadow(0 18px 28px rgba(26, 21, 18, 0.16));
+  width: 100%;
+  max-width: 300px;
+  aspect-ratio: 1535 / 2047;
+  margin: 0 auto;
 }
 @media (min-width: 900px) {
-  .home-hero__chef-img { width: clamp(320px, 30vw, 440px); }
+  .home-hero__visual {
+    max-width: 410px;
+    margin-left: auto;
+    margin-right: clamp(96px, 12vw, 200px);
+  }
+}
+.home-hero__chef-img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: top center;
 }
 
-/* ---------- Entrance reveal ---------- */
+/* ---------- Header entrance (Step 1) ----------
+   `.home-header-reveal` already exists on the header markup (a leftover
+   hook from the retired, unloaded offerings.css) but had no active styling
+   on this page — the header currently had zero entrance motion. Styled
+   here instead of in offerings.css, which stays untouched and unloaded. */
+.home .site-header.home-header-reveal {
+  opacity: 0;
+  transform: translateY(-8px);
+  animation: homeHeaderReveal 420ms cubic-bezier(.22, 1, .36, 1) forwards;
+}
+@keyframes homeHeaderReveal {
+  to { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .home .site-header.home-header-reveal { opacity: 1; transform: none; animation: none; }
+}
+
+/* ---------- Entrance reveal (Steps 2-5) ----------
+   Sequence: header (above) -> tagline/eyebrow (--1) -> headline (--2) ->
+   supporting copy -> CTA row -> proof strip (all --3, staggered via their
+   own element class below) -> chef portrait (--4), timed to begin ~100ms
+   after the headline per the approved motion spec. */
 .home-hero__reveal {
   opacity: 0;
-  transform: translateY(10px);
-  animation: homeHeroReveal 700ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  transform: translateY(12px);
+  animation: homeHeroReveal 550ms cubic-bezier(.22, 1, .36, 1) forwards;
 }
 .home-hero__reveal--1 { animation-delay: 80ms; }
+.home-hero__tagline.home-hero__reveal--1,
+.home-hero__eyebrow-row.home-hero__reveal--1 { animation-duration: 450ms; }
 .home-hero__reveal--2 { animation-delay: 200ms; }
+.home-hero__title.home-hero__reveal--2 { animation-duration: 580ms; }
 .home-hero__reveal--3 { animation-delay: 320ms; }
-.home-hero__reveal--4 { animation-delay: 160ms; }
+.home-hero__cta-row.home-hero__reveal--3 { animation-delay: 410ms; }
+.home-hero__proof.home-hero__reveal--3 { animation-delay: 480ms; }
+.home-hero__reveal--4 { animation-delay: 300ms; }
+.home-hero__visual.home-hero__reveal--4 { animation-duration: 620ms; }
 @keyframes homeHeroReveal {
   to { opacity: 1; transform: none; }
 }
 @media (prefers-reduced-motion: reduce) {
   .home-hero__reveal { opacity: 1; transform: none; animation: none; }
+}
+
+/* ---------- Hero trust strip (three quiet proof points) ---------- */
+.home-hero__proof {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-6);
+  list-style: none;
+  margin: var(--space-6) 0 0;
+  padding: var(--space-4) 0 0;
+  border-top: 1px solid var(--home-ink-faint);
+}
+.home-hero__proof-item {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  font-family: var(--home-font-body);
+  font-size: 13px;
+  color: var(--home-ink-dim);
+}
+.home-hero__proof-icon {
+  width: 20px;
+  height: 20px;
+  color: var(--home-red);
+  flex: none;
+  margin-top: 1px;
+}
+.home-hero__proof-item strong {
+  display: block;
+  color: var(--home-ink);
+  font-weight: 600;
+}
+
+/* ============================================================
+   Act 2 — Summer Menu
+   ============================================================ */
+.home-menu {
+  padding: var(--space-16) var(--edge);
+  max-width: 1280px;
+  margin: 0 auto;
+}
+@media (min-width: 900px) {
+  .home-menu {
+    padding-top: 0;
+    display: grid;
+    grid-template-columns: minmax(0, 300px) 1fr;
+    align-items: start;
+    gap: var(--space-8);
+  }
+}
+.home-menu__intro {
+  max-width: 640px;
+  margin-bottom: var(--space-8);
+}
+@media (min-width: 900px) {
+  .home-menu__intro { margin-bottom: 0; }
+}
+.home-menu__eyebrow {
+  font-family: var(--home-font-body);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--home-red);
+  margin: 0 0 var(--space-2);
+}
+.home-menu__heading {
+  font-family: var(--home-font-display);
+  font-weight: 500;
+  font-size: clamp(1.75rem, 3vw, 2.25rem);
+  color: var(--home-ink);
+  margin: 0 0 var(--space-3);
+}
+.home-menu__rule {
+  display: block;
+  width: 40px;
+  height: 2px;
+  background: var(--home-red);
+  margin-bottom: var(--space-4);
+}
+.home-menu__body {
+  font-family: var(--home-font-body);
+  font-size: 15px;
+  line-height: 1.55;
+  color: var(--home-ink-dim);
+  max-width: 42ch;
+  margin: 0 0 var(--space-4);
+}
+.home-menu__view-all {
+  font-family: var(--home-font-body);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--home-red);
+  text-decoration: none;
+}
+/* <900px: horizontal swipe/scroll carousel (CSS-only, no JS) instead of
+   three full-width stacked cards, so the section doesn't unnecessarily
+   extend the mobile page. Cards stay real <a> elements; a sliver of the
+   next card stays visible to hint the row is swipeable. */
+.home-menu__grid {
+  display: flex;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  gap: var(--space-4);
+  margin: 0 calc(var(--edge) * -1);
+  padding: 0 var(--edge) var(--space-2);
+  -webkit-overflow-scrolling: touch;
+}
+.home-menu__grid .home-menu__card {
+  flex: 0 0 min(78vw, 360px);
+  scroll-snap-align: start;
+}
+@media (max-width: 640px) {
+  .home-menu__grid .home-menu__card { flex-basis: 84vw; }
+}
+@media (min-width: 900px) {
+  .home-menu__grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-6);
+    overflow-x: visible;
+    scroll-snap-type: none;
+    margin: 0;
+    padding: 0;
+  }
+  .home-menu__grid .home-menu__card { flex: initial; }
+}
+.home-menu__card {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+  border-radius: 2px;
+}
+.home-menu__media {
+  position: relative;
+  border-radius: 8px;
+  overflow: hidden;
+  aspect-ratio: 4 / 3;
+  background: var(--home-white-dim);
+}
+.home-menu__media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 260ms ease;
+}
+.home-menu__card:hover .home-menu__media img,
+.home-menu__card:focus-visible .home-menu__media img {
+  transform: scale(1.02);
+}
+.home-menu__card-text {
+  padding-top: var(--space-3);
+}
+.home-menu__card-name {
+  font-family: var(--home-font-body);
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--home-ink);
+  margin: 0;
+}
+@media (prefers-reduced-motion: reduce) {
+  .home-menu__media img { transition: none; }
+}
+
+/* ---------- Summer Menu scroll reveal ----------
+   Progressive enhancement: the hidden pre-state below only ever applies
+   under html.has-motion, which home.js adds at runtime. Without
+   JavaScript (or if it errors), .has-motion never appears and this
+   section stays at its default fully-visible state — see home.js. The
+   IntersectionObserver there adds .is-visible to .home-menu once, on
+   first entry into the viewport; it never re-hides on scroll-away. Cards
+   are staggered via :nth-child so no card-level markup change is needed. */
+.has-motion .home-menu__intro,
+.has-motion .home-menu__grid .home-menu__card {
+  opacity: 0;
+  transform: translateY(12px);
+  transition: opacity 500ms cubic-bezier(.22, 1, .36, 1), transform 500ms cubic-bezier(.22, 1, .36, 1);
+}
+.has-motion .home-menu.is-visible .home-menu__intro,
+.has-motion .home-menu.is-visible .home-menu__grid .home-menu__card {
+  opacity: 1;
+  transform: none;
+}
+.has-motion .home-menu.is-visible .home-menu__grid .home-menu__card:nth-child(2) { transition-delay: 90ms; }
+.has-motion .home-menu.is-visible .home-menu__grid .home-menu__card:nth-child(3) { transition-delay: 180ms; }
+@media (prefers-reduced-motion: reduce) {
+  .has-motion .home-menu__intro,
+  .has-motion .home-menu__grid .home-menu__card {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}
+
+/* ============================================================
+   Act 3 — Conversion band
+   ============================================================ */
+.home-cta-band {
+  background: var(--home-red);
+  color: var(--home-white);
+  padding: var(--space-12) var(--edge);
+  display: grid;
+  gap: var(--space-4);
+}
+.home-cta-band__eyebrow {
+  font-family: var(--home-font-body);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.8);
+  margin: 0 0 var(--space-2);
+}
+.home-cta-band__heading {
+  font-family: var(--home-font-display);
+  font-weight: 500;
+  font-size: clamp(1.5rem, 3vw, 2rem);
+  margin: 0;
+  color: var(--home-white);
+}
+.home-cta-band__body {
+  font-family: var(--home-font-body);
+  font-size: 14px;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.88);
+  max-width: 34ch;
+  margin: 0;
+}
+.home-cta-band__cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: 44px;
+  padding: 12px 24px;
+  background: var(--home-white);
+  color: var(--home-red);
+  font-family: var(--home-font-body);
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  border-radius: 2px;
+  width: fit-content;
+}
+.home-cta-band__cta:hover,
+.home-cta-band__cta:focus-visible {
+  background: var(--home-white-dim);
+}
+.home-cta-band__contact-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.home-cta-band__contact {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 44px;
+  color: var(--home-white);
+  text-decoration: none;
+  font-family: var(--home-font-body);
+  font-size: 13px;
+}
+.home-cta-band__contact--email {
+  padding-left: 28px;
+  min-height: auto;
+  color: rgba(255, 255, 255, 0.88);
+}
+.home-cta-band__contact-icon {
+  width: 20px;
+  height: 20px;
+  flex: none;
+}
+@media (min-width: 900px) {
+  .home-cta-band {
+    grid-template-columns: 1.2fr auto auto;
+    align-items: center;
+    column-gap: var(--space-8);
+  }
+  .home-cta-band__body { grid-column: 1; grid-row: 2; }
+}
+.home-cta-band__tags {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-3);
+  padding: var(--space-6) var(--edge);
+  margin: 0;
+  font-family: var(--home-font-body);
+  font-size: 13px;
+  color: var(--home-ink-dim);
+}
+.home-cta-band__tags li {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+.home-cta-band__tags li + li::before {
+  content: "•";
+  color: var(--home-red);
+}
+
+/* ---------- Act 3 scroll reveal ----------
+   Same has-motion/is-visible progressive-enhancement pattern as the
+   Summer Menu reveal above. The red band background is unanimated —
+   only its content groups fade/lift in once, on first entry. */
+.has-motion .home-cta-band__text,
+.has-motion .home-cta-band__body,
+.has-motion .home-cta-band__cta,
+.has-motion .home-cta-band__contact-group {
+  opacity: 0;
+  transform: translateY(12px);
+  transition: opacity 500ms cubic-bezier(.22, 1, .36, 1), transform 500ms cubic-bezier(.22, 1, .36, 1);
+}
+.has-motion .home-cta-band.is-visible .home-cta-band__text,
+.has-motion .home-cta-band.is-visible .home-cta-band__body,
+.has-motion .home-cta-band.is-visible .home-cta-band__cta,
+.has-motion .home-cta-band.is-visible .home-cta-band__contact-group {
+  opacity: 1;
+  transform: none;
+}
+.has-motion .home-cta-band.is-visible .home-cta-band__body { transition-delay: 90ms; }
+.has-motion .home-cta-band.is-visible .home-cta-band__cta,
+.has-motion .home-cta-band.is-visible .home-cta-band__contact-group { transition-delay: 180ms; }
+@media (prefers-reduced-motion: reduce) {
+  .has-motion .home-cta-band__text,
+  .has-motion .home-cta-band__body,
+  .has-motion .home-cta-band__cta,
+  .has-motion .home-cta-band__contact-group {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
 }
 
 /* ---------- Small phones (<=420px) ---------- */
