@@ -42,7 +42,23 @@ and/or approves real promo copy. The page never fabricates either.
 **If `COMING_SOON_ENABLED` is missing entirely, the gate is off.** This is
 deliberate — a missing env var must never take a live business offline.
 
-## Turning it off (at real launch)
+## Automatic launch at `COMING_SOON_LAUNCH_AT`
+
+Once `COMING_SOON_LAUNCH_AT` is set to a real, approved instant, the gate
+opens itself automatically — no redeploy, no manual step. `middleware.js`
+checks `hasLaunchTimeArrived()` (`api/_lib/launch-time.js`) against the
+server's own clock on every request (middleware runs uncached, so the very
+next request after the configured instant gets the real site). This is the
+same value that drives the countdown display — one date, one meaning.
+
+**Emergency hold:** if a problem is found close to the configured instant,
+set `COMING_SOON_LAUNCH_HOLD=true` and redeploy. This keeps the gate closed
+regardless of the clock, without touching `COMING_SOON_LAUNCH_AT` itself —
+the countdown keeps showing the correct, already-approved date; only
+enforcement pauses. Unset it (or set to anything other than `"true"`) and
+redeploy to resume automatic launch.
+
+## Turning it off manually (no launch date configured, or before it arrives)
 
 Set `COMING_SOON_ENABLED=false` (or delete the var) and redeploy. **Do not
 delete the feature** — `middleware.js`, the `api/preview/*` endpoints, and
@@ -94,12 +110,17 @@ issued under the old one.
   cookie is present, in which case it shows a discreet exit control.
 - `admin/js/layout.js` — "Unlock Website Preview" sidebar action
   (owner/developer only).
+- `api/_lib/launch-time.js` — pure, unit-tested clock check
+  (`hasLaunchTimeArrived()`) that drives automatic launch at
+  `COMING_SOON_LAUNCH_AT`.
 
 ## Known limitations
 
 - The reviewer password is shared, not per-person — see "Revoking access"
   above.
-- No automated notification when a reviewer/developer unlocks the preview.
-- `COMING_SOON_LAUNCH_AT` drives the countdown only; nothing automatically
-  flips `COMING_SOON_ENABLED` to false at that instant — turning the gate
-  off at real launch is still a deliberate, explicit deploy action.
+- No automated notification when a reviewer/developer unlocks the preview,
+  or when automatic launch actually fires — nothing currently pages anyone
+  at the moment the gate opens itself.
+- Automatic launch depends on the deployed server's clock (reliable,
+  NTP-synced infrastructure time) — never a visitor's device clock, and
+  never the client-side countdown, which is cosmetic display only.

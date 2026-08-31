@@ -16,6 +16,7 @@
 import { next, rewrite } from "@vercel/functions";
 import { classifyPath } from "./api/_lib/preview-paths.js";
 import { verifyPreviewToken, parseCookies, COOKIE_NAME } from "./api/_lib/preview-token.js";
+import { hasLaunchTimeArrived } from "./api/_lib/launch-time.js";
 
 const COMING_SOON_PATH = "/assets/mockups/working/prototype-v2/coming-soon.html";
 
@@ -31,6 +32,13 @@ export const config = {
 
 export default function middleware(request) {
   if (process.env.COMING_SOON_ENABLED !== "true") {
+    return next();
+  }
+
+  // Automatic launch: once the server clock reaches COMING_SOON_LAUNCH_AT,
+  // every request passes through with no deploy needed. COMING_SOON_LAUNCH_HOLD
+  // is the emergency brake if a problem is found right before the instant.
+  if (hasLaunchTimeArrived(process.env.COMING_SOON_LAUNCH_AT, Date.now(), process.env.COMING_SOON_LAUNCH_HOLD === "true")) {
     return next();
   }
 
