@@ -851,6 +851,52 @@ a { color: inherit; }
   color: var(--menu-white);
 }
 
+/* A dish requiring a choice ("Choose: Beef or Chicken") or carrying a fixed
+   accompaniment note. It wraps onto its own full-width line beneath the
+   row. .menu-card__body is deliberately left un-wrapped: it is the tight
+   baseline-aligned "name ..... price" pair, and letting it wrap would drop
+   the price below every name long enough to run to two lines. */
+.menu-page .menu-card__open { flex-wrap: wrap; }
+.menu-page .menu-card__note {
+  flex: 1 1 100%;
+  margin: 2px 0 0;
+  font-family: var(--menu-font-body);
+  font-size: 12px;
+  line-height: 1.4;
+  color: var(--menu-ink-dim);
+}
+/* Only the Summer cards show a thumbnail, so only there does the note need
+   indenting to line up with the dish name rather than the image edge. */
+.menu-page .menu-section[data-category="summer"] .menu-card__note {
+  padding-left: calc(56px + var(--space-4));
+}
+/* One button per choice, replacing the single Add — so a burger or taco
+   cannot be added without the customer selecting an option. */
+.menu-page .menu-card__choices {
+  flex: none;
+  display: flex;
+  gap: var(--space-2);
+}
+.menu-page .menu-card__choice { padding: 10px 14px; }
+
+/* Sits beneath a category's items (the illustrative-images caveat), unlike
+   .menu-section__note which sits above them. */
+.menu-page .menu-section__footnote {
+  font-family: var(--menu-font-body);
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--menu-ink-dim);
+  margin: var(--space-5) 0 0;
+}
+.menu-page .menu-modal__note {
+  font-family: var(--menu-font-body);
+  font-size: 13px;
+  color: var(--white-dim);
+  margin: var(--space-2) 0 0;
+}
+.menu-modal__choices { display: flex; gap: var(--space-3); flex-wrap: wrap; }
+.menu-modal__choices .btn { flex: 1 1 auto; }
+
 /* Conversion strip — references the approved artwork's red action band.
    Both actions reuse existing integrations (data-whatsapp-trigger and the
    /contact enquiry journey); no new route, URL or ordering mechanism. */
@@ -997,6 +1043,10 @@ a { color: inherit; }
   .menu-page .menu-card__name::after { display: none; }
   .menu-page .menu-card__body { gap: var(--space-3); }
   .menu-page .menu-card__add { margin-left: auto; }
+  /* Keeps the choice pair on the same right-aligned line the single Add
+     button uses at this width, rather than stacking. */
+  .menu-page .menu-card__choices { margin-left: auto; }
+  .menu-page .menu-card__choices .menu-card__add { margin-left: 0; }
   .menu-page .menu-cta-block__cta { width: 100%; }
   /* The floating WhatsApp FAB is hidden on THIS page at small-mobile only:
      it sat over an Add-to-order button, and on a page whose whole purpose is

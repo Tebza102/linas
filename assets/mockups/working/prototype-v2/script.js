@@ -86,9 +86,16 @@
 
   /* ---------- WhatsApp action (shared across all pages) ---------- */
   var whatsappNote = document.getElementById("whatsappNote");
-  function handleWhatsAppAction(itemName) {
+  function handleWhatsAppAction(itemName, isEnquiryOnly) {
     if (CONFIG.whatsappNumber) {
-      var text = itemName ? "Hi Lina's, I'd like to order: " + itemName : "Hello Lina's, I would like to enquire about your catering or mobile kitchen services.";
+      // isEnquiryOnly: used only for menu items with no confirmed price/id
+      // (currently the temporary Summer Menu preview) — "order" would be
+      // misleading for something that isn't a confirmed, priced product yet.
+      var text = itemName
+        ? (isEnquiryOnly
+            ? "Hi Lina's, I'd like to ask about: " + itemName + " (Summer Menu)"
+            : "Hi Lina's, I'd like to order: " + itemName)
+        : "Hello Lina's, I would like to enquire about your catering or mobile kitchen services.";
       window.open("https://wa.me/" + CONFIG.whatsappNumber + "?text=" + encodeURIComponent(text), "_blank", "noopener");
     } else if (whatsappNote) {
       whatsappNote.textContent = "WhatsApp ordering isn't connected to a number yet. Nothing was sent — please use the enquiry form instead.";
@@ -108,11 +115,33 @@
     });
   }
 
+  /* Collapses a category's items into display entries: consecutive items
+     sharing a `group` become ONE entry carrying every option, so the two
+     burger ids render as a single "Lina's Burger & Fries" card with a
+     Beef and a Chicken button. Ungrouped items pass through untouched. */
+  function groupItems(items) {
+    var entries = [];
+    var byGroup = {};
+    (items || []).forEach(function (item) {
+      if (!item.group) { entries.push({ item: item, options: null }); return; }
+      if (byGroup[item.group]) { byGroup[item.group].options.push(item); return; }
+      var entry = {
+        item: item,
+        options: [item],
+        groupName: item.groupName || item.name,
+        groupNote: item.groupNote || null
+      };
+      byGroup[item.group] = entry;
+      entries.push(entry);
+    });
+    return entries;
+  }
+
   // Builds one menu row. Extracted verbatim from the previous inline
   // cat.items.forEach body so every category can reuse it — the DOM,
   // classes, image/imageConfidence handling, modal listener and cart
   // wiring below are unchanged from that original implementation.
-  function buildMenuCard(item, cat) {
+  function buildMenuCard(item, cat, entry) {
       // The card is a DIV holding two sibling buttons — "open details" and
       // "add". It used to be a single <button>; nesting an Add button inside
       // that would be invalid HTML with unpredictable click behaviour.
@@ -129,7 +158,10 @@
         // Honest labelling: a photo shown here is never claimed to be the exact
         // plate unless imageConfidence is "confirmed" — otherwise it's genuine
         // Lina's photography used as representative imagery, and says so.
-        if (item.imageConfidence !== "confirmed") {
+        // The Summer Menu preview is the one exception: its photos are the
+        // exact approved homepage images of these exact dishes, not
+        // representative stand-ins, so the caveat tag would be inaccurate.
+        if (item.imageConfidence !== "confirmed" && cat.id !== "summer") {
           var repTag = document.createElement("span");
           repTag.className = "menu-card__tag";
           repTag.textContent = "Representative photo";
@@ -146,76 +178,240 @@
       }
       openBtn.appendChild(imgWrap);
       var body = document.createElement("div"); body.className = "menu-card__body";
-      var name = document.createElement("p"); name.className = "menu-card__name"; name.textContent = item.name;
+      var name = document.createElement("p"); name.className = "menu-card__name";
+      // A grouped dish shows its dish name ("Lina's Tacos"), never one
+      // variant's name — the variant is chosen by the buttons below.
+      name.textContent = (entry && entry.options) ? entry.groupName : item.name;
       var price = document.createElement("p"); price.className = "menu-card__price"; price.textContent = item.price;
-      body.appendChild(name); body.appendChild(price); openBtn.appendChild(body);
-      openBtn.addEventListener("click", function () { openMenuModal(item, cat); });
+      body.appendChild(name);
+      body.appendChild(price); openBtn.appendChild(body);
+      // "Choose: Prawn or Chicken", or a fixed accompaniment note. Appended
+      // to the row, NOT inside .menu-card__body: body is the tight
+      // baseline-aligned "name ..... price" pair, and adding a third child
+      // there forces the price onto its own line for any name long enough
+      // to wrap. This keeps that row exactly as it was and gives the note
+      // its own full-width line beneath.
+      var noteText = (entry && entry.options) ? entry.groupNote : item.note;
+      if (noteText) {
+        var noteEl = document.createElement("p");
+        noteEl.className = "menu-card__note";
+        noteEl.textContent = noteText;
+        openBtn.appendChild(noteEl);
+      }
+      openBtn.addEventListener("click", function () { openMenuModal(item, cat, entry); });
       card.appendChild(openBtn);
 
       // One-tap add is the point of a mobile-kitchen menu — burying it inside
       // the details modal would defeat it. Only rendered when cart.js is
-      // present (menu page only), so other pages are unaffected.
-      if (window.LINA_CART && item.id) {
-        var addBtn = document.createElement("button");
-        addBtn.type = "button"; addBtn.className = "menu-card__add";
-        addBtn.textContent = "Add";
-        addBtn.setAttribute("aria-label", "Add " + item.name + " to your order");
-        addBtn.addEventListener("click", function () {
-          window.LINA_CART.add(item.id, 1);
-        });
-        card.appendChild(addBtn);
+      // present (menu page only) AND the item is a confirmed, server-priced
+      // product (has an id, orderable !== false) — the temporary Summer Menu
+      // preview items have neither, by design, so they never get an Add
+      // button and can never reach the cart.
+      if (window.LINA_CART && item.id && item.orderable !== false) {
+        if (entry && entry.options) {
+          // One button per option — the choice IS the add action, so a
+          // burger or taco can never reach the cart without one.
+          var choices = document.createElement("div");
+          choices.className = "menu-card__choices";
+          entry.options.forEach(function (opt) {
+            var choiceBtn = document.createElement("button");
+            choiceBtn.type = "button"; choiceBtn.className = "menu-card__add menu-card__choice";
+            choiceBtn.textContent = opt.choiceLabel;
+            choiceBtn.setAttribute("aria-label", "Add " + opt.name + " to your order");
+            choiceBtn.addEventListener("click", function () {
+              window.LINA_CART.add(opt.id, 1);
+            });
+            choices.appendChild(choiceBtn);
+          });
+          card.appendChild(choices);
+        } else {
+          var addBtn = document.createElement("button");
+          addBtn.type = "button"; addBtn.className = "menu-card__add";
+          addBtn.textContent = "Add";
+          addBtn.setAttribute("aria-label", "Add " + item.name + " to your order");
+          addBtn.addEventListener("click", function () {
+            window.LINA_CART.add(item.id, 1);
+          });
+          card.appendChild(addBtn);
+        }
       }
       return card;
   }
 
-  // Renders every category sequentially as its own editorial section, so the
-  // whole menu is visible without interaction (previously one category at a
-  // time behind a tab strip). Headings and the optional price note come from
-  // the LINA_MENU data itself — never hard-coded here.
-  function renderGrid() {
+  /* ---------- Tab navigation ----------
+     Tabs are a presentation grouping over categories, not categories
+     themselves: "The Rest of Lina's Menu" shows Everyday Favourites and
+     Drinks one after the other as headings, so the whole non-seasonal menu
+     is one continuous view rather than a second level of navigation.
+     LINA_MENU is never mutated here. */
+  var TAB_LIST = (typeof LINA_MENU !== "undefined" && LINA_MENU.tabs) ? LINA_MENU.tabs : [];
+  var DEFAULT_CATEGORY_ID = TAB_LIST.length ? TAB_LIST[0].id : null;
+
+  function findCategory(id) {
+    var cats = (typeof LINA_MENU !== "undefined" && LINA_MENU.categories) ? LINA_MENU.categories : [];
+    for (var i = 0; i < cats.length; i++) {
+      if (cats[i].id === id) return cats[i];
+    }
+    return null;
+  }
+  function findTab(id) {
+    for (var i = 0; i < TAB_LIST.length; i++) {
+      if (TAB_LIST[i].id === id) return TAB_LIST[i];
+    }
+    return null;
+  }
+  // Invalid/missing values fall back to the default (Summer Menu) rather
+  // than erroring or showing nothing.
+  function resolveCategoryId(requested) {
+    return findTab(requested) ? requested : DEFAULT_CATEGORY_ID;
+  }
+  function categoryIdFromUrl() {
+    var params = new URLSearchParams(window.location.search);
+    return resolveCategoryId(params.get("category"));
+  }
+
+  var tabsEl = document.getElementById("menuCategoryTabs");
+
+  function renderTabs(activeId) {
+    if (!tabsEl) return;
+    tabsEl.innerHTML = "";
+    TAB_LIST.forEach(function (tab) {
+      var btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "menu-tab";
+      btn.textContent = tab.label;
+      btn.setAttribute("role", "tab");
+      var selected = tab.id === activeId;
+      btn.setAttribute("aria-selected", selected ? "true" : "false");
+      if (selected) btn.classList.add("is-active");
+      btn.addEventListener("click", function () { activateCategory(tab.id, true); });
+      tabsEl.appendChild(btn);
+    });
+  }
+
+  // Renders only the active category's items — the fix for the page
+  // previously rendering every category stacked in one long scroll.
+  // Cart state (cart.js/sessionStorage) is entirely independent of this and
+  // is never touched here.
+  function renderGrid(activeId) {
     menuGridEl.innerHTML = "";
-    LINA_MENU.categories.forEach(function (cat) {
+    var tab = findTab(activeId) || findTab(DEFAULT_CATEGORY_ID);
+    if (!tab) return;
+
+    // Every category in the active tab, in order, each with its own heading
+    // — one continuous view, no nested tabs or accordions.
+    (tab.categories || []).forEach(function (catId, index) {
+      var cat = findCategory(catId);
+      if (!cat) return;
+
       var section = document.createElement("section");
       section.className = "menu-section";
+      // The tabpanel id/role belongs to the first section only — the tab
+      // controls one panel, and the rest are ordinary sections within it.
+      if (index === 0) {
+        section.id = "menuCategoryPanel";
+        section.setAttribute("role", "tabpanel");
+      }
+      section.setAttribute("data-category", cat.id);
 
       var heading = document.createElement("h2");
       heading.className = "menu-section__title";
       heading.textContent = cat.label;
       section.appendChild(heading);
 
-      if (cat.priceNote) {
+      var noteText = cat.priceNote || cat.note;
+      if (noteText) {
         var note = document.createElement("p");
         note.className = "menu-section__note";
-        note.textContent = cat.priceNote;
+        note.textContent = noteText;
         section.appendChild(note);
       }
 
-      cat.items.forEach(function (item) {
-        section.appendChild(buildMenuCard(item, cat));
+      groupItems(cat.items).forEach(function (entry) {
+        section.appendChild(buildMenuCard(entry.item, cat, entry));
       });
+
+      // Sits BENEATH the items, unlike `note` above them.
+      if (cat.footnote) {
+        var footnote = document.createElement("p");
+        footnote.className = "menu-section__footnote";
+        footnote.textContent = cat.footnote;
+        section.appendChild(footnote);
+      }
 
       menuGridEl.appendChild(section);
     });
   }
+
+  function activateCategory(id, pushHistory) {
+    var resolved = resolveCategoryId(id);
+    renderTabs(resolved);
+    renderGrid(resolved);
+    if (pushHistory) {
+      var url = new URL(window.location.href);
+      url.searchParams.set("category", resolved);
+      window.history.pushState({ category: resolved }, "", url);
+    }
+  }
+
+  window.addEventListener("popstate", function () {
+    activateCategory(categoryIdFromUrl(), false);
+  });
+
   var lastMenuTrigger = null;
-  function openMenuModal(item, cat) {
+  function openMenuModal(item, cat, entry) {
+    var canOrder = window.LINA_CART && item.id && item.orderable !== false;
+    var options = (entry && entry.options) ? entry.options : null;
+    var displayName = options ? entry.groupName : item.name;
+    var noteText = options ? entry.groupNote : item.note;
     var modal = document.createElement("div");
     modal.className = "menu-modal"; modal.setAttribute("role", "dialog"); modal.setAttribute("aria-modal", "true");
-    modal.setAttribute("aria-label", item.name);
+    modal.setAttribute("aria-label", displayName);
+
+    // A grouped dish gets one button per option instead of a single "Add to
+    // order", so the choice is made here too rather than defaulting silently.
+    var actionsHtml;
+    if (canOrder && options) {
+      actionsHtml = '<div class="menu-modal__choices">';
+      options.forEach(function (opt, i) {
+        actionsHtml +=
+          '<button class="btn btn--primary" type="button" data-choice-index="' + i + '">' +
+            'Add ' + escapeHtml(opt.choiceLabel) +
+          '</button>';
+      });
+      actionsHtml += '</div>';
+    } else {
+      actionsHtml =
+        '<button class="btn btn--primary" id="modalOrderBtn" type="button">' +
+          (canOrder ? "Add to order" : "Order this on WhatsApp →") +
+        '</button>';
+    }
+
     modal.innerHTML =
       '<div class="menu-modal__panel">' +
         '<button class="menu-modal__close" aria-label="Close item details">✕</button>' +
-        '<h3>' + escapeHtml(item.name) + '</h3>' +
+        '<h3>' + escapeHtml(displayName) + '</h3>' +
         '<p class="menu-card__price">' + escapeHtml(item.price) + ' · ' + escapeHtml(cat.label) + '</p>' +
-        '<p class="placeholder-note">Ingredient list is exactly as written on Lina’s own menu. No extra description is added.</p>' +
-        '<button class="btn btn--primary" id="modalOrderBtn" type="button">' +
-          (window.LINA_CART && item.id ? "Add to order" : "Order this on WhatsApp →") +
-        '</button>' +
+        (noteText ? '<p class="menu-modal__note">' + escapeHtml(noteText) + '</p>' : '') +
+        '<p class="placeholder-note">' +
+          "Ingredient list is exactly as written on Lina’s own menu. No extra description is added." +
+        '</p>' +
+        actionsHtml +
       '</div>';
     document.body.appendChild(modal);
     var closeBtn = modal.querySelector(".menu-modal__close");
     var orderBtn = modal.querySelector("#modalOrderBtn");
     closeBtn.focus();
+    // Wired before the single-button handler below, which no longer exists
+    // for a grouped dish.
+    modal.querySelectorAll("[data-choice-index]").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        var opt = options[Number(btn.getAttribute("data-choice-index"))];
+        if (!opt) return;
+        window.LINA_CART.add(opt.id, 1);
+        close();
+      });
+    });
     function close() {
       document.body.removeChild(modal);
       document.removeEventListener("keydown", onKey);
@@ -231,21 +427,24 @@
     }
     closeBtn.addEventListener("click", close);
     modal.addEventListener("click", function (e) { if (e.target === modal) close(); });
-    orderBtn.addEventListener("click", function () {
-      // With the cart present this adds to the order; without it (any page
-      // that doesn't load cart.js) the original single-item WhatsApp action
-      // is preserved unchanged.
-      if (window.LINA_CART && item.id) {
-        window.LINA_CART.add(item.id, 1);
-        close();
-        return;
-      }
-      handleWhatsAppAction(item.name);
-    });
+    // Absent for a grouped dish — its per-option buttons are wired above.
+    if (orderBtn) {
+      orderBtn.addEventListener("click", function () {
+        // With the cart present AND the item confirmed-orderable, this adds
+        // to the order; without cart.js (any other page) the original
+        // single-item WhatsApp action is preserved.
+        if (canOrder) {
+          window.LINA_CART.add(item.id, 1);
+          close();
+          return;
+        }
+        handleWhatsAppAction(item.name, item.orderable === false);
+      });
+    }
     document.addEventListener("keydown", onKey);
   }
   if (typeof LINA_MENU !== "undefined" && menuGridEl) {
-    renderGrid();
+    activateCategory(categoryIdFromUrl(), false);
   }
 
   /* ---------- Gallery click-to-play video tiles (never autoplay) ---------- */

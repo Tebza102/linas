@@ -15,7 +15,7 @@ const SUBMISSION_ID = "sub-12345678-abcd";
 /** A minimal valid body; overrides merge on top. */
 function body(overrides) {
   return {
-    items: [{ itemId: "plates-short-rib-chakalaka-potato-salad", quantity: 1 }],
+    items: [{ itemId: "everyday-beef-stew-steak-fried-chicken", quantity: 1 }],
     submissionId: SUBMISSION_ID,
     ...overrides
   };
@@ -26,8 +26,8 @@ test("prices a single-item order from the server catalogue", () => {
   assert.equal(result.items.length, 1);
   assert.equal(result.items[0].unitPriceCents, 6000);
   assert.equal(result.items[0].lineTotalCents, 6000);
-  assert.equal(result.items[0].name, "Short-rib, chakalaka, potato salad");
-  assert.equal(result.items[0].categoryLabel, "Plates");
+  assert.equal(result.items[0].name, "Beef Stew, Steak or Fried Chicken with two side salads and dombolo");
+  assert.equal(result.items[0].categoryLabel, "Everyday Favourites");
   assert.equal(result.subtotalCents, 6000);
   assert.equal(result.itemCount, 1);
   assert.equal(result.lineCount, 1);
@@ -37,9 +37,9 @@ test("prices a single-item order from the server catalogue", () => {
 test("computes line totals and subtotal across multiple items", () => {
   const result = validateOrderSubmission(body({
     items: [
-      { itemId: "plates-short-rib-chakalaka-potato-salad", quantity: 2 }, // 12000
-      { itemId: "chips-snacks-small-chips", quantity: 3 },                //  4500
-      { itemId: "drinks-juice", quantity: 1 }                             //  1700
+      { itemId: "everyday-beef-stew-steak-fried-chicken", quantity: 2 }, // 12000
+      { itemId: "drinks-canned-soft-drink", quantity: 3 },                //  4500
+      { itemId: "drinks-fruto-juice", quantity: 1 }                             //  1700
     ]
   }));
   assert.equal(result.subtotalCents, 18200);
@@ -52,7 +52,7 @@ test("client-supplied prices and subtotal are IGNORED, never trusted", () => {
   // everything costs 1c must still be charged the real catalogue price.
   const result = validateOrderSubmission(body({
     items: [{
-      itemId: "plates-short-rib-chakalaka-potato-salad",
+      itemId: "everyday-beef-stew-steak-fried-chicken",
       quantity: 2,
       unitPriceCents: 1,
       lineTotalCents: 2,
@@ -70,8 +70,8 @@ test("client-supplied prices and subtotal are IGNORED, never trusted", () => {
 test("duplicate itemIds are merged into one line with summed quantity", () => {
   const result = validateOrderSubmission(body({
     items: [
-      { itemId: "drinks-juice", quantity: 2 },
-      { itemId: "drinks-juice", quantity: 3 }
+      { itemId: "drinks-fruto-juice", quantity: 2 },
+      { itemId: "drinks-fruto-juice", quantity: 3 }
     ]
   }));
   assert.equal(result.lineCount, 1);
@@ -85,8 +85,8 @@ test("duplicates are merged BEFORE the quantity cap, so they cannot smuggle past
   // happened after the cap check, this would wrongly succeed as two legal lines.
   assert.throws(() => validateOrderSubmission(body({
     items: [
-      { itemId: "drinks-juice", quantity: 15 },
-      { itemId: "drinks-juice", quantity: 10 }
+      { itemId: "drinks-fruto-juice", quantity: 15 },
+      { itemId: "drinks-fruto-juice", quantity: 10 }
     ]
   })), OrderValidationError);
 });
@@ -117,37 +117,37 @@ test("rejects a missing itemId", () => {
 
 test("rejects quantity 0", () => {
   assert.throws(() => validateOrderSubmission(body({
-    items: [{ itemId: "drinks-juice", quantity: 0 }]
+    items: [{ itemId: "drinks-fruto-juice", quantity: 0 }]
   })), OrderValidationError);
 });
 
 test("rejects a negative quantity", () => {
   assert.throws(() => validateOrderSubmission(body({
-    items: [{ itemId: "drinks-juice", quantity: -1 }]
+    items: [{ itemId: "drinks-fruto-juice", quantity: -1 }]
   })), OrderValidationError);
 });
 
 test("rejects a string quantity (no type coercion)", () => {
   assert.throws(() => validateOrderSubmission(body({
-    items: [{ itemId: "drinks-juice", quantity: "2" }]
+    items: [{ itemId: "drinks-fruto-juice", quantity: "2" }]
   })), OrderValidationError);
 });
 
 test("rejects a fractional quantity", () => {
   assert.throws(() => validateOrderSubmission(body({
-    items: [{ itemId: "drinks-juice", quantity: 1.5 }]
+    items: [{ itemId: "drinks-fruto-juice", quantity: 1.5 }]
   })), OrderValidationError);
 });
 
 test("rejects a quantity over the per-line cap", () => {
   assert.throws(() => validateOrderSubmission(body({
-    items: [{ itemId: "drinks-juice", quantity: 21 }]
+    items: [{ itemId: "drinks-fruto-juice", quantity: 21 }]
   })), OrderValidationError);
 });
 
 test("rejects more distinct lines than the per-order cap", () => {
   const items = [];
-  for (let i = 0; i < 21; i++) items.push({ itemId: "drinks-juice", quantity: 1 });
+  for (let i = 0; i < 21; i++) items.push({ itemId: "drinks-fruto-juice", quantity: 1 });
   assert.throws(() => validateOrderSubmission(body({ items })), OrderValidationError);
 });
 
