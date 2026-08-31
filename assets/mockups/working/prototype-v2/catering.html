@@ -18,6 +18,12 @@
 <meta property="og:image" content="https://linas.co.za/assets/mockups/working/media/lina-hero-poster-working-v1-20260728.jpg">
 <meta property="og:image:alt" content="Chef Lina in her mobile kitchen, presenting a plated meal">
 <link rel="icon" href="/assets/source/brand/Linas_Favicon.jpg">
+<!-- Fraunces/Inter loaded for THIS page only, mirroring the homepage's own
+     isolated pattern (see home.css) — global --font-display/--font-body in
+     styles.css stay untouched, so every other page is unaffected. -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/assets/mockups/working/prototype-v2/styles.css">
 </head>
 <body class="catering-page">
@@ -25,10 +31,20 @@
 
 <header class="site-header">
   <a class="site-header__mark" href="/">
-    <img src="/assets/mockups/working/media/linas-logo-nb-wl.svg" alt="Lina's Mobile Food Kitchen" width="4678" height="3307" class="site-header__logo">
+    <img src="/assets/brand/working/lina-logo-red-unboxed-working-v1-20260830.svg" alt="Lina's Mobile Food Kitchen" width="4678" height="3307" class="site-header__logo">
   </a>
+  <nav class="catering-header__nav" aria-label="Primary">
+    <a href="/">Home</a>
+    <a href="/catering" aria-current="page">Catering</a>
+    <a href="/menu">Menu</a>
+    <a href="/chef-lina">Meet Chef Lina</a>
+    <a href="/contact">Find Us</a>
+  </nav>
   <div class="site-header__right">
-    <button class="nav-toggle" id="navToggle" aria-haspopup="true" aria-controls="siteNav" aria-label="Open menu"><span></span><span></span><span></span></button>
+    <a class="catering-nav__cta" href="/contact">Request a Quote</a>
+    <button class="nav-toggle nav-toggle--icon" id="navToggle" aria-haspopup="true" aria-controls="siteNav" aria-label="Open menu">
+      <svg class="nav-toggle__icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M3 6h18M3 12h18M3 18h18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+    </button>
   </div>
 </header>
 
@@ -38,52 +54,97 @@
   <a href="/">Home</a>
   <a href="/catering" aria-current="page">Catering</a>
   <a href="/menu">Menu</a>
-  <a href="/chef-lina">About Lina's</a>
-  <a href="/contact" class="site-nav__cta">Contact</a>
+  <a href="/chef-lina">Meet Chef Lina</a>
+  <a href="/contact" class="site-nav__cta">Find Us</a>
   <a href="/admin/login.html" id="navLogin" class="site-nav__login">Login</a>
 </nav>
 
 <main>
-  <section class="catering-hero" aria-label="Private catering">
-    <div class="catering-hero__grid">
-      <div class="catering-hero__copy">
-        <p class="catering-hero__eyebrow">Private Catering</p>
-        <h1 class="catering-hero__title">Real plates, prepared for real events.</h1>
-        <p class="catering-hero__sub">Weddings, funerals, corporate functions and private gatherings — catered by Lina's.</p>
-        <div class="catering-hero__actions">
-          <a href="/contact" class="catering-cta catering-cta--primary">Request a Quote →</a>
-          <a href="/menu" class="catering-cta catering-cta--secondary">Explore the Menu</a>
-        </div>
-      </div>
-      <div class="catering-hero__visual">
-        <img class="catering-hero__chef" src="/assets/mockups/working/media/lina-hero-chef-cutout-working-v1-20260802.webp" alt="Chef Lina at her mobile kitchen counter, presenting a plated meal">
-        <img class="catering-hero__dish" src="/assets/mockups/working/media/lina-dish-catering-bowl-working-v1-20260802.webp" alt="A bowl of seasoned chicken pieces, prepared for a group">
+  <section class="catering-hero" aria-label="Catering enquiries">
+    <div class="catering-hero__inner">
+      <p class="catering-hero__eyebrow">Lina's Catering</p>
+      <h1 class="catering-hero__title">Catering for your occasion</h1>
+      <p class="catering-hero__sub">Tell us about your event and the catering support you require. Lina's will review your request and contact you to discuss the next step.</p>
+      <div class="catering-hero__actions">
+        <a href="/contact" class="catering-cta catering-cta--primary">Request a Catering Quote</a>
+        <a href="#how-it-works" class="catering-hero__anchor">How It Works</a>
       </div>
     </div>
   </section>
 
-  <section class="section catering-occasions" aria-label="Occasions Lina's caters">
-    <h2 class="section-title">Occasions Lina's caters</h2>
+  <section class="section catering-occasions" aria-label="Catering for every occasion">
+    <h2 class="section-title">Catering for every occasion</h2>
     <ul class="occasions__list">
-      <li><span class="catering-occasions__index">01</span><div><span>Weddings</span><p>Presentation-led plates for the big day.</p></div></li>
-      <li><span class="catering-occasions__index">02</span><div><span>Funerals</span><p>Reliable, respectful catering at scale.</p></div></li>
-      <li><span class="catering-occasions__index">03</span><div><span>Corporate events</span><p>Order-ready catering for teams and functions.</p></div></li>
-      <li><span class="catering-occasions__index">04</span><div><span>Private functions</span><p>Family gatherings, birthdays and get-togethers.</p></div></li>
+      <li><span class="catering-occasions__index">01</span><span>Weddings</span></li>
+      <li><span class="catering-occasions__index">02</span><span>Funerals</span></li>
+      <li><span class="catering-occasions__index">03</span><span>Corporate events</span></li>
+      <li><span class="catering-occasions__index">04</span><span>Private catering</span></li>
     </ul>
   </section>
 
-  <section class="catering-value" aria-label="Chef-led catering">
-    <div class="catering-value__grid">
-      <img class="catering-value__dish" src="/assets/mockups/working/media/lina-dish-rice-working-v1-20260802.webp" alt="A plate prepared by Chef Lina">
-      <p class="catering-value__statement">Chef Lina remains closely involved in the food and service experience.</p>
-    </div>
+  <section class="section catering-process" id="how-it-works" aria-label="How the enquiry process works">
+    <h2 class="section-title">How the enquiry process works</h2>
+    <ol class="catering-process__list">
+      <li class="catering-process__step">
+        <span class="catering-process__index">01</span>
+        <div>
+          <p class="catering-process__step-title">Share your event details</p>
+          <p class="catering-process__step-body">Provide the occasion, date, location, estimated guest count and catering requirements.</p>
+        </div>
+      </li>
+      <li class="catering-process__step">
+        <span class="catering-process__index">02</span>
+        <div>
+          <p class="catering-process__step-title">Lina reviews your request</p>
+          <p class="catering-process__step-body">The team reviews the information and contacts you if any further details are required.</p>
+        </div>
+      </li>
+      <li class="catering-process__step">
+        <span class="catering-process__index">03</span>
+        <div>
+          <p class="catering-process__step-title">Receive a quotation</p>
+          <p class="catering-process__step-body">Lina's prepares and shares a quotation based on the confirmed requirements.</p>
+        </div>
+      </li>
+      <li class="catering-process__step">
+        <span class="catering-process__index">04</span>
+        <div>
+          <p class="catering-process__step-title">Confirm the booking</p>
+          <p class="catering-process__step-body">The booking is confirmed after the requirements and payment arrangements have been agreed.</p>
+        </div>
+      </li>
+    </ol>
+  </section>
+
+  <section class="section catering-prepare" aria-label="What to have ready">
+    <h2 class="section-title">What to have ready</h2>
+    <ul class="catering-prepare__list">
+      <li>Type of occasion</li>
+      <li>Event date and serving time</li>
+      <li>Venue or location</li>
+      <li>Estimated number of guests</li>
+      <li>Catering requirements</li>
+      <li>Dietary requirements or allergies</li>
+      <li>Budget range, if known</li>
+      <li>Special requests or additional notes</li>
+    </ul>
   </section>
 
   <section class="catering-cta-block" aria-label="Quotation journey">
-    <h2 class="catering-cta-block__title">Get a quotation</h2>
-    <p class="catering-cta-block__lede">Tell us the occasion, date and guest count — the enquiry will be followed up by phone or email with a quote.</p>
-    <a href="/contact" class="catering-cta catering-cta--primary">Request a Quote →</a>
+    <div class="catering-cta-block__text">
+      <p class="catering-cta-block__eyebrow">Ready to Book?</p>
+      <h2 class="catering-cta-block__title">Planning an event?</h2>
+    </div>
+    <p class="catering-cta-block__lede">Send us your event details and Lina's will contact you to discuss your catering request.</p>
+    <a href="/contact" class="catering-cta-block__cta">Request a Catering Quote <span aria-hidden="true">→</span></a>
+    <div class="catering-cta-block__contact-group">
+      <a href="tel:+27764834344" class="catering-cta-block__contact">Call or WhatsApp<br><strong>076 483 4344</strong></a>
+      <a href="mailto:enquiries@linas.co.za" class="catering-cta-block__contact catering-cta-block__contact--email">enquiries@linas.co.za</a>
+    </div>
   </section>
+  <ul class="catering-cta-block__tags" aria-label="Occasions we cater for">
+    <li>Weddings</li><li>Funerals</li><li>Corporate Events</li><li>Private Catering</li>
+  </ul>
 </main>
 
 <button class="sticky-whatsapp sticky-whatsapp--icon" id="stickyWhatsapp" data-whatsapp-trigger aria-label="Contact Lina's on WhatsApp" aria-describedby="whatsappNote">

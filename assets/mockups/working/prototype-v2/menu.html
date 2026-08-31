@@ -17,6 +17,12 @@
 <meta property="og:image" content="https://linas.co.za/assets/mockups/working/media/lina-preparation-frame-working-v1-20260728.jpg">
 <meta property="og:image:alt" content="Chakalaka and spinach being prepared at the trailer">
 <link rel="icon" href="/assets/source/brand/Linas_Favicon.jpg">
+<!-- Fraunces/Inter loaded for THIS page only, mirroring the homepage's,
+     Catering's, About's and Contact's own isolated pattern — global
+     --font-display/--font-body in styles.css stay untouched. -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/assets/mockups/working/prototype-v2/styles.css">
 </head>
 <body class="menu-page">
@@ -24,10 +30,20 @@
 
 <header class="site-header">
   <a class="site-header__mark" href="/">
-    <img src="/assets/mockups/working/media/linas-logo-nb-wl.svg" alt="Lina's Mobile Food Kitchen" width="4678" height="3307" class="site-header__logo">
+    <img src="/assets/brand/working/lina-logo-red-unboxed-working-v1-20260830.svg" alt="Lina's Mobile Food Kitchen" width="4678" height="3307" class="site-header__logo">
   </a>
+  <nav class="menu-header__nav" aria-label="Primary">
+    <a href="/">Home</a>
+    <a href="/catering">Catering</a>
+    <a href="/menu" aria-current="page">Menu</a>
+    <a href="/chef-lina">Meet Chef Lina</a>
+    <a href="/contact">Find Us</a>
+  </nav>
   <div class="site-header__right">
-    <button class="nav-toggle" id="navToggle" aria-haspopup="true" aria-controls="siteNav" aria-label="Open menu"><span></span><span></span><span></span></button>
+    <a class="menu-nav__cta" href="/contact">Request a Quote</a>
+    <button class="nav-toggle nav-toggle--icon" id="navToggle" aria-haspopup="true" aria-controls="siteNav" aria-label="Open menu">
+      <svg class="nav-toggle__icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M3 6h18M3 12h18M3 18h18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+    </button>
   </div>
 </header>
 
@@ -37,28 +53,20 @@
   <a href="/">Home</a>
   <a href="/catering">Catering</a>
   <a href="/menu" aria-current="page">Menu</a>
-  <a href="/chef-lina">About Lina's</a>
-  <a href="/contact" class="site-nav__cta">Contact</a>
+  <a href="/chef-lina">Meet Chef Lina</a>
+  <a href="/contact" class="site-nav__cta">Find Us</a>
   <a href="/admin/login.html" id="navLogin" class="site-nav__login">Login</a>
 </nav>
 
 <main>
-  <!-- Typographic masthead with Chef Lina as the right-hand human anchor.
-       She is the page's identity host, so she is NOT lazy-loaded — she is
-       part of the initial above-the-fold composition. -->
-  <section class="menu-hero" aria-label="Today's menu">
-    <div class="menu-hero__grid">
-      <div class="menu-masthead">
-        <p class="menu-masthead__brand">Lina's</p>
-        <p class="menu-masthead__tagline">Freshly Prepared &bull; Made With Passion</p>
-        <span class="menu-masthead__rule" aria-hidden="true"></span>
-        <h1 class="menu-masthead__title">Menu</h1>
-        <p class="menu-masthead__services">Mobile Kitchen &bull; Private Catering &bull; Events</p>
-      </div>
-      <div class="menu-hero__chef">
-        <img src="/assets/mockups/working/media/lina-welcome-hero-working-v1-20260802.webp"
-             alt="Chef Lina presenting a Lina's platter" width="1000" height="1333">
-      </div>
+  <!-- Compact editorial intro — replaces the previous oversized chef-portrait
+       masthead, matching the restrained hero treatment now used on the
+       homepage, Catering, About and Contact pages. -->
+  <section class="menu-hero" aria-label="Our menu">
+    <div class="menu-hero__inner">
+      <p class="menu-hero__eyebrow">Our Menu</p>
+      <h1 class="menu-hero__title">Explore our menu.</h1>
+      <p class="menu-hero__sub">Explore Lina's current menu, seasonal favourites and freshly prepared meals.</p>
     </div>
   </section>
 
@@ -74,68 +82,42 @@
         </ul>
       </div>
     </noscript>
-    <!-- Decorative dish cut-outs, placed in the gutters beside the 760px menu
-         column so they can never overlap a row. Purely presentational:
-         aria-hidden, empty alt, pointer-events:none — the menu itself carries
-         all the meaning. Scale varies to build a zigzag that leads the eye
-         down the page. -->
-    <div class="menu-decor" aria-hidden="true">
-      <img class="menu-decor__dish menu-decor__dish--a"
-           src="/assets/mockups/working/media/lina-dish-rice-working-v1-20260802.webp"
-           alt="" loading="lazy" width="800" height="800">
-      <img class="menu-decor__dish menu-decor__dish--b"
-           src="/assets/mockups/working/media/lina-dish-steak-pap-working-v1-20260802.webp"
-           alt="" loading="lazy" width="800" height="800">
-      <img class="menu-decor__dish menu-decor__dish--c"
-           src="/assets/mockups/working/media/lina-dish-catering-bowl-working-v1-20260802.webp"
-           alt="" loading="lazy" width="800" height="800">
-      <img class="menu-decor__dish menu-decor__dish--d"
-           src="/assets/mockups/working/media/lina-dish-tripe-dumpling-working-v1-20260802.webp"
-           alt="" loading="lazy" width="800" height="800">
-    </div>
+    <div class="menu-tabs" id="menuCategoryTabs" role="tablist" aria-label="Menu categories"></div>
     <div class="menu__grid" id="menuGrid"></div>
   </section>
 
-  <!-- Conversion strip — references the approved artwork's red action band.
-       Both actions reuse existing integrations: the WhatsApp button uses the
-       same data-whatsapp-trigger handler as every other page, and catering
-       routes to the existing /contact enquiry journey. Online ordering stays
-       with the cart above, so it is deliberately not duplicated here. -->
-  <section class="menu-cta" aria-label="Order or enquire">
-    <div class="menu-cta__inner">
-      <p class="menu-cta__lede">Good food. Good people. Great moments.</p>
-      <div class="menu-cta__actions">
-        <button type="button" class="menu-cta__action menu-cta__action--primary" data-whatsapp-trigger aria-describedby="whatsappNote">
-          WhatsApp Us
-          <span class="menu-cta__action-note">Chat with us directly</span>
-        </button>
-        <a href="/contact" class="menu-cta__action menu-cta__action--secondary">
-          Catering Enquiry
-          <span class="menu-cta__action-note">Request a quote</span>
-        </a>
-        <!-- Temporary placeholder PDF: a real, downloadable file so the action
-             works today, holding the slot until the approved interactive menu
-             replaces it. Swapping it later is a file replacement at the same
-             path — no markup change needed. -->
-        <a href="/assets/menu/Linas-Menu.pdf" download class="menu-cta__action menu-cta__action--secondary">
-          Download Menu
-          <span class="menu-cta__action-note">PDF</span>
-        </a>
-      </div>
+  <!-- Closing CTA — reproduces the approved homepage Act 3 conversion band
+       (red, eyebrow + heading, contact-info group, tags), per direct human
+       correction consolidating the previous two-band ending (a beige action
+       strip followed by a separate black brand band) into the one closing
+       treatment already applied to Catering, About and Contact. All copy
+       reused verbatim from the previous two sections — "Good food. Good
+       people. Great moments." (was the action strip's lede, now the
+       heading) and the brand lede/location/number (was menu-end). All
+       three actions and the exact PDF path/behaviour are unchanged. -->
+  <section class="menu-cta-block" aria-label="Order or enquire">
+    <div class="menu-cta-block__text">
+      <p class="menu-cta-block__eyebrow">Lina's</p>
+      <h2 class="menu-cta-block__title">Good food. Good people. Great moments.</h2>
+      <p class="menu-cta-block__lede">Chef-led catering and a mobile kitchen — freshly prepared meals, private catering and events.</p>
+    </div>
+    <div class="menu-cta-block__actions">
+      <button type="button" class="menu-cta-block__cta menu-cta-block__cta--primary" data-whatsapp-trigger aria-describedby="whatsappNote">WhatsApp Us</button>
+      <a href="/contact" class="menu-cta-block__cta menu-cta-block__cta--secondary">Catering Enquiry</a>
+      <!-- Temporary placeholder PDF: a real, downloadable file so the action
+           works today, holding the slot until the approved interactive menu
+           replaces it. Swapping it later is a file replacement at the same
+           path — no markup change needed. -->
+      <a href="/assets/menu/Linas-Menu.pdf" download class="menu-cta-block__cta menu-cta-block__cta--secondary">Download Menu</a>
+    </div>
+    <div class="menu-cta-block__contact-group">
+      <a href="tel:+27764834344" class="menu-cta-block__contact">Call or WhatsApp<br><strong>076 483 4344</strong></a>
+      <span class="menu-cta-block__contact menu-cta-block__contact--email">Heidelberg</span>
     </div>
   </section>
-
-  <!-- Black closing section — mirrors the current approved closing treatment
-       already used by .catering-cta-block and .about-cta-block (black field,
-       centred display type, white-dim lede). Deliberately NOT the retired
-       .site-footer, which no longer exists on any page. -->
-  <section class="menu-end" aria-label="Lina's">
-    <div class="menu-end__inner">
-      <p class="menu-end__brand">Lina's</p>
-      <p class="menu-end__lede">Chef-led catering and a mobile kitchen &mdash; freshly prepared meals, private catering and events.</p>
-      <p class="menu-end__meta">Heidelberg &bull; +27 76 483 4344</p>
-    </div>
-  </section>
+  <ul class="menu-cta-block__tags" aria-label="Menu categories">
+    <li>Plates</li><li>Kota</li><li>Chips &amp; Snacks</li><li>Drinks</li>
+  </ul>
 </main>
 
 <button class="sticky-whatsapp sticky-whatsapp--icon" id="stickyWhatsapp" data-whatsapp-trigger aria-label="Contact Lina's on WhatsApp" aria-describedby="whatsappNote">

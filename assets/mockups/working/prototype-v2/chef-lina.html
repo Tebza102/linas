@@ -5,6 +5,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>About Lina's — Lina's</title>
 <link rel="icon" href="/assets/source/brand/Linas_Favicon.jpg">
+<!-- Fraunces/Inter loaded for THIS page only, mirroring the homepage's and
+     Catering page's own isolated pattern — global --font-display/--font-body
+     in styles.css stay untouched, so every other page is unaffected. -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/assets/mockups/working/prototype-v2/styles.css">
 </head>
 <body class="about-page">
@@ -12,10 +18,20 @@
 
 <header class="site-header">
   <a class="site-header__mark" href="/">
-    <img src="/assets/mockups/working/media/linas-logo-nb-wl.svg" alt="Lina's Mobile Food Kitchen" width="4678" height="3307" class="site-header__logo">
+    <img src="/assets/brand/working/lina-logo-red-unboxed-working-v1-20260830.svg" alt="Lina's Mobile Food Kitchen" width="4678" height="3307" class="site-header__logo">
   </a>
+  <nav class="about-header__nav" aria-label="Primary">
+    <a href="/">Home</a>
+    <a href="/catering">Catering</a>
+    <a href="/menu">Menu</a>
+    <a href="/chef-lina" aria-current="page">Meet Chef Lina</a>
+    <a href="/contact">Find Us</a>
+  </nav>
   <div class="site-header__right">
-    <button class="nav-toggle" id="navToggle" aria-haspopup="true" aria-controls="siteNav" aria-label="Open menu"><span></span><span></span><span></span></button>
+    <a class="about-nav__cta" href="/contact">Request a Quote</a>
+    <button class="nav-toggle nav-toggle--icon" id="navToggle" aria-haspopup="true" aria-controls="siteNav" aria-label="Open menu">
+      <svg class="nav-toggle__icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M3 6h18M3 12h18M3 18h18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+    </button>
   </div>
 </header>
 
@@ -25,59 +41,76 @@
   <a href="/">Home</a>
   <a href="/catering">Catering</a>
   <a href="/menu">Menu</a>
-  <a href="/chef-lina" aria-current="page">About Lina's</a>
+  <a href="/chef-lina" aria-current="page">Meet Chef Lina</a>
   <a href="/contact" class="site-nav__cta">Contact</a>
   <a href="/admin/login.html" id="navLogin" class="site-nav__login">Login</a>
 </nav>
 
 <main>
-  <section class="about-hero" aria-label="About Lina's">
-    <div class="about-hero__grid">
-      <div class="about-hero__copy">
-        <p class="about-hero__eyebrow">The Chef</p>
-        <h1 class="about-hero__title">About Lina's</h1>
-        <p class="about-hero__sub">Chef-led food, prepared with purpose. Freshly prepared meals, mobile-kitchen service and private catering — chicken, chakalaka, potato salad and fresh bread, made to order.</p>
-        <div class="about-hero__actions">
-          <a href="/menu" class="about-cta about-cta--primary">Explore the Menu →</a>
-          <a href="/contact" class="about-cta about-cta--secondary">Plan an Event</a>
+  <section class="about-hero" aria-label="Meet Chef Lina">
+    <div class="about-hero__inner">
+      <p class="about-hero__eyebrow">Meet Chef Lina</p>
+      <h1 class="about-hero__title">From Heidelberg to New Orleans—and Back to Build Something of Her Own</h1>
+      <p class="about-hero__sub">Lina's is a chef-led mobile kitchen founded by Lebohang Magdalina Moeketsi, professionally known as Chef Lina. Her story is shaped by determination, professional growth and a passion for bringing people together through food.</p>
+    </div>
+  </section>
+
+  <section class="section about-journey" aria-label="Chef Lina's journey">
+    <ol class="about-journey__list">
+      <li class="about-journey__step">
+        <span class="about-journey__index">01</span>
+        <div>
+          <h2 class="about-journey__step-title">Building the foundations of her craft</h2>
+          <p class="about-journey__step-body">Chef Lina transformed her passion into a profession at Capsicum Culinary Studio in Sandton, completing formal culinary training and earning qualifications recognised by City &amp; Guilds and CATHSSETA.</p>
+          <p class="about-journey__step-body">Her training and practical experience equipped her with the technical knowledge, discipline and versatility required in professional kitchens—from food preparation and pastry to sautéing, grilling, plating and service.</p>
         </div>
-      </div>
-      <div class="about-hero__visual">
-        <img class="about-hero__chef" src="/assets/mockups/working/media/lina-hero-chef-cutout-working-v1-20260802.webp" alt="Chef Lina at her mobile kitchen counter, presenting a plated meal">
-        <img class="about-hero__dish" src="/assets/mockups/working/media/lina-dish-rice-working-v1-20260802.webp" alt="A plate prepared by Chef Lina">
-      </div>
-    </div>
-  </section>
-
-  <section class="about-story" aria-label="The Lina's story">
-    <h2 class="about-story__title">Lina's</h2>
-    <p class="about-story__text">Lina's is a chef-led food business offering freshly prepared meals, mobile-kitchen service and private catering.</p>
-    <p class="about-story__text">Weddings, funerals, corporate functions and private gatherings — catered by Lina's.</p>
-  </section>
-
-  <section class="about-services" aria-label="What Lina's does">
-    <h2 class="section-title">What Lina's does</h2>
-    <ul class="about-services__list">
-      <li><span class="about-services__index">01</span><span class="about-services__label">Fresh prepared meals</span></li>
-      <li><span class="about-services__index">02</span><span class="about-services__label">Mobile-kitchen service</span></li>
-      <li><span class="about-services__index">03</span><span class="about-services__label">Private catering</span></li>
-      <li><span class="about-services__index">04</span><span class="about-services__label">Events</span></li>
-    </ul>
-  </section>
-
-  <section class="about-approach" aria-label="Chef-led approach">
-    <div class="about-approach__grid">
-      <img class="about-approach__dish" src="/assets/mockups/working/media/lina-dish-catering-bowl-working-v1-20260802.webp" alt="A bowl of seasoned chicken pieces, prepared for a group">
-      <p class="about-approach__statement">Chef Lina remains closely involved in the food and service experience.</p>
-    </div>
+      </li>
+      <li class="about-journey__step">
+        <span class="about-journey__index">02</span>
+        <div>
+          <h2 class="about-journey__step-title">Growing through professional kitchens</h2>
+          <p class="about-journey__step-body">Chef Lina developed her craft at establishments including Morning Glory Café, Peeping Tom, The Houghton Hotel and Truffles on the Park.</p>
+          <p class="about-journey__step-body">With every opportunity, she broadened her abilities and learned to deliver with precision, consistency and confidence in demanding kitchen environments.</p>
+        </div>
+      </li>
+      <li class="about-journey__step">
+        <span class="about-journey__index">03</span>
+        <div>
+          <h2 class="about-journey__step-title">Taking her experience international</h2>
+          <p class="about-journey__step-body">Her journey later took her to New Orleans, Louisiana, where she joined Hufft Marchand Hospitality.</p>
+          <p class="about-journey__step-body">Working across sauté, grill, plating and service coordination strengthened her expertise and ability to perform under pressure. It also inspired a bigger ambition: to return home and build something of her own.</p>
+        </div>
+      </li>
+      <li class="about-journey__step">
+        <span class="about-journey__index">04</span>
+        <div>
+          <h2 class="about-journey__step-title">Returning home with a bigger vision</h2>
+          <p class="about-journey__step-body">Chef Lina returned to South Africa with the experience, confidence and discipline to turn her vision into a business.</p>
+          <p class="about-journey__step-body">Today, Lina's is a growing mobile kitchen based in Heidelberg, offering freshly prepared meals and catering for private celebrations, corporate functions and community events.</p>
+          <p class="about-journey__step-body">More than a place to buy a meal, Lina's is the next chapter in Chef Lina's journey—a proudly local business shaped by professional expertise, international experience and a genuine love for serving people through food.</p>
+        </div>
+      </li>
+    </ol>
   </section>
 
   <section class="about-cta-block" aria-label="Experience Lina's">
-    <h2 class="about-cta-block__title">Experience Lina's</h2>
+    <div class="about-cta-block__text">
+      <p class="about-cta-block__eyebrow">Lina's</p>
+      <h2 class="about-cta-block__title">Experience Lina's</h2>
+      <p class="about-cta-block__lede">Explore the menu or tell us about the occasion you are planning.</p>
+    </div>
     <div class="about-cta-block__actions">
-      <a href="/contact" class="about-cta about-cta--primary">Plan an Event</a>
+      <a href="/menu" class="about-cta-block__cta about-cta-block__cta--primary">View the Menu <span aria-hidden="true">→</span></a>
+      <a href="/contact" class="about-cta-block__cta about-cta-block__cta--secondary">Request a Catering Quote</a>
+    </div>
+    <div class="about-cta-block__contact-group">
+      <a href="tel:+27764834344" class="about-cta-block__contact">Call or WhatsApp<br><strong>076 483 4344</strong></a>
+      <a href="mailto:enquiries@linas.co.za" class="about-cta-block__contact about-cta-block__contact--email">enquiries@linas.co.za</a>
     </div>
   </section>
+  <ul class="about-cta-block__tags" aria-label="What Lina's does">
+    <li>Fresh prepared meals</li><li>Mobile-kitchen service</li><li>Private catering</li><li>Events</li>
+  </ul>
 </main>
 
 <button class="sticky-whatsapp sticky-whatsapp--icon" id="stickyWhatsapp" data-whatsapp-trigger aria-label="Contact Lina's on WhatsApp" aria-describedby="whatsappNote">

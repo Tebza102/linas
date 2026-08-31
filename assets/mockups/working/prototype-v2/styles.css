@@ -15,8 +15,8 @@
   --black: #000000;
   --black-soft: #080808;         /* structural separation only (modal/footer panels) — visually reads as black */
   --white: #FFFFFF;
-  --red: #A43129;                 /* verified — sampled directly from the real Lina logo */
-  --red-deep: #7C241D;            /* hover/active state of --red, not a second colour */
+  --red: #B2373E;                 /* approved public-site red — docs/LINA-DESIGN-DNA.md; matches every page's own --{page}-red */
+  --red-deep: #8B2921;            /* hover/active state of --red, not a second colour */
   --border-on-black: rgba(255,255,255,0.18);
   --overlay: rgba(0,0,0,0.48);
   --white-dim: rgba(255,255,255,0.64);    /* secondary text — opacity of white, not a new hue */
@@ -497,136 +497,144 @@ a { color: inherit; }
   --menu-ink: rgba(0, 0, 0, 0.82);
   --menu-ink-dim: rgba(0, 0, 0, 0.55);
   --menu-ink-faint: rgba(0, 0, 0, 0.14);
+  /* Page-local Fraunces/Inter, isolated exactly like home.css's
+     --home-font-display/--home-font-body — global --font-display/
+     --font-body in :root stay untouched, so no other page is affected. */
+  --menu-font-display: 'Fraunces', Georgia, "Iowan Old Style", serif;
+  --menu-font-body: 'Inter', -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   background: #ffffff;
   color: var(--menu-ink);
+  font-family: var(--menu-font-body);
 }
 .menu-page :focus-visible { outline-color: var(--menu-red); }
 
-/* Header — same white-bg/red-logo-badge treatment as the homepage
-   header, written independently here (home.css is off-limits) rather
-   than shared, so the two pages never risk drifting if one is edited
-   without the other. */
+/* Header — reproduces the approved homepage header (white, sticky, inline
+   desktop nav, hamburger hidden ≥900px) within the .menu-page scope, per
+   the same correction already applied to Catering, About and Contact. */
 .menu-page .site-header {
-  background: var(--menu-red);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.18);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: #ffffff;
+  border-bottom: 1px solid transparent;
 }
 .menu-page .site-header__mark {
-  background: transparent;
   padding: 0;
-  border-radius: 0;
   line-height: 0;
+  flex: none;
 }
 .menu-page .site-header__logo {
   display: block;
-  height: 80px;
+  height: 56px;
   width: auto;
   max-width: 100%;
-  opacity: 1;
   object-fit: contain;
-  filter: contrast(1.8) brightness(1.4) drop-shadow(0 1px 2px rgba(0, 0, 0, 0.35));
+  filter: none;
 }
 @media (min-width: 640px) {
-  .menu-page .site-header__logo { height: 96px; }
+  .menu-page .site-header__logo { height: 68px; }
 }
-.menu-page .nav-toggle span { background: #ffffff; }
+.menu-page .site-header__right {
+  margin-left: auto;
+}
+.menu-page .nav-toggle span { background: var(--menu-ink); }
 .menu-page .nav-toggle:hover span,
-.menu-page .nav-toggle:focus-visible span { background: #ffffff; }
-.menu-page .site-header :focus-visible { outline-color: #ffffff; }
-
-/* Typographic masthead, now paired with Chef Lina as the right-hand human
-   anchor. Palette deliberately shifted from red-led to charcoal-led: red is
-   reserved for conversion actions and one small editorial accent, so the
-   page reads calm and premium rather than uniformly red. */
-.menu-page .menu-hero {
-  padding: 128px var(--edge) var(--space-8);
-}
-@media (min-width: 900px) {
-  .menu-page .menu-hero { padding: 152px var(--edge) var(--space-8); }
-}
-.menu-page .menu-hero__grid {
-  max-width: 1180px;
-  margin: 0 auto;
+.menu-page .nav-toggle:focus-visible span { background: var(--menu-red); }
+.menu-page .site-header :focus-visible { outline-color: var(--menu-red); }
+.menu-page .nav-toggle--icon {
+  width: 44px;
+  height: 44px;
+  padding: 0;
   display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: var(--space-6);
+  justify-content: center;
+  border: 1px solid var(--menu-ink-faint);
+  border-radius: 2px;
+  background: #ffffff;
 }
+.menu-page .nav-toggle--icon:hover,
+.menu-page .nav-toggle--icon:focus-visible { border-color: var(--menu-red); }
+.menu-page .nav-toggle__icon { width: 20px; height: 20px; color: var(--menu-ink); }
+.menu-page .nav-toggle--icon:hover .nav-toggle__icon,
+.menu-page .nav-toggle--icon:focus-visible .nav-toggle__icon { color: var(--menu-red); }
+
+/* ---------- Desktop inline nav (≥900px) — hamburger-only below it ---------- */
+.menu-page .menu-header__nav { display: none; }
 @media (min-width: 900px) {
-  .menu-page .menu-hero__grid {
-    flex-direction: row;
+  .menu-page .menu-header__nav {
+    display: flex;
     align-items: center;
-    justify-content: space-between;
-    gap: var(--space-12);
-    text-align: left;
+    gap: var(--space-6);
+    margin: 0 auto 0 var(--space-8);
+  }
+  .menu-page .menu-header__nav a {
+    font-family: var(--menu-font-body);
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--menu-ink);
+    text-decoration: none;
+    padding: var(--space-1) 0;
+  }
+  .menu-page .menu-header__nav a:hover,
+  .menu-page .menu-header__nav a:focus-visible,
+  .menu-page .menu-header__nav a[aria-current="page"] {
+    color: var(--menu-red);
   }
 }
-/* Unboxed: the cut-out sits directly on the page rather than inside a
-   rectangle, so she reads as part of the composition. */
-.menu-page .menu-hero__chef {
-  flex: none;
-  width: min(300px, 72vw);
-  line-height: 0;
-}
+.menu-page .menu-nav__cta { display: none; }
 @media (min-width: 900px) {
-  .menu-page .menu-hero__chef { width: clamp(300px, 32vw, 420px); }
+  .menu-page .menu-nav__cta {
+    display: inline-block;
+    background: var(--menu-red);
+    color: #ffffff;
+    font-family: var(--menu-font-body);
+    font-size: 13px;
+    font-weight: 600;
+    text-decoration: none;
+    padding: 10px 20px;
+    border-radius: 2px;
+    transition: background 180ms ease;
+  }
+  .menu-page .menu-nav__cta:hover,
+  .menu-page .menu-nav__cta:focus-visible { background: var(--menu-red-deep); }
+  .menu-page .nav-toggle { display: none; }
 }
-.menu-page .menu-hero__chef img {
-  width: 100%;
-  height: auto;
-  display: block;
-}
-.menu-page .menu-masthead {
+
+/* ---------- Compact editorial intro — replaces the previous oversized
+   chef-portrait masthead, matching the restrained hero treatment now used
+   on the homepage, Catering, About and Contact pages. ---------- */
+.menu-page .menu-hero {
+  padding: var(--space-12) var(--edge) var(--space-8);
   max-width: 760px;
   margin: 0 auto;
-  text-align: center;
 }
 @media (min-width: 900px) {
-  .menu-page .menu-masthead { margin: 0; text-align: left; }
-  .menu-page .menu-masthead__rule { margin-left: 0; margin-right: 0; }
+  .menu-page .menu-hero { padding: var(--space-8) var(--edge) var(--space-8); }
 }
-.menu-page .menu-masthead__brand {
-  font-family: var(--font-display);
-  font-size: clamp(30px, 5.5vw, 46px);
-  line-height: 1;
-  color: var(--menu-charcoal);
-  margin: 0;
-  letter-spacing: 0.02em;
-}
-.menu-page .menu-masthead__tagline {
-  font-family: var(--font-body);
-  font-size: clamp(10px, 1.6vw, 12px);
+.menu-page .menu-hero__eyebrow {
+  font-family: var(--menu-font-body);
+  font-size: 12px;
   font-weight: 600;
-  letter-spacing: 0.22em;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
+  color: var(--menu-red);
+  margin: 0 0 var(--space-3);
+}
+.menu-page .menu-hero__title {
+  font-family: var(--menu-font-display);
+  font-weight: 500;
+  font-size: clamp(1.85rem, 5vw, 2.75rem);
+  line-height: 1.1;
+  color: var(--menu-red);
+  margin: 0 0 var(--space-3);
+}
+.menu-page .menu-hero__sub {
+  font-family: var(--menu-font-body);
+  font-size: 1rem;
+  line-height: 1.55;
   color: var(--menu-ink-dim);
-  margin: var(--space-3) 0 0;
-}
-/* The artwork's fine centred divider, reduced to a single restrained rule. */
-.menu-page .menu-masthead__rule {
-  display: block;
-  width: 88px;
-  height: 1px;
-  background: var(--menu-red);
-  margin: var(--space-4) auto;
-}
-.menu-page .menu-masthead__title {
-  font-family: var(--font-display);
-  font-weight: 400;
-  font-size: clamp(44px, 11vw, 96px);
-  line-height: 0.95;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--menu-charcoal);
+  max-width: 52ch;
   margin: 0;
-}
-.menu-page .menu-masthead__services {
-  font-family: var(--font-body);
-  font-size: clamp(10px, 1.6vw, 12px);
-  font-weight: 600;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: var(--menu-ink-dim);
-  margin: var(--space-3) 0 0;
 }
 
 /* Tightened from the shared .section rhythm so the masthead and the first
@@ -642,46 +650,82 @@ a { color: inherit; }
   padding-bottom: var(--space-8);
 }
 
-/* ---------- Decorative dish cut-outs ----------
-   Absolutely positioned in the gutters OUTSIDE the 760px menu column, so a
-   dish can never sit over a row. pointer-events:none guarantees they can
-   never intercept a tap meant for an Add button or a menu row. Sizes vary
-   deliberately (largest first, smallest last) to lead the eye downward. */
-.menu-page .menu-decor {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  z-index: 0;
-  overflow: hidden;
+/* ---------- Category tabs ----------
+   Horizontal-scroll row on narrow widths (one line, never several wrapped
+   rows of buttons); plain wrap-free flex row from tablet up since five
+   short labels fit comfortably. Plain <button> elements (native Tab order,
+   native Enter/Space activation) with aria-selected communicating state —
+   deliberately not a full roving-tabindex ARIA tablist, which the task's
+   own acceptance criteria treats as optional ("aria-selected or the
+   appropriate tab pattern"). */
+.menu-page .menu-tabs {
+  display: flex;
+  gap: var(--space-2);
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  margin: 0 0 var(--space-6);
+  padding-bottom: var(--space-1);
+  scrollbar-width: thin;
 }
-.menu-page .menu-decor__dish {
-  position: absolute;
-  width: 0;              /* hidden by default; only shown where there is room */
-  height: auto;
-  display: none;
-  opacity: 0.96;
-  filter: drop-shadow(0 12px 20px rgba(0, 0, 0, 0.10));
+.menu-page .menu-tab {
+  flex: none;
+  font-family: var(--menu-font-body);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--menu-ink-dim);
+  background: transparent;
+  border: 1px solid var(--menu-ink-faint);
+  border-radius: 999px;
+  padding: 10px 18px;
+  min-height: 40px;
+  cursor: pointer;
+  transition: background 160ms ease, color 160ms ease, border-color 160ms ease;
+  white-space: nowrap;
 }
-/* The menu column is 760px wide and centred, so gutters only become usable
-   at ~1080px+. Below that the page stays purely typographic. */
-/* Offsets stay positive so nothing is cropped by the decor layer's own
-   overflow:hidden — that clip is what keeps a dish from ever pushing the
-   page into horizontal overflow at awkward widths. */
-@media (min-width: 1080px) {
-  .menu-page .menu-decor__dish { display: block; }
-  .menu-page .menu-decor__dish--a { width: 150px; top: 40px;   left: 4px; }
-  .menu-page .menu-decor__dish--b { width: 132px; top: 320px;  right: 4px; }
-  .menu-page .menu-decor__dish--c { width: 120px; top: 660px;  left: 12px; }
-  .menu-page .menu-decor__dish--d { width: 104px; top: 1000px; right: 16px; }
+.menu-page .menu-tab:hover,
+.menu-page .menu-tab:focus-visible {
+  border-color: var(--menu-red);
+  color: var(--menu-red);
 }
-@media (min-width: 1320px) {
-  .menu-page .menu-decor__dish--a { width: 190px; top: 24px;   left: 0; }
-  .menu-page .menu-decor__dish--b { width: 165px; top: 300px;  right: 0; }
-  .menu-page .menu-decor__dish--c { width: 145px; top: 660px;  left: 8px; }
-  .menu-page .menu-decor__dish--d { width: 128px; top: 1010px; right: 12px; }
+.menu-page .menu-tab.is-active {
+  background: var(--menu-red);
+  border-color: var(--menu-red);
+  color: #ffffff;
 }
+@media (prefers-reduced-motion: reduce) {
+  .menu-page .menu-tab { transition: none; }
+}
+
 /* The menu column must always sit above the decoration. */
 .menu-page .menu__grid { position: relative; z-index: 1; }
+
+/* ---------- Summer Menu preview — the one category where the approved
+   homepage photos are shown, since they are the exact confirmed images of
+   these exact three dishes (not representative stand-ins like the rest of
+   the menu). Price uses the same tabular-nums column but must be allowed
+   to wrap ("Price to be confirmed" is far longer than "R60"). ---------- */
+.menu-page .menu-section[data-category="summer"] .menu-card__image {
+  display: block;
+  width: 56px;
+  height: 56px;
+  flex: none;
+  border-radius: 4px;
+  overflow: hidden;
+}
+.menu-page .menu-section[data-category="summer"] .menu-card__image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.menu-page .menu-section[data-category="summer"] .menu-card__price {
+  white-space: normal;
+  text-align: right;
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--menu-ink-dim);
+  max-width: 40%;
+}
 
 /* Category sections — every category renders sequentially on one sheet
    (script.js renderGrid), each with the artwork's red editorial heading
@@ -696,7 +740,7 @@ a { color: inherit; }
 .menu-page .menu-section { margin-bottom: var(--space-12); }
 .menu-page .menu-section:last-child { margin-bottom: 0; }
 .menu-page .menu-section__title {
-  font-family: var(--font-display);
+  font-family: var(--menu-font-display);
   font-weight: 400;
   font-size: clamp(20px, 3.2vw, 27px);
   letter-spacing: 0.08em;
@@ -707,7 +751,7 @@ a { color: inherit; }
   border-bottom: 1px solid rgba(42, 42, 42, 0.22);
 }
 .menu-page .menu-section__note {
-  font-family: var(--font-body);
+  font-family: var(--menu-font-body);
   font-size: 12px;
   font-weight: 600;
   letter-spacing: 0.08em;
@@ -753,7 +797,7 @@ a { color: inherit; }
   gap: var(--space-2);
 }
 .menu-page .menu-card__name {
-  font-family: var(--font-display);
+  font-family: var(--menu-font-display);
   font-size: clamp(15px, 2.1vw, 17px);
   font-weight: 400;
   line-height: 1.35;
@@ -778,7 +822,7 @@ a { color: inherit; }
 .menu-page .menu-card__price {
   flex: none;
   margin: 0;
-  font-family: var(--font-body);
+  font-family: var(--menu-font-body);
   font-size: clamp(14px, 2vw, 16px);
   font-weight: 700;
   color: var(--menu-charcoal);
@@ -813,115 +857,136 @@ a { color: inherit; }
 /* De-weighted from a full-bleed red band to a warm neutral field: the
    actions stay unmistakably branded, but the page no longer ends on a
    second large area of red before the black closing section. */
-.menu-page .menu-cta {
-  background: var(--menu-white);
-  color: var(--menu-charcoal);
+/* ---------- Closing CTA — reproduces the approved homepage Act 3
+   conversion band (red, eyebrow + heading, contact-info group, tags), per
+   direct human correction consolidating the previous two-band ending (a
+   beige action strip + separate black brand band) into the one closing
+   treatment already applied to Catering, About and Contact. All copy is
+   reused verbatim from the two sections it replaces. ---------- */
+.menu-page .menu-cta-block {
+  background: var(--menu-red);
+  color: #ffffff;
   padding: var(--space-12) var(--edge);
-  margin-top: var(--space-8);
-  border-top: 1px solid rgba(42, 42, 42, 0.12);
-}
-.menu-page .menu-cta__inner {
-  max-width: 760px;
-  margin: 0 auto;
-  text-align: center;
-}
-.menu-page .menu-cta__lede {
-  font-family: var(--font-display);
-  font-size: clamp(19px, 3vw, 26px);
-  color: var(--menu-charcoal);
-  margin: 0 0 var(--space-8);
-}
-.menu-page .menu-cta__actions {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
+  display: grid;
   gap: var(--space-4);
+  margin-top: var(--space-8);
 }
-.menu-page .menu-cta__action {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 2px;
-  min-width: 210px;
-  min-height: 56px;
-  padding: 14px 26px;
-  border-radius: 2px;
-  border: 1px solid var(--menu-red);
-  font-family: var(--font-body);
-  font-size: 13px;
-  font-weight: 700;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  text-decoration: none;
-  cursor: pointer;
-  transition: background 200ms ease, color 200ms ease;
-}
-/* WhatsApp stays the solid-red primary; the other two are red-outlined so
-   all three read as Lina's actions without three solid red blocks. */
-.menu-page .menu-cta__action--primary {
-  background: var(--menu-red);
-  color: var(--menu-white);
-}
-.menu-page .menu-cta__action--secondary {
-  background: transparent;
-  color: var(--menu-red);
-}
-.menu-page .menu-cta__action--primary:hover,
-.menu-page .menu-cta__action--primary:focus-visible {
-  background: var(--menu-red-deep);
-  color: var(--menu-white);
-}
-.menu-page .menu-cta__action--secondary:hover,
-.menu-page .menu-cta__action--secondary:focus-visible {
-  background: var(--menu-red);
-  color: var(--menu-white);
-}
-.menu-page .menu-cta :focus-visible { outline-color: var(--menu-red); }
-.menu-page .menu-cta__action-note {
-  font-size: 11px;
-  font-weight: 400;
-  letter-spacing: 0.04em;
-  text-transform: none;
-  opacity: 0.8;
-}
-
-/* Black closing section — same essential system as the approved
-   .catering-cta-block / .about-cta-block treatment (var(--black) field,
-   centred composition, display type, --white-dim supporting copy), scoped
-   to .menu-page so neither of those frozen pages is touched. */
-.menu-page .menu-end {
-  background: var(--black);
-  color: var(--white);
-  padding: var(--space-16) var(--edge);
-  text-align: center;
-}
-.menu-page .menu-end__inner { max-width: 640px; margin: 0 auto; }
-.menu-page .menu-end__brand {
-  font-family: var(--font-display);
-  font-weight: 400;
-  font-size: clamp(26px, 4vw, 40px);
-  color: var(--white);
-  margin: 0 0 var(--space-3);
-}
-.menu-page .menu-end__lede {
-  color: var(--white-dim);
-  font-size: 15px;
-  line-height: 1.6;
-  margin: 0 auto var(--space-4);
-  max-width: 56ch;
-}
-.menu-page .menu-end__meta {
-  font-family: var(--font-body);
+.menu-page .menu-cta-block__eyebrow {
+  font-family: var(--menu-font-body);
   font-size: 12px;
   font-weight: 600;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: var(--white-dim);
+  color: rgba(255, 255, 255, 0.8);
+  margin: 0 0 var(--space-2);
+}
+.menu-page .menu-cta-block__title {
+  font-family: var(--menu-font-display);
+  font-weight: 500;
+  font-size: clamp(1.4rem, 2.8vw, 1.85rem);
+  margin: 0 0 var(--space-2);
+  color: #ffffff;
+}
+.menu-page .menu-cta-block__lede {
+  font-family: var(--menu-font-body);
+  color: rgba(255, 255, 255, 0.88);
+  max-width: 44ch;
   margin: 0;
+  font-size: 14px;
+  line-height: 1.5;
+}
+.menu-page .menu-cta-block__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+.menu-page .menu-cta-block__cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 12px 24px;
+  font-family: var(--menu-font-body);
+  font-size: 13px;
+  font-weight: 600;
+  text-decoration: none;
+  border-radius: 2px;
+  border: 1px solid #ffffff;
+  cursor: pointer;
+  transition: background 180ms ease, color 180ms ease;
+}
+.menu-page .menu-cta-block__cta--primary { background: #ffffff; color: var(--menu-red); }
+.menu-page .menu-cta-block__cta--primary:hover,
+.menu-page .menu-cta-block__cta--primary:focus-visible { background: var(--menu-white); }
+.menu-page .menu-cta-block__cta--secondary { background: transparent; color: #ffffff; }
+.menu-page .menu-cta-block__cta--secondary:hover,
+.menu-page .menu-cta-block__cta--secondary:focus-visible { background: rgba(255, 255, 255, 0.12); }
+.menu-page .menu-cta-block :focus-visible { outline-color: #ffffff; }
+.menu-page .menu-cta-block__contact-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.menu-page .menu-cta-block__contact {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 44px;
+  color: #ffffff;
+  text-decoration: none;
+  font-family: var(--menu-font-body);
+  font-size: 13px;
+}
+.menu-page .menu-cta-block__contact--email {
+  padding-left: 0;
+  min-height: auto;
+  color: rgba(255, 255, 255, 0.88);
+}
+@media (min-width: 900px) {
+  .menu-page .menu-cta-block {
+    grid-template-columns: 1.2fr auto auto;
+    align-items: center;
+    column-gap: var(--space-8);
+  }
+}
+.menu-page .menu-cta-block__tags {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-3);
+  padding: var(--space-6) var(--edge);
+  margin: 0;
+  font-family: var(--menu-font-body);
+  font-size: 13px;
+  color: var(--menu-ink-dim);
+}
+.menu-page .menu-cta-block__tags li {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+.menu-page .menu-cta-block__tags li + li::before {
+  content: "•";
+  color: var(--menu-red);
 }
 
 /* Mobile — the leader is dropped where item names wrap, so the row stays a
    clean two-part "name / price" block rather than a broken dotted line. */
+/* Above the small-mobile breakpoint (where the cart already becomes a
+   full-width bar, below), the floating "View order" button shares the
+   WhatsApp FAB's exact bottom-right corner. A pre-existing rule elsewhere
+   forces the WhatsApp button to stay visually displayed regardless of its
+   own [hidden] state (out of scope to fix here — it's shared across four
+   pages), so the two controls can overlap, with the cart button's own text
+   partly obscured. Moving the cart to the opposite corner — still in the
+   same thumb-reachable bottom zone, just the left side — removes the
+   collision entirely without touching the WhatsApp button or its rules. */
+.menu-page #stickyCart.sticky-cart {
+  left: var(--space-4);
+  right: auto;
+}
+
 @media (max-width: 560px) {
   .menu-page .menu-card {
     flex-wrap: wrap;
@@ -932,7 +997,7 @@ a { color: inherit; }
   .menu-page .menu-card__name::after { display: none; }
   .menu-page .menu-card__body { gap: var(--space-3); }
   .menu-page .menu-card__add { margin-left: auto; }
-  .menu-page .menu-cta__action { min-width: 0; width: 100%; }
+  .menu-page .menu-cta-block__cta { width: 100%; }
   /* The floating WhatsApp FAB is hidden on THIS page at small-mobile only:
      it sat over an Add-to-order button, and on a page whose whole purpose is
      ordering, a control must never be obscured by a floating element. Safe
@@ -974,16 +1039,16 @@ a { color: inherit; }
 
   /* Reserve real scrolling space beneath the bar. Without this the closing
      section's last line can never be brought fully above a fixed bar — it
-     stays permanently trapped at the end of the document. The black field
-     simply extends behind the bar, so the bar reads as part of it rather
-     than floating on top. Bar height + normal spacing + safe-area inset. */
-  body.menu-page .menu-end {
+     stays permanently trapped at the end of the document. The tags row is
+     now the final element on the page (the closing band's own content
+     comes just before it), so the reserved space moves here with it. */
+  .menu-page .menu-cta-block__tags {
     padding-bottom: calc(var(--space-16) + 56px + var(--space-4) + env(safe-area-inset-bottom, 0px));
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .menu-page .menu-cta__action { transition: none; }
+  .menu-page .menu-cta-block__cta { transition: none; }
 }
 
 /* ============================================================
@@ -1004,148 +1069,199 @@ a { color: inherit; }
   --catering-ink: rgba(0, 0, 0, 0.82);
   --catering-ink-dim: rgba(0, 0, 0, 0.55);
   --catering-ink-faint: rgba(0, 0, 0, 0.14);
+  /* Page-local Fraunces/Inter, isolated exactly like home.css's
+     --home-font-display/--home-font-body — global --font-display/
+     --font-body in :root stay untouched, so no other page is affected. */
+  --catering-font-display: 'Fraunces', Georgia, "Iowan Old Style", serif;
+  --catering-font-body: 'Inter', -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   background: #ffffff;
   color: var(--catering-ink);
+  font-family: var(--catering-font-body);
 }
 .catering-page :focus-visible { outline-color: var(--catering-red); }
 
-/* Header — same white-bg/red-logo-badge treatment as the homepage and
-   Menu page headers, written independently here (home.css/menu-page
-   rules are off-limits) so none of the three ever drift together. */
+/* Header — reproduces the approved homepage header (white, sticky, inline
+   desktop nav, hamburger hidden ≥900px) within the .catering-page scope,
+   per direct human correction: the previous red/fixed inner-page header
+   was rejected as visually inconsistent with the approved homepage. */
 .catering-page .site-header {
-  background: var(--catering-red);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.18);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: #ffffff;
+  border-bottom: 1px solid transparent;
 }
 .catering-page .site-header__mark {
-  background: transparent;
   padding: 0;
-  border-radius: 0;
   line-height: 0;
+  flex: none;
 }
 .catering-page .site-header__logo {
   display: block;
-  height: 80px;
+  height: 56px;
   width: auto;
   max-width: 100%;
-  opacity: 1;
   object-fit: contain;
-  filter: contrast(1.8) brightness(1.4) drop-shadow(0 1px 2px rgba(0, 0, 0, 0.35));
+  filter: none;
 }
 @media (min-width: 640px) {
-  .catering-page .site-header__logo { height: 96px; }
+  .catering-page .site-header__logo { height: 68px; }
 }
-.catering-page .nav-toggle span { background: #ffffff; }
+.catering-page .site-header__right {
+  margin-left: auto;
+}
+.catering-page .nav-toggle span { background: var(--catering-ink); }
 .catering-page .nav-toggle:hover span,
-.catering-page .nav-toggle:focus-visible span { background: #ffffff; }
-.catering-page .site-header :focus-visible { outline-color: #ffffff; }
-
-/* ---------- Hero — white editorial, chef cutout as central authority ---------- */
-.catering-page .catering-hero {
-  padding: 128px var(--edge) var(--space-8);
-}
-@media (min-width: 900px) {
-  .catering-page .catering-hero { padding: 156px var(--edge) var(--space-16); }
-}
-.catering-page .catering-hero__grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: var(--space-8);
+.catering-page .nav-toggle:focus-visible span { background: var(--catering-red); }
+.catering-page .site-header :focus-visible { outline-color: var(--catering-red); }
+.catering-page .nav-toggle--icon {
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  display: flex;
   align-items: center;
-  max-width: 1280px;
-  margin: 0 auto;
+  justify-content: center;
+  border: 1px solid var(--catering-ink-faint);
+  border-radius: 2px;
+  background: #ffffff;
+}
+.catering-page .nav-toggle--icon:hover,
+.catering-page .nav-toggle--icon:focus-visible { border-color: var(--catering-red); }
+.catering-page .nav-toggle__icon { width: 20px; height: 20px; color: var(--catering-ink); }
+.catering-page .nav-toggle--icon:hover .nav-toggle__icon,
+.catering-page .nav-toggle--icon:focus-visible .nav-toggle__icon { color: var(--catering-red); }
+
+/* ---------- Desktop inline nav (≥900px) — hamburger-only below it ---------- */
+.catering-page .catering-header__nav { display: none; }
+@media (min-width: 900px) {
+  .catering-page .catering-header__nav {
+    display: flex;
+    align-items: center;
+    gap: var(--space-6);
+    margin: 0 auto 0 var(--space-8);
+  }
+  .catering-page .catering-header__nav a {
+    font-family: var(--catering-font-body);
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--catering-ink);
+    text-decoration: none;
+    padding: var(--space-1) 0;
+  }
+  .catering-page .catering-header__nav a:hover,
+  .catering-page .catering-header__nav a:focus-visible,
+  .catering-page .catering-header__nav a[aria-current="page"] {
+    color: var(--catering-red);
+  }
+}
+.catering-page .catering-nav__cta { display: none; }
+@media (min-width: 900px) {
+  .catering-page .catering-nav__cta {
+    display: inline-block;
+    background: var(--catering-red);
+    color: #ffffff;
+    font-family: var(--catering-font-body);
+    font-size: 13px;
+    font-weight: 600;
+    text-decoration: none;
+    padding: 10px 20px;
+    border-radius: 2px;
+    transition: background 180ms ease;
+  }
+  .catering-page .catering-nav__cta:hover,
+  .catering-page .catering-nav__cta:focus-visible { background: var(--catering-red-deep); }
+  .catering-page .nav-toggle { display: none; }
+}
+
+/* ---------- Hero — text-only editorial, no photography (per approved
+   Change Contract: catering-specific imagery removed site-wide from this
+   page). Top padding unchanged from the previous photo-hero version — it
+   exists to clear the fixed .site-header, not to make room for an image,
+   so removing the image column doesn't reduce how much is needed. ---------- */
+.catering-page .catering-hero {
+  padding: var(--space-12) var(--edge) var(--space-12);
 }
 @media (min-width: 900px) {
-  .catering-page .catering-hero__grid { grid-template-columns: 1.1fr 0.9fr; gap: var(--space-12); }
+  .catering-page .catering-hero { padding: var(--space-8) var(--edge) var(--space-16); }
+}
+.catering-page .catering-hero__inner {
+  max-width: 720px;
 }
 .catering-page .catering-hero__eyebrow {
-  font-family: var(--font-body);
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.12em;
+  font-family: var(--catering-font-body);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--catering-red);
   margin: 0 0 var(--space-3);
 }
 .catering-page .catering-hero__title {
-  font-family: var(--font-display);
-  font-weight: 400;
-  font-size: clamp(30px, 5.4vw, 52px);
+  font-family: var(--catering-font-display);
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: clamp(1.85rem, 6.5vw, 3.5rem);
   line-height: 1.08;
+  letter-spacing: 0.01em;
   color: var(--catering-red);
   margin: 0 0 var(--space-4);
-  max-width: 14ch;
+  max-width: 19ch;
 }
 .catering-page .catering-hero__sub {
-  font-size: 15px;
-  line-height: 1.6;
+  font-family: var(--catering-font-body);
+  font-size: 1.125rem;
+  line-height: 1.55;
   color: var(--catering-ink-dim);
-  max-width: 48ch;
+  max-width: 40ch;
   margin: 0 0 var(--space-6);
-}
-@media (min-width: 900px) {
-  .catering-page .catering-hero__sub { font-size: 16px; }
 }
 .catering-page .catering-hero__actions {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--space-3);
+  align-items: center;
+  gap: var(--space-4);
 }
 
-/* Shared Catering CTA button, used in the hero and the closing CTA block. */
+/* Shared Catering CTA button, used in the hero and the closing CTA block —
+   sized/typeset to match the homepage's .home-hero__cta exactly. */
 .catering-page .catering-cta {
-  display: inline-block;
-  font-family: var(--font-body);
-  font-size: 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 52px;
+  font-family: var(--catering-font-body);
+  font-size: 0.9375rem;
   font-weight: 600;
-  letter-spacing: 0.01em;
   text-decoration: none;
-  padding: 13px 26px;
+  padding: 14px 28px;
   border-radius: 2px;
-  border: 1px solid transparent;
+  border: 1px solid var(--catering-red);
   text-align: center;
   transition: background 180ms ease, color 180ms ease;
 }
 .catering-page .catering-cta--primary { background: var(--catering-red); color: var(--catering-white); }
 .catering-page .catering-cta--primary:hover,
 .catering-page .catering-cta--primary:focus-visible { background: var(--catering-red-deep); }
-.catering-page .catering-cta--secondary { background: transparent; color: var(--catering-red); border-color: var(--catering-red); }
+.catering-page .catering-cta--secondary { background: transparent; color: var(--catering-red); }
 .catering-page .catering-cta--secondary:hover,
 .catering-page .catering-cta--secondary:focus-visible { background: var(--catering-red); color: var(--catering-white); }
 
-/* Chef cutout dominant, dish cutout smaller/secondary — both contained
-   within the visual column's own box (no negative offsets) so neither
-   can bleed into the copy column or overlap text at any width. */
-.catering-page .catering-hero__visual {
-  position: relative;
-  height: 260px;
+/* Secondary hero action is an anchor to the on-page process section, not a
+   button — kept visually distinct (text link, not a bordered box) from the
+   primary quotation CTA beside it. */
+.catering-page .catering-hero__anchor {
+  font-family: var(--catering-font-body);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--catering-red);
+  text-decoration: none;
 }
-@media (min-width: 900px) {
-  .catering-page .catering-hero__visual { height: 520px; }
-}
-.catering-page .catering-hero__chef {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  object-position: bottom right;
-  z-index: 2;
-}
-.catering-page .catering-hero__dish {
-  position: absolute;
-  left: 0;
-  bottom: 0;
-  width: 34%;
-  max-width: 170px;
-  object-fit: contain;
-  z-index: 1;
-  filter: drop-shadow(0 10px 16px rgba(0, 0, 0, 0.12));
-}
-@media (min-width: 900px) {
-  .catering-page .catering-hero__dish { width: 32%; max-width: 220px; }
+.catering-page .catering-hero__anchor:hover,
+.catering-page .catering-hero__anchor:focus-visible {
+  text-decoration: underline;
 }
 
-/* ---------- Occasions — editorial numbered list, not cards ---------- */
+/* ---------- Occasions — editorial numbered list, names only ---------- */
 .catering-page .catering-occasions { max-width: 1100px; margin: 0 auto; }
 .catering-page .occasions__list {
   grid-template-columns: 1fr;
@@ -1163,75 +1279,188 @@ a { color: inherit; }
 .catering-page .catering-occasions__index {
   flex: none;
   width: 28px;
-  font-family: var(--font-display);
+  font-family: var(--catering-font-display);
   font-size: 13px;
   color: var(--catering-red);
 }
 .catering-page .occasions__list span {
-  font-family: var(--font-display);
+  font-family: var(--catering-font-display);
   font-size: clamp(19px, 2.4vw, 22px);
   font-weight: 400;
   color: var(--catering-ink);
-  margin: 0 0 2px;
-}
-.catering-page .occasions__list p {
-  color: var(--catering-ink-dim);
-  font-size: 14px;
   margin: 0;
 }
 
-/* ---------- Chef-led value — controlled red field, existing copy reused ---------- */
-.catering-page .catering-value {
-  background: var(--catering-red);
-  padding: var(--space-8) var(--edge);
-}
-.catering-page .catering-value__grid {
+/* ---------- How the enquiry process works — numbered steps, no icons ---------- */
+.catering-page .catering-process { max-width: 760px; margin: 0 auto; }
+.catering-page .catering-process__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
   display: flex;
   flex-direction: column;
-  align-items: center;
   gap: var(--space-6);
-  max-width: 900px;
-  margin: 0 auto;
-  text-align: center;
 }
-@media (min-width: 768px) {
-  .catering-page .catering-value__grid { flex-direction: row; text-align: left; }
+.catering-page .catering-process__step {
+  display: flex;
+  gap: var(--space-4);
+  align-items: flex-start;
+  border-top: 1px solid var(--catering-ink-faint);
+  padding-top: var(--space-4);
 }
-.catering-page .catering-value__dish {
-  width: 110px;
-  height: 110px;
+.catering-page .catering-process__index {
   flex: none;
-  object-fit: contain;
-  filter: drop-shadow(0 8px 14px rgba(0, 0, 0, 0.2));
+  width: 32px;
+  font-family: var(--catering-font-display);
+  font-size: 14px;
+  color: var(--catering-red);
 }
-.catering-page .catering-value__statement {
-  font-family: var(--font-display);
-  font-weight: 400;
-  font-size: clamp(20px, 3vw, 28px);
-  line-height: 1.3;
-  color: var(--catering-white);
+.catering-page .catering-process__step-title {
+  font-family: var(--catering-font-display);
+  font-size: clamp(17px, 2vw, 19px);
+  font-weight: 500;
+  color: var(--catering-ink);
+  margin: 0 0 var(--space-1);
+}
+.catering-page .catering-process__step-body {
+  font-family: var(--catering-font-body);
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--catering-ink-dim);
   margin: 0;
 }
 
-/* ---------- Closing event-enquiry CTA — controlled black ---------- */
+/* ---------- What to have ready — plain checklist, no icons ---------- */
+.catering-page .catering-prepare { max-width: 760px; margin: 0 auto; }
+.catering-page .catering-prepare__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-3);
+}
+@media (min-width: 640px) {
+  .catering-page .catering-prepare__list { grid-template-columns: 1fr 1fr; gap: var(--space-3) var(--space-6); }
+}
+.catering-page .catering-prepare__list li {
+  position: relative;
+  padding-left: var(--space-4);
+  font-family: var(--catering-font-body);
+  font-size: 14px;
+  color: var(--catering-ink-dim);
+}
+.catering-page .catering-prepare__list li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.55em;
+  width: 6px;
+  height: 6px;
+  background: var(--catering-red);
+}
+
+/* ---------- Closing event-enquiry CTA — reproduces the approved homepage
+   Act 3 conversion band (red, eyebrow + heading, contact-info group,
+   occasion tags), per direct human correction rejecting the previous
+   plain black band as visually inconsistent with the homepage. ---------- */
 .catering-page .catering-cta-block {
-  background: var(--black);
-  color: var(--white);
-  padding: var(--space-16) var(--edge);
-  text-align: center;
+  background: var(--catering-red);
+  color: #ffffff;
+  padding: var(--space-12) var(--edge);
+  display: grid;
+  gap: var(--space-4);
+}
+.catering-page .catering-cta-block__eyebrow {
+  font-family: var(--catering-font-body);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.8);
+  margin: 0 0 var(--space-2);
 }
 .catering-page .catering-cta-block__title {
-  font-family: var(--font-display);
-  font-weight: 400;
-  font-size: clamp(26px, 4vw, 40px);
-  color: var(--white);
-  margin: 0 0 var(--space-3);
+  font-family: var(--catering-font-display);
+  font-weight: 500;
+  font-size: clamp(1.5rem, 3vw, 2rem);
+  margin: 0;
+  color: #ffffff;
 }
 .catering-page .catering-cta-block__lede {
-  color: var(--white-dim);
-  max-width: 56ch;
-  margin: 0 auto var(--space-6);
-  font-size: 15px;
+  font-family: var(--catering-font-body);
+  color: rgba(255, 255, 255, 0.88);
+  max-width: 34ch;
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.5;
+}
+.catering-page .catering-cta-block__cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: 44px;
+  padding: 12px 24px;
+  background: #ffffff;
+  color: var(--catering-red);
+  font-family: var(--catering-font-body);
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  border-radius: 2px;
+  width: fit-content;
+}
+.catering-page .catering-cta-block__cta:hover,
+.catering-page .catering-cta-block__cta:focus-visible { background: var(--catering-white); }
+.catering-page .catering-cta-block__contact-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.catering-page .catering-cta-block__contact {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 44px;
+  color: #ffffff;
+  text-decoration: none;
+  font-family: var(--catering-font-body);
+  font-size: 13px;
+}
+.catering-page .catering-cta-block__contact--email {
+  padding-left: 0;
+  min-height: auto;
+  color: rgba(255, 255, 255, 0.88);
+}
+@media (min-width: 900px) {
+  .catering-page .catering-cta-block {
+    grid-template-columns: 1.2fr auto auto;
+    align-items: center;
+    column-gap: var(--space-8);
+  }
+  .catering-page .catering-cta-block__lede { grid-column: 1; grid-row: 2; }
+}
+.catering-page .catering-cta-block__tags {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-3);
+  padding: var(--space-6) var(--edge);
+  margin: 0;
+  font-family: var(--catering-font-body);
+  font-size: 13px;
+  color: var(--catering-ink-dim);
+}
+.catering-page .catering-cta-block__tags li {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+.catering-page .catering-cta-block__tags li + li::before {
+  content: "•";
+  color: var(--catering-red);
 }
 
 /* ============================================================
@@ -1252,259 +1481,311 @@ a { color: inherit; }
   --about-ink: rgba(0, 0, 0, 0.82);
   --about-ink-dim: rgba(0, 0, 0, 0.55);
   --about-ink-faint: rgba(0, 0, 0, 0.14);
+  /* Page-local Fraunces/Inter, isolated exactly like home.css's
+     --home-font-display/--home-font-body — global --font-display/
+     --font-body in :root stay untouched, so no other page is affected. */
+  --about-font-display: 'Fraunces', Georgia, "Iowan Old Style", serif;
+  --about-font-body: 'Inter', -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   background: #ffffff;
   color: var(--about-ink);
+  font-family: var(--about-font-body);
 }
 .about-page :focus-visible { outline-color: var(--about-red); }
 
-/* Header — same white-bg/red-logo-badge treatment as the homepage,
-   Menu and Catering page headers, written independently here (those
-   pages' rules are off-limits) so none of them ever drift together. */
+/* Header — reproduces the approved homepage header (white, sticky, inline
+   desktop nav, hamburger hidden ≥900px) within the .about-page scope, per
+   direct human correction rejecting the previous red/fixed header as
+   visually inconsistent with the approved homepage (same correction
+   already applied to the Catering page). */
 .about-page .site-header {
-  background: var(--about-red);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.18);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: #ffffff;
+  border-bottom: 1px solid transparent;
 }
 .about-page .site-header__mark {
-  background: transparent;
   padding: 0;
-  border-radius: 0;
   line-height: 0;
+  flex: none;
 }
 .about-page .site-header__logo {
   display: block;
-  height: 80px;
+  height: 56px;
   width: auto;
   max-width: 100%;
-  opacity: 1;
   object-fit: contain;
-  filter: contrast(1.8) brightness(1.4) drop-shadow(0 1px 2px rgba(0, 0, 0, 0.35));
+  filter: none;
 }
 @media (min-width: 640px) {
-  .about-page .site-header__logo { height: 96px; }
+  .about-page .site-header__logo { height: 68px; }
 }
-.about-page .nav-toggle span { background: #ffffff; }
+.about-page .site-header__right {
+  margin-left: auto;
+}
+.about-page .nav-toggle span { background: var(--about-ink); }
 .about-page .nav-toggle:hover span,
-.about-page .nav-toggle:focus-visible span { background: #ffffff; }
-.about-page .site-header :focus-visible { outline-color: #ffffff; }
-
-/* ---------- Hero — white editorial, chef cutout as central authority ---------- */
-.about-page .about-hero {
-  padding: 128px var(--edge) var(--space-8);
-}
-@media (min-width: 900px) {
-  .about-page .about-hero { padding: 156px var(--edge) var(--space-16); }
-}
-.about-page .about-hero__grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: var(--space-8);
+.about-page .nav-toggle:focus-visible span { background: var(--about-red); }
+.about-page .site-header :focus-visible { outline-color: var(--about-red); }
+.about-page .nav-toggle--icon {
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  display: flex;
   align-items: center;
-  max-width: 1280px;
-  margin: 0 auto;
+  justify-content: center;
+  border: 1px solid var(--about-ink-faint);
+  border-radius: 2px;
+  background: #ffffff;
+}
+.about-page .nav-toggle--icon:hover,
+.about-page .nav-toggle--icon:focus-visible { border-color: var(--about-red); }
+.about-page .nav-toggle__icon { width: 20px; height: 20px; color: var(--about-ink); }
+.about-page .nav-toggle--icon:hover .nav-toggle__icon,
+.about-page .nav-toggle--icon:focus-visible .nav-toggle__icon { color: var(--about-red); }
+
+/* ---------- Desktop inline nav (≥900px) — hamburger-only below it ---------- */
+.about-page .about-header__nav { display: none; }
+@media (min-width: 900px) {
+  .about-page .about-header__nav {
+    display: flex;
+    align-items: center;
+    gap: var(--space-6);
+    margin: 0 auto 0 var(--space-8);
+  }
+  .about-page .about-header__nav a {
+    font-family: var(--about-font-body);
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--about-ink);
+    text-decoration: none;
+    padding: var(--space-1) 0;
+  }
+  .about-page .about-header__nav a:hover,
+  .about-page .about-header__nav a:focus-visible,
+  .about-page .about-header__nav a[aria-current="page"] {
+    color: var(--about-red);
+  }
+}
+.about-page .about-nav__cta { display: none; }
+@media (min-width: 900px) {
+  .about-page .about-nav__cta {
+    display: inline-block;
+    background: var(--about-red);
+    color: #ffffff;
+    font-family: var(--about-font-body);
+    font-size: 13px;
+    font-weight: 600;
+    text-decoration: none;
+    padding: 10px 20px;
+    border-radius: 2px;
+    transition: background 180ms ease;
+  }
+  .about-page .about-nav__cta:hover,
+  .about-page .about-nav__cta:focus-visible { background: var(--about-red-deep); }
+  .about-page .nav-toggle { display: none; }
+}
+
+/* ---------- Hero — text-only editorial, no photography (per approved
+   Change Contract: the existing visible graphic is removed site-wide from
+   this page). Top padding matches the homepage's own header-clearance
+   math for a sticky (not fixed) header. ---------- */
+.about-page .about-hero {
+  padding: var(--space-12) var(--edge) var(--space-8);
 }
 @media (min-width: 900px) {
-  .about-page .about-hero__grid { grid-template-columns: 1.1fr 0.9fr; gap: var(--space-12); }
+  .about-page .about-hero { padding: var(--space-8) var(--edge) var(--space-16); }
+}
+.about-page .about-hero__inner {
+  max-width: 720px;
 }
 .about-page .about-hero__eyebrow {
-  font-family: var(--font-body);
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.12em;
+  font-family: var(--about-font-body);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--about-red);
   margin: 0 0 var(--space-3);
 }
 .about-page .about-hero__title {
-  font-family: var(--font-display);
-  font-weight: 400;
-  font-size: clamp(30px, 5.4vw, 52px);
+  font-family: var(--about-font-display);
+  font-weight: 600;
+  font-size: clamp(1.85rem, 6.5vw, 3.5rem);
   line-height: 1.08;
+  letter-spacing: 0.01em;
   color: var(--about-red);
   margin: 0 0 var(--space-4);
-  max-width: 14ch;
+  max-width: 22ch;
 }
 .about-page .about-hero__sub {
-  font-size: 15px;
-  line-height: 1.6;
+  font-family: var(--about-font-body);
+  font-size: 1.125rem;
+  line-height: 1.55;
   color: var(--about-ink-dim);
-  max-width: 48ch;
-  margin: 0 0 var(--space-6);
-}
-@media (min-width: 900px) {
-  .about-page .about-hero__sub { font-size: 16px; }
-}
-.about-page .about-hero__actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-3);
+  max-width: 60ch;
+  margin: 0;
 }
 
-/* Shared About CTA button, used in the hero and the closing CTA block. */
-.about-page .about-cta {
-  display: inline-block;
-  font-family: var(--font-body);
-  font-size: 14px;
-  font-weight: 600;
-  letter-spacing: 0.01em;
-  text-decoration: none;
-  padding: 13px 26px;
-  border-radius: 2px;
-  border: 1px solid transparent;
-  text-align: center;
-  transition: background 180ms ease, color 180ms ease;
-}
-.about-page .about-cta--primary { background: var(--about-red); color: var(--about-white); }
-.about-page .about-cta--primary:hover,
-.about-page .about-cta--primary:focus-visible { background: var(--about-red-deep); }
-.about-page .about-cta--secondary { background: transparent; color: var(--about-red); border-color: var(--about-red); }
-.about-page .about-cta--secondary:hover,
-.about-page .about-cta--secondary:focus-visible { background: var(--about-red); color: var(--about-white); }
-
-/* Chef cutout dominant, dish cutout smaller/secondary — both contained
-   within the visual column's own box (no negative offsets) so neither
-   can bleed into the copy column or overlap text at any width. */
-.about-page .about-hero__visual {
-  position: relative;
-  height: 260px;
-}
-@media (min-width: 900px) {
-  .about-page .about-hero__visual { height: 520px; }
-}
-.about-page .about-hero__chef {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  object-position: bottom right;
-  z-index: 2;
-}
-.about-page .about-hero__dish {
-  position: absolute;
-  left: 0;
-  bottom: 0;
-  width: 34%;
-  max-width: 170px;
-  object-fit: contain;
-  z-index: 1;
-  filter: drop-shadow(0 10px 16px rgba(0, 0, 0, 0.12));
-}
-@media (min-width: 900px) {
-  .about-page .about-hero__dish { width: 32%; max-width: 220px; }
-}
-
-/* ---------- Story — compact editorial, existing verified sentences only ---------- */
-.about-page .about-story {
-  max-width: 800px;
-  margin: 0 auto;
-  padding: var(--space-16) var(--edge) var(--space-8);
-  text-align: center;
-}
-/* The floating WhatsApp button sits fixed bottom-right; on narrow
-   viewports the story section's centred text can land in that exact
-   band at initial page load. Extra top padding here (mobile only)
-   keeps the heading/first line clear of it, without moving or
-   resizing the WhatsApp button itself. */
-@media (max-width: 899px) {
-  .about-page .about-story { padding-top: calc(var(--space-16) + 96px); }
-}
-.about-page .about-story__title {
-  font-family: var(--font-display);
-  font-weight: 400;
-  font-size: clamp(22px, 3vw, 30px);
-  color: var(--about-red);
-  margin: 0 0 var(--space-6);
-}
-.about-page .about-story__text {
-  font-family: var(--font-display);
-  font-size: clamp(18px, 2.6vw, 24px);
-  line-height: 1.5;
-  color: var(--about-ink);
-  margin: 0 0 var(--space-4);
-}
-.about-page .about-story__text:last-child { margin-bottom: 0; }
-
-/* ---------- Services — structured editorial list, not cards ---------- */
-.about-page .about-services { max-width: 1100px; margin: 0 auto; padding: 0 var(--edge) var(--space-16); }
-.about-page .about-services__list {
+/* ---------- Chef Lina's journey — three numbered narrative sections, no
+   icons or decorative graphics, reusing the same restrained numbered-step
+   pattern already approved on the Catering page's "How it works". ---------- */
+.about-page .about-journey { max-width: 760px; margin: 0 auto; }
+.about-page .about-journey__list {
   list-style: none;
   margin: 0;
   padding: 0;
-  border-top: 1px solid var(--about-ink-faint);
-}
-.about-page .about-services__list li {
-  display: flex;
-  align-items: baseline;
-  gap: var(--space-4);
-  border-bottom: 1px solid var(--about-ink-faint);
-  padding: var(--space-4) 0;
-}
-.about-page .about-services__index {
-  flex: none;
-  width: 28px;
-  font-family: var(--font-display);
-  font-size: 13px;
-  color: var(--about-red);
-}
-.about-page .about-services__label {
-  font-family: var(--font-display);
-  font-size: clamp(19px, 2.4vw, 22px);
-  font-weight: 400;
-  color: var(--about-ink);
-}
-
-/* ---------- Chef-led approach — controlled red field, existing copy reused ---------- */
-.about-page .about-approach {
-  background: var(--about-red);
-  padding: var(--space-8) var(--edge);
-}
-.about-page .about-approach__grid {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: var(--space-6);
-  max-width: 900px;
-  margin: 0 auto;
-  text-align: center;
+  gap: var(--space-8);
 }
-@media (min-width: 768px) {
-  .about-page .about-approach__grid { flex-direction: row; text-align: left; }
+.about-page .about-journey__step {
+  display: flex;
+  gap: var(--space-4);
+  align-items: flex-start;
+  border-top: 1px solid var(--about-ink-faint);
+  padding-top: var(--space-6);
 }
-.about-page .about-approach__dish {
-  width: 110px;
-  height: 110px;
+.about-page .about-journey__index {
   flex: none;
-  object-fit: contain;
-  filter: drop-shadow(0 8px 14px rgba(0, 0, 0, 0.2));
+  width: 32px;
+  font-family: var(--about-font-display);
+  font-size: 14px;
+  color: var(--about-red);
 }
-.about-page .about-approach__statement {
-  font-family: var(--font-display);
-  font-weight: 400;
-  font-size: clamp(20px, 3vw, 28px);
-  line-height: 1.3;
-  color: var(--about-white);
-  margin: 0;
+.about-page .about-journey__step-title {
+  font-family: var(--about-font-display);
+  font-weight: 500;
+  font-size: clamp(20px, 2.4vw, 24px);
+  color: var(--about-ink);
+  margin: 0 0 var(--space-3);
 }
+.about-page .about-journey__step-body {
+  font-family: var(--about-font-body);
+  font-size: 15px;
+  line-height: 1.65;
+  color: var(--about-ink-dim);
+  margin: 0 0 var(--space-4);
+}
+.about-page .about-journey__step-body:last-child { margin-bottom: 0; }
 
-/* ---------- Closing CTA — controlled black ---------- */
+/* ---------- Closing CTA — reproduces the approved homepage Act 3
+   conversion band (red, eyebrow + heading, contact-info group), per
+   direct human correction rejecting the previous plain black band as
+   visually inconsistent with the homepage (same correction already
+   applied to the Catering page). Two CTAs here (View the Menu / Request
+   a Catering Quote), matching this page's approved closing copy. ---------- */
 .about-page .about-cta-block {
-  background: var(--black);
-  color: var(--white);
-  padding: var(--space-16) var(--edge);
-  text-align: center;
+  background: var(--about-red);
+  color: #ffffff;
+  padding: var(--space-12) var(--edge);
+  display: grid;
+  gap: var(--space-4);
+}
+.about-page .about-cta-block__eyebrow {
+  font-family: var(--about-font-body);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.8);
+  margin: 0 0 var(--space-2);
 }
 .about-page .about-cta-block__title {
-  font-family: var(--font-display);
-  font-weight: 400;
-  font-size: clamp(26px, 4vw, 40px);
-  color: var(--white);
-  margin: 0 0 var(--space-6);
+  font-family: var(--about-font-display);
+  font-weight: 500;
+  font-size: clamp(1.5rem, 3vw, 2rem);
+  margin: 0 0 var(--space-2);
+  color: #ffffff;
 }
+.about-page .about-cta-block__lede {
+  font-family: var(--about-font-body);
+  color: rgba(255, 255, 255, 0.88);
+  max-width: 40ch;
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.5;
+}
+/* Stacked, not side-by-side: two CTAs here (unlike the homepage/Catering
+   band's one) would otherwise widen this column enough to squeeze the
+   heading column into an awkward wrap — stacking keeps this column the
+   same width as a single-button band, matching the homepage exactly. */
 .about-page .about-cta-block__actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-2);
+}
+.about-page .about-cta-block__cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: 44px;
+  padding: 12px 24px;
+  font-family: var(--about-font-body);
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  border-radius: 2px;
+  width: fit-content;
+  border: 1px solid #ffffff;
+  transition: background 180ms ease, color 180ms ease;
+}
+.about-page .about-cta-block__cta--primary { background: #ffffff; color: var(--about-red); }
+.about-page .about-cta-block__cta--primary:hover,
+.about-page .about-cta-block__cta--primary:focus-visible { background: var(--about-white); }
+.about-page .about-cta-block__cta--secondary { background: transparent; color: #ffffff; }
+.about-page .about-cta-block__cta--secondary:hover,
+.about-page .about-cta-block__cta--secondary:focus-visible { background: rgba(255, 255, 255, 0.12); }
+.about-page .about-cta-block__contact-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.about-page .about-cta-block__contact {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 44px;
+  color: #ffffff;
+  text-decoration: none;
+  font-family: var(--about-font-body);
+  font-size: 13px;
+}
+.about-page .about-cta-block__contact--email {
+  padding-left: 0;
+  min-height: auto;
+  color: rgba(255, 255, 255, 0.88);
+}
+@media (min-width: 900px) {
+  .about-page .about-cta-block {
+    grid-template-columns: 1.2fr auto auto;
+    align-items: center;
+    column-gap: var(--space-8);
+  }
+  .about-page .about-cta-block__lede { grid-column: 1; grid-row: 2; }
+}
+.about-page .about-cta-block__tags {
+  list-style: none;
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
   gap: var(--space-3);
+  padding: var(--space-6) var(--edge);
+  margin: 0;
+  font-family: var(--about-font-body);
+  font-size: 13px;
+  color: var(--about-ink-dim);
+}
+.about-page .about-cta-block__tags li {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+.about-page .about-cta-block__tags li + li::before {
+  content: "•";
+  color: var(--about-red);
 }
 
 /* ============================================================
@@ -1527,71 +1808,131 @@ a { color: inherit; }
   --contact-ink: rgba(0, 0, 0, 0.82);
   --contact-ink-dim: rgba(0, 0, 0, 0.55);
   --contact-ink-faint: rgba(0, 0, 0, 0.14);
+  /* Page-local Fraunces/Inter, isolated exactly like home.css's
+     --home-font-display/--home-font-body — global --font-display/
+     --font-body in :root stay untouched, so no other page is affected. */
+  --contact-font-display: 'Fraunces', Georgia, "Iowan Old Style", serif;
+  --contact-font-body: 'Inter', -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   background: #ffffff;
   color: var(--contact-ink);
+  font-family: var(--contact-font-body);
 }
 .contact-page :focus-visible { outline-color: var(--contact-red); }
 
-/* Header — full-width red bar, not the white-bg/red-logo-badge treatment
-   used on the other pages. The approved logo (linas-logo-nb-wl.svg) is
-   transparent with white line-art; on a white header it was only
-   visible inside a small red badge box behind it (--contact-red on
-   --contact-white). Painting the whole header red instead means the
-   logo reads correctly everywhere across the bar, with no separate box.
-   Written independently here (those pages' rules are off-limits) so
-   none of them ever drift together. */
+/* Header — reproduces the approved homepage header (white, sticky, inline
+   desktop nav, hamburger hidden ≥900px) within the .contact-page scope,
+   per direct human correction rejecting the previous red/fixed header as
+   visually inconsistent with the approved homepage (same correction
+   already applied to Catering and About). */
 .contact-page .site-header {
-  background: var(--contact-red);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.18);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: #ffffff;
+  border-bottom: 1px solid transparent;
 }
 .contact-page .site-header__mark {
-  background: transparent;
   padding: 0;
-  border-radius: 0;
   line-height: 0;
+  flex: none;
 }
 .contact-page .site-header__logo {
   display: block;
-  height: 80px;
+  height: 56px;
   width: auto;
   max-width: 100%;
-  opacity: 1;
   object-fit: contain;
-  filter: contrast(1.8) brightness(1.4) drop-shadow(0 1px 2px rgba(0, 0, 0, 0.35));
+  filter: none;
 }
 @media (min-width: 640px) {
-  .contact-page .site-header__logo { height: 96px; }
+  .contact-page .site-header__logo { height: 68px; }
 }
-.contact-page .nav-toggle span { background: #ffffff; }
+.contact-page .site-header__right {
+  margin-left: auto;
+}
+.contact-page .nav-toggle span { background: var(--contact-ink); }
 .contact-page .nav-toggle:hover span,
-.contact-page .nav-toggle:focus-visible span { background: #ffffff; }
-/* The page-wide focus ring (.contact-page :focus-visible) uses the same
-   red as this header's new background — invisible on a red-on-red
-   header control. Header-only override keeps the menu trigger's focus
-   state genuinely visible without touching focus styling anywhere else
-   on the page. */
-.contact-page .site-header :focus-visible { outline-color: #ffffff; }
+.contact-page .nav-toggle:focus-visible span { background: var(--contact-red); }
+.contact-page .site-header :focus-visible { outline-color: var(--contact-red); }
+.contact-page .nav-toggle--icon {
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--contact-ink-faint);
+  border-radius: 2px;
+  background: #ffffff;
+}
+.contact-page .nav-toggle--icon:hover,
+.contact-page .nav-toggle--icon:focus-visible { border-color: var(--contact-red); }
+.contact-page .nav-toggle__icon { width: 20px; height: 20px; color: var(--contact-ink); }
+.contact-page .nav-toggle--icon:hover .nav-toggle__icon,
+.contact-page .nav-toggle--icon:focus-visible .nav-toggle__icon { color: var(--contact-red); }
+
+/* ---------- Desktop inline nav (≥900px) — hamburger-only below it ---------- */
+.contact-page .contact-header__nav { display: none; }
+@media (min-width: 900px) {
+  .contact-page .contact-header__nav {
+    display: flex;
+    align-items: center;
+    gap: var(--space-6);
+    margin: 0 auto 0 var(--space-8);
+  }
+  .contact-page .contact-header__nav a {
+    font-family: var(--contact-font-body);
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--contact-ink);
+    text-decoration: none;
+    padding: var(--space-1) 0;
+  }
+  .contact-page .contact-header__nav a:hover,
+  .contact-page .contact-header__nav a:focus-visible,
+  .contact-page .contact-header__nav a[aria-current="page"] {
+    color: var(--contact-red);
+  }
+}
+.contact-page .contact-nav__cta { display: none; }
+@media (min-width: 900px) {
+  .contact-page .contact-nav__cta {
+    display: inline-block;
+    background: var(--contact-red);
+    color: #ffffff;
+    font-family: var(--contact-font-body);
+    font-size: 13px;
+    font-weight: 600;
+    text-decoration: none;
+    padding: 10px 20px;
+    border-radius: 2px;
+    transition: background 180ms ease;
+  }
+  .contact-page .contact-nav__cta:hover,
+  .contact-page .contact-nav__cta:focus-visible { background: var(--contact-red-deep); }
+  .contact-page .nav-toggle { display: none; }
+}
 
 /* ---------- Hero — compact white editorial, no video/dark overlay ---------- */
 .contact-page .contact-hero {
-  padding: 128px var(--edge) var(--space-8);
+  padding: var(--space-12) var(--edge) var(--space-8);
   max-width: 900px;
 }
 @media (min-width: 900px) {
-  .contact-page .contact-hero { padding: 156px var(--edge) var(--space-8); }
+  .contact-page .contact-hero { padding: var(--space-8) var(--edge) var(--space-8); }
 }
 .contact-page .contact-hero__eyebrow {
-  font-family: var(--font-body);
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.12em;
+  font-family: var(--contact-font-body);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--contact-red);
   margin: 0 0 var(--space-3);
 }
 .contact-page .contact-hero__title {
-  font-family: var(--font-display);
-  font-weight: 400;
+  font-family: var(--contact-font-display);
+  font-weight: 500;
   font-size: clamp(28px, 5vw, 48px);
   line-height: 1.1;
   color: var(--contact-red);
@@ -1599,6 +1940,7 @@ a { color: inherit; }
   max-width: 16ch;
 }
 .contact-page .contact-hero__sub {
+  font-family: var(--contact-font-body);
   font-size: 15px;
   line-height: 1.6;
   color: var(--contact-ink-dim);
@@ -1609,11 +1951,25 @@ a { color: inherit; }
   .contact-page .contact-hero__sub { font-size: 16px; }
 }
 
-/* ---------- Form panel — already a white card in the base system;
-   only the accent colour and field focus/hover states change here. ---------- */
+/* ---------- Form panel — modern card, consistent with the site's
+   editorial Fraunces/Inter system (per direct human request to bring
+   this form's visual language in line with the rest of the brand).
+   Structure/fields/validation/submission are untouched — this section
+   is presentation only. ---------- */
 .contact-page .form-panel {
-  max-width: 900px;
-  padding-top: 0;
+  max-width: 640px;
+  margin: 0 auto;
+  padding: var(--space-8) var(--edge) var(--space-16);
+}
+.contact-page .form-panel .section-title {
+  font-family: var(--contact-font-display);
+  font-weight: 500;
+  font-size: clamp(22px, 3vw, 28px);
+}
+.contact-page .form-panel .section-lede {
+  font-family: var(--contact-font-body);
+  color: var(--contact-ink-dim);
+  opacity: 1;
 }
 /* The floating WhatsApp button sits fixed bottom-right; on narrow
    viewports one of the first form fields can land in that exact band
@@ -1627,33 +1983,111 @@ a { color: inherit; }
      further down moved the "date" field deeper into the button's
      band rather than clear of it, so the fix is to pull the form up
      instead, keeping "date" fully above the button's new top edge. */
-  .contact-page .form-panel { padding-top: 100px; }
-  /* At 390x844 specifically, the gap between the date and guest-count
-     fields (~37px) is narrower than the WhatsApp button's footprint,
-     so no single uniform top-push can clear it — any flat shift just
-     relocates which field lands in the button's fixed band. Widening
-     this one seam is the targeted fix; it only pushes fields after
-     "date" further down, which stays safely clear at every other
-     tested width. */
-  .contact-page #enquiryForm label:has(input[name="date"]) { margin-bottom: 60px; }
+  .contact-page .form-panel { padding-top: 0; }
+}
+/* At 390x844 specifically, the gap between the date and guest-count
+   fields (~37px) is narrower than the WhatsApp button's footprint,
+   so no single uniform top-push can clear it — any flat shift just
+   relocates which field lands in the button's fixed band. Widening
+   this one seam is the targeted fix; it only pushes fields after
+   "date" further down, which stays safely clear at every other
+   tested width.
+   Bounded to 781-900px height so it no longer fires at 768x1024
+   tablet (confirmed no collision risk there — plenty of vertical
+   room) while still covering the tested 390x844 phone. Shorter
+   phones (<=780px height, e.g. 360x740) are handled by the
+   dedicated rule below instead. */
+@media (max-width: 899px) and (min-height: 781px) and (max-height: 900px) {
+  .contact-page #enquiryForm label:has(input[name="date"]) { margin-top: -10px; margin-bottom: 100px; }
+}
+/* Shorter viewports (e.g. 360x740) sit the button's fixed band higher up
+   the page, far enough to reach the "Event type" field above "Event
+   date" — the fix above alone doesn't reach that far up. Pulling the
+   hero's own bottom padding in for this bracket only shifts the whole
+   field stack up before the button's band, then a wider date-field gap
+   (replacing, not adding to, the bracket above) clears it on the way
+   back down. */
+@media (max-width: 899px) and (max-height: 780px) {
+  .contact-page .contact-hero { padding-bottom: 0; }
+  .contact-page #enquiryForm label:has(input[name="date"]) { margin-top: 64px; margin-bottom: 20px; }
+}
+.contact-page #enquiryForm {
+  gap: var(--space-5);
+  max-width: none;
+}
+.contact-page #enquiryForm label {
+  font-family: var(--contact-font-body);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--contact-ink);
+}
+.contact-page #enquiryForm input,
+.contact-page #enquiryForm select,
+.contact-page #enquiryForm textarea {
+  font-family: var(--contact-font-body);
+  font-size: 15px;
+  font-weight: 400;
+  padding: 12px 14px;
+  border: 1px solid var(--contact-ink-faint);
+  border-radius: 4px;
+  background: #ffffff;
+  color: var(--contact-ink);
+  transition: border-color 160ms ease, box-shadow 160ms ease;
+}
+.contact-page #enquiryForm input::placeholder,
+.contact-page #enquiryForm textarea::placeholder {
+  color: var(--contact-ink-dim);
+  opacity: 0.6;
+}
+.contact-page #enquiryForm input:hover,
+.contact-page #enquiryForm select:hover,
+.contact-page #enquiryForm textarea:hover {
+  border-color: rgba(0, 0, 0, 0.3);
 }
 .contact-page #enquiryForm input:focus-visible,
 .contact-page #enquiryForm select:focus-visible,
 .contact-page #enquiryForm textarea:focus-visible {
-  outline: 3px solid var(--contact-red);
-  outline-offset: 1px;
+  outline: none;
   border-color: var(--contact-red);
+  box-shadow: 0 0 0 3px rgba(178, 55, 62, 0.15);
 }
+.contact-page #enquiryForm .checkbox {
+  font-family: var(--contact-font-body);
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--contact-ink-dim);
+  align-items: center;
+}
+.contact-page #enquiryForm .checkbox input { accent-color: var(--contact-red); width: 16px; height: 16px; }
 .contact-page #enquiryForm .btn--primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 52px;
+  padding: 14px 28px;
   background: var(--contact-red);
-  border-color: transparent;
+  border: 1px solid var(--contact-red);
+  border-radius: 2px;
+  font-family: var(--contact-font-body);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
+  margin-top: var(--space-2);
 }
 .contact-page #enquiryForm .btn--primary:hover,
 .contact-page #enquiryForm .btn--primary:focus-visible {
   background: var(--contact-red-deep);
+  border-color: var(--contact-red-deep);
 }
-.contact-page #enquiryForm .checkbox input { accent-color: var(--contact-red); }
-.contact-page .reference-box { border-left-color: var(--contact-red) !important; }
+.contact-page .form__status { font-family: var(--contact-font-body); }
+.contact-page .reference-box {
+  border-left-color: var(--contact-red) !important;
+  border-radius: 2px;
+  font-family: var(--contact-font-body);
+}
+.contact-page .reference-box strong { font-family: var(--contact-font-display); }
 
 /* ---------- Order-instead / commercial nudge ---------- */
 .contact-page .contact-order {
@@ -1738,22 +2172,24 @@ a { color: inherit; }
   margin-top: var(--space-4);
 }
 .contact-page .contact-cta {
-  display: inline-block;
-  font-family: var(--font-body);
-  font-size: 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 52px;
+  font-family: var(--contact-font-body);
+  font-size: 0.9375rem;
   font-weight: 600;
-  letter-spacing: 0.01em;
   text-decoration: none;
-  padding: 13px 26px;
+  padding: 14px 28px;
   border-radius: 2px;
-  border: 1px solid transparent;
+  border: 1px solid var(--contact-red);
   text-align: center;
   transition: background 180ms ease, color 180ms ease;
 }
 .contact-page .contact-cta--primary { background: var(--contact-red); color: var(--contact-white); }
 .contact-page .contact-cta--primary:hover,
 .contact-page .contact-cta--primary:focus-visible { background: var(--contact-red-deep); }
-.contact-page .contact-cta--secondary { background: transparent; color: var(--contact-red); border-color: var(--contact-red); }
+.contact-page .contact-cta--secondary { background: transparent; color: var(--contact-red); }
 .contact-page .contact-cta--secondary:hover,
 .contact-page .contact-cta--secondary:focus-visible { background: var(--contact-red); color: var(--contact-white); }
 
@@ -1772,6 +2208,111 @@ a { color: inherit; }
 
 /* ---------- Mobile Kitchen note — standalone, distinct from the business address/map ---------- */
 .contact-page .contact-mobile-kitchen { max-width: 900px; }
+
+/* ---------- Closing CTA — reproduces the approved homepage Act 3
+   conversion band (red, eyebrow + heading, contact-info group, tags),
+   per direct human correction rejecting this page's previous abrupt
+   ending as visually inconsistent with the homepage (same correction
+   already applied to Catering and About). Copy reuses this page's own
+   already-approved hero eyebrow/heading/sub and WhatsApp CTA — nothing
+   new is introduced. ---------- */
+.contact-page .contact-cta-block {
+  background: var(--contact-red);
+  color: #ffffff;
+  padding: var(--space-12) var(--edge);
+  display: grid;
+  gap: var(--space-4);
+}
+.contact-page .contact-cta-block__eyebrow {
+  font-family: var(--contact-font-body);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.8);
+  margin: 0 0 var(--space-2);
+}
+.contact-page .contact-cta-block__title {
+  font-family: var(--contact-font-display);
+  font-weight: 500;
+  font-size: clamp(1.5rem, 3vw, 2rem);
+  margin: 0 0 var(--space-2);
+  color: #ffffff;
+}
+.contact-page .contact-cta-block__lede {
+  font-family: var(--contact-font-body);
+  color: rgba(255, 255, 255, 0.88);
+  max-width: 42ch;
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.5;
+}
+.contact-page .contact-cta-block__cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: 44px;
+  padding: 12px 24px;
+  background: #ffffff;
+  color: var(--contact-red);
+  font-family: var(--contact-font-body);
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  border-radius: 2px;
+  width: fit-content;
+}
+.contact-page .contact-cta-block__cta:hover,
+.contact-page .contact-cta-block__cta:focus-visible { background: var(--contact-white); }
+.contact-page .contact-cta-block__contact-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.contact-page .contact-cta-block__contact {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 44px;
+  color: #ffffff;
+  text-decoration: none;
+  font-family: var(--contact-font-body);
+  font-size: 13px;
+}
+.contact-page .contact-cta-block__contact--email {
+  padding-left: 0;
+  min-height: auto;
+  color: rgba(255, 255, 255, 0.88);
+}
+@media (min-width: 900px) {
+  .contact-page .contact-cta-block {
+    grid-template-columns: 1.2fr auto auto;
+    align-items: center;
+    column-gap: var(--space-8);
+  }
+}
+.contact-page .contact-cta-block__tags {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--space-3);
+  padding: var(--space-6) var(--edge);
+  margin: 0;
+  font-family: var(--contact-font-body);
+  font-size: 13px;
+  color: var(--contact-ink-dim);
+}
+.contact-page .contact-cta-block__tags li {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+.contact-page .contact-cta-block__tags li + li::before {
+  content: "•";
+  color: var(--contact-red);
+}
 
 /* ============================================================
    Client-meeting UI consolidation — shared header/logo/menu-trigger

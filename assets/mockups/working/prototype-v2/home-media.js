@@ -20,7 +20,7 @@
 // since their content does not change based on any state.
 var LINA_HOME_MEDIA = {
   copy: {
-    tagline: "Freshly prepared. Made with care.",
+    tagline: "Made with love, served with style.",
     eyebrow: "Lina's",
     headline: "Chef-Led Catering & Mobile-Kitchen Experiences",
     supporting: "Weddings, funerals, corporate events and private catering — plus a real mobile kitchen serving plates to order."

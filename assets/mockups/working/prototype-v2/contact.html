@@ -17,6 +17,13 @@
 <meta property="og:image" content="https://linas.co.za/assets/mockups/working/media/lina-hero-poster-working-v1-20260728.jpg">
 <meta property="og:image:alt" content="Chef Lina in her mobile kitchen, presenting a plated meal">
 <link rel="icon" href="/assets/source/brand/Linas_Favicon.jpg">
+<!-- Fraunces/Inter loaded for THIS page only, mirroring the homepage's,
+     Catering's and About's own isolated pattern — global --font-display/
+     --font-body in styles.css stay untouched, so every other page is
+     unaffected. -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/assets/mockups/working/prototype-v2/styles.css">
 </head>
 <body class="contact-page">
@@ -24,10 +31,20 @@
 
 <header class="site-header">
   <a class="site-header__mark" href="/">
-    <img src="/assets/mockups/working/media/linas-logo-nb-wl.svg" alt="Lina's Mobile Food Kitchen" width="4678" height="3307" class="site-header__logo">
+    <img src="/assets/brand/working/lina-logo-red-unboxed-working-v1-20260830.svg" alt="Lina's Mobile Food Kitchen" width="4678" height="3307" class="site-header__logo">
   </a>
+  <nav class="contact-header__nav" aria-label="Primary">
+    <a href="/">Home</a>
+    <a href="/catering">Catering</a>
+    <a href="/menu">Menu</a>
+    <a href="/chef-lina">Meet Chef Lina</a>
+    <a href="/contact" aria-current="page">Find Us</a>
+  </nav>
   <div class="site-header__right">
-    <button class="nav-toggle" id="navToggle" aria-haspopup="true" aria-controls="siteNav" aria-label="Open menu"><span></span><span></span><span></span></button>
+    <a class="contact-nav__cta" href="/contact">Request a Quote</a>
+    <button class="nav-toggle nav-toggle--icon" id="navToggle" aria-haspopup="true" aria-controls="siteNav" aria-label="Open menu">
+      <svg class="nav-toggle__icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M3 6h18M3 12h18M3 18h18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+    </button>
   </div>
 </header>
 
@@ -37,8 +54,8 @@
   <a href="/">Home</a>
   <a href="/catering">Catering</a>
   <a href="/menu">Menu</a>
-  <a href="/chef-lina">About Lina's</a>
-  <a href="/contact" class="site-nav__cta" aria-current="page">Contact</a>
+  <a href="/chef-lina">Meet Chef Lina</a>
+  <a href="/contact" class="site-nav__cta" aria-current="page">Find Us</a>
   <a href="/admin/login.html" id="navLogin" class="site-nav__login">Login</a>
 </nav>
 
@@ -162,6 +179,22 @@
     <h2 class="section-title">Mobile Kitchen</h2>
     <p class="section-lede">Find the mobile kitchen at the Unique Builders parking lot, just before Oasis Center.</p>
   </section>
+
+  <section class="contact-cta-block" aria-label="Come find Lina's">
+    <div class="contact-cta-block__text">
+      <p class="contact-cta-block__eyebrow">Contact &amp; Find Us</p>
+      <h2 class="contact-cta-block__title">Come find Lina's.</h2>
+      <p class="contact-cta-block__lede">Visit the mobile kitchen, contact us about an order, or tell us about your upcoming event.</p>
+    </div>
+    <a href="https://wa.me/27764834344?text=Hello%20Lina's%2C%20I%20would%20like%20to%20enquire%20about%20your%20catering%20or%20mobile%20kitchen%20services." target="_blank" rel="noopener" class="contact-cta-block__cta">WhatsApp Lina's</a>
+    <div class="contact-cta-block__contact-group">
+      <a href="tel:+27764834344" class="contact-cta-block__contact">Call or WhatsApp<br><strong>076 483 4344</strong></a>
+      <a href="mailto:enquiries@linas.co.za" class="contact-cta-block__contact contact-cta-block__contact--email">enquiries@linas.co.za</a>
+    </div>
+  </section>
+  <ul class="contact-cta-block__tags" aria-label="Occasions we cater for">
+    <li>Weddings</li><li>Funerals</li><li>Corporate Events</li><li>Private Catering</li>
+  </ul>
 </main>
 
 <button class="sticky-whatsapp sticky-whatsapp--icon" id="stickyWhatsapp" data-whatsapp-trigger aria-label="Contact Lina's on WhatsApp" aria-describedby="whatsappNote">
