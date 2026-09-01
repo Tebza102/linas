@@ -392,26 +392,40 @@ a { color: inherit; }
    own comment records the .site-footer element as removed from every
    page — and reusing the name silently resurrected its old, much larger
    padding (--space-12) instead of the value written below.
-   Deliberately unscoped, not `.{page}-page`-prefixed: five pages end on a
-   solid red closing band, two (mobile-kitchen, gallery) are still on the
-   original plain black theme with no page-scoped class at all. White text
-   on a faint white divider reads correctly against both without needing a
-   per-page colour token. */
+   Deliberately unscoped, not `.{page}-page`-prefixed, but NOT theme-blind:
+   the footer sits after </main>, so its background is always the body's,
+   not whatever colour the closing section above it happens to be. Five
+   pages (.home, .catering-page, .about-page, .contact-page, .menu-page)
+   set body { background: #fff }, so the default below is dark text. Only
+   mobile-kitchen.html and gallery.html keep the original unclassed body
+   (background: var(--black) from the base body rule), so the override
+   restores white text there without needing a page-scoped class. */
 .site-credit {
-  border-top: 1px solid rgba(255, 255, 255, 0.15);
+  border-top: 1px solid rgba(0, 0, 0, 0.12);
   padding: var(--space-4) var(--edge);
   text-align: center;
 }
 .site-credit p {
   margin: 0;
   font-size: 12px;
-  color: rgba(255, 255, 255, 0.65);
+  color: rgba(0, 0, 0, 0.55);
 }
 .site-credit a {
   color: inherit;
   text-decoration: underline;
 }
-.site-credit a:hover, .site-credit a:focus-visible { color: var(--white); }
+.site-credit a:hover, .site-credit a:focus-visible { color: var(--black); }
+
+body:not(.home):not(.catering-page):not(.about-page):not(.contact-page):not(.menu-page) .site-credit {
+  border-top-color: rgba(255, 255, 255, 0.15);
+}
+body:not(.home):not(.catering-page):not(.about-page):not(.contact-page):not(.menu-page) .site-credit p {
+  color: rgba(255, 255, 255, 0.65);
+}
+body:not(.home):not(.catering-page):not(.about-page):not(.contact-page):not(.menu-page) .site-credit a:hover,
+body:not(.home):not(.catering-page):not(.about-page):not(.contact-page):not(.menu-page) .site-credit a:focus-visible {
+  color: var(--white);
+}
 
 /* ---------- Sticky WhatsApp (all pages, restrained) ---------- */
 .sticky-whatsapp {
