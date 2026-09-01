@@ -497,4 +497,11 @@
      Firestore-backed logic in enquiry-submit.js — loaded as a separate
      module only on contact.html, not here, since it needs ES module
      imports for the Firebase client SDK. */
+
+  /* ---------- Footer year (every page) ----------
+     The visitor's own device clock, read once at page load — the same
+     source every other client-side date on this site already uses. Never
+     hard-coded, so it never needs a yearly edit. */
+  var footerYearEl = document.getElementById("footerYear");
+  if (footerYearEl) footerYearEl.textContent = new Date().getFullYear();
 })();
