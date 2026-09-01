@@ -386,27 +386,32 @@ a { color: inherit; }
 .form__status[data-state="error"] { color: var(--red); }
 .form__status[data-state="success"] { color: #2f6b3a; }
 
-/* ---------- Site footer (all 7 public pages) ----------
+/* ---------- Site credit footer (all 7 public pages) ----------
+   Named .site-credit, not .site-footer: that class already existed here
+   (line ~527) as intentionally-orphaned CSS from a prior redesign — its
+   own comment records the .site-footer element as removed from every
+   page — and reusing the name silently resurrected its old, much larger
+   padding (--space-12) instead of the value written below.
    Deliberately unscoped, not `.{page}-page`-prefixed: five pages end on a
    solid red closing band, two (mobile-kitchen, gallery) are still on the
    original plain black theme with no page-scoped class at all. White text
    on a faint white divider reads correctly against both without needing a
    per-page colour token. */
-.site-footer {
+.site-credit {
   border-top: 1px solid rgba(255, 255, 255, 0.15);
   padding: var(--space-4) var(--edge);
   text-align: center;
 }
-.site-footer p {
+.site-credit p {
   margin: 0;
   font-size: 12px;
   color: rgba(255, 255, 255, 0.65);
 }
-.site-footer a {
+.site-credit a {
   color: inherit;
   text-decoration: underline;
 }
-.site-footer a:hover, .site-footer a:focus-visible { color: var(--white); }
+.site-credit a:hover, .site-credit a:focus-visible { color: var(--white); }
 
 /* ---------- Sticky WhatsApp (all pages, restrained) ---------- */
 .sticky-whatsapp {
