@@ -6,7 +6,8 @@
     { "source": "/chef-lina", "destination": "/assets/mockups/working/prototype-v2/chef-lina.html" },
     { "source": "/mobile-kitchen", "destination": "/assets/mockups/working/prototype-v2/mobile-kitchen.html" },
     { "source": "/gallery", "destination": "/assets/mockups/working/prototype-v2/gallery.html" },
-    { "source": "/contact", "destination": "/assets/mockups/working/prototype-v2/contact.html" }
+    { "source": "/contact", "destination": "/assets/mockups/working/prototype-v2/contact.html" },
+    { "source": "/request-a-quote", "destination": "/assets/mockups/working/prototype-v2/contact.html" }
   ],
   "redirects": [
     { "source": "/admin", "destination": "/admin/login.html", "permanent": false }

@@ -84,6 +84,36 @@ a { color: inherit; }
 .site-header__logo { height: 72px; width: auto; border-radius: 3px; display: block; object-fit: contain; }
 @media (max-width: 640px) { .site-header__logo { height: 56px; } }
 .site-header__right { display: flex; align-items: center; gap: var(--space-3); }
+/* Desktop-only Admin Login. Below 900px it is hidden and the hamburger
+   drawer's existing Login link is the route in, exactly as before; at and
+   above 900px the hamburger is hidden on every page, which previously left
+   no way to reach /admin at all on desktop.
+   Colour is taken from each page's own ink token rather than `inherit`:
+   the global `body` colour is white (the original dark theme), which only
+   the four inner-page scopes override, so an inherited colour renders
+   white-on-white in the homepage's white header. Held slightly back from
+   full opacity so it reads as a staff utility, not a customer action. */
+.site-header__admin { display: none; }
+@media (min-width: 900px) {
+  .site-header__admin {
+    display: inline-block;
+    font-size: 13px;
+    font-weight: 500;
+    opacity: 0.6;
+    text-decoration: none;
+    white-space: nowrap;
+  }
+  /* Family is set per page for the same reason as colour: body.home does
+     not declare one, so an inherited family falls back to the global
+     system stack instead of the header's Inter. */
+  body.home .site-header__admin { color: var(--home-ink); font-family: var(--home-font-body); }
+  .menu-page .site-header__admin { color: var(--menu-ink); font-family: var(--menu-font-body); }
+  .catering-page .site-header__admin { color: var(--catering-ink); font-family: var(--catering-font-body); }
+  .about-page .site-header__admin { color: var(--about-ink); font-family: var(--about-font-body); }
+  .contact-page .site-header__admin { color: var(--contact-ink); font-family: var(--contact-font-body); }
+  .site-header__admin:hover,
+  .site-header__admin:focus-visible { opacity: 1; text-decoration: underline; }
+}
 /* Refined hamburger — three fixed bars, no text label. A text "MENU" button
    was itself part of the "spread out" feeling; an icon is more controlled. */
 .nav-toggle {

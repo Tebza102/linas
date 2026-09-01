@@ -33,6 +33,12 @@
     <a href="/contact">Find Us</a>
   </nav>
   <div class="site-header__right">
+    <!-- Desktop-only Admin Login. The drawer's own Login link (#navLogin,
+         upgraded to "Back to Admin" by public-admin-link.js) is unreachable
+         at >=900px because the hamburger that opens it is hidden there.
+         This carries no id, so that script still targets exactly one
+         element and the drawer behaviour is unchanged. -->
+    <a class="site-header__admin" href="/admin/login.html">Admin Login</a>
     <a class="home-nav__cta" id="homeNavCta" href="/contact">Request a Quote</a>
     <button class="nav-toggle nav-toggle--icon" id="navToggle" aria-haspopup="true" aria-controls="siteNav" aria-label="Open website navigation">
       <svg class="nav-toggle__icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M3 6h18M3 12h18M3 18h18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
