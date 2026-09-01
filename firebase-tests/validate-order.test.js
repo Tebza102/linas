@@ -12,11 +12,20 @@ const { validateOrderSubmission, OrderValidationError } = require("../api/_lib/v
 
 const SUBMISSION_ID = "sub-12345678-abcd";
 
-/** A minimal valid body; overrides merge on top. */
+/**
+ * A minimal valid body; overrides merge on top. Includes valid identity
+ * fields by default (order-integrity change made them required) so every
+ * pre-existing item/pricing test below keeps testing exactly one thing —
+ * override a field to `undefined` to test it missing, not by omitting it,
+ * since omitting a key that the base already supplies would not remove it.
+ */
 function body(overrides) {
   return {
     items: [{ itemId: "everyday-beef-stew-steak-fried-chicken", quantity: 1 }],
     submissionId: SUBMISSION_ID,
+    customerName: "Thabo Nkosi",
+    customerPhone: "0764834344",
+    popiaConsent: true,
     ...overrides
   };
 }
@@ -155,41 +164,84 @@ test("honeypot field rejects the submission (never a fake success)", () => {
   assert.throws(() => validateOrderSubmission(body({ company: "Acme Ltd" })), OrderValidationError);
 });
 
-test("an anonymous order needs no consent and stores no personal details", () => {
-  const result = validateOrderSubmission(body());
-  assert.equal(result.customerName, null);
-  assert.equal(result.customerPhone, null);
-  assert.equal(result.popiaConsent, false);
+// ---- Required customer identity (order-integrity change) ----
+// An anonymous order attempt is no longer representable at all: name,
+// phone and consent are each unconditionally required, checked in that
+// order. body()'s defaults already supply valid values for all three, so
+// every case below overrides exactly the one field under test — to
+// `undefined` for "missing", which correctly overrides the default (unlike
+// simply omitting the key, which would not).
+
+test("rejects a missing name", () => {
+  assert.throws(() => validateOrderSubmission(body({ customerName: undefined })), OrderValidationError);
 });
 
-test("supplying a name without consent is rejected", () => {
-  assert.throws(() => validateOrderSubmission(body({
-    customerName: "Thabo Nkosi"
-  })), OrderValidationError);
+test("rejects a whitespace-only name", () => {
+  assert.throws(() => validateOrderSubmission(body({ customerName: "   " })), OrderValidationError);
 });
 
-test("supplying a phone without consent is rejected", () => {
-  assert.throws(() => validateOrderSubmission(body({
-    customerPhone: "0764834344"
-  })), OrderValidationError);
+test("rejects a name of the wrong type (not coerced, unlike other fields)", () => {
+  [123, ["Thabo"], { first: "Thabo" }, true].forEach((bad) => {
+    assert.throws(
+      () => validateOrderSubmission(body({ customerName: bad })),
+      OrderValidationError,
+      `expected rejection for customerName ${JSON.stringify(bad)}`
+    );
+  });
 });
 
-test("accepts name and phone when consent is given, and normalises the phone", () => {
+test("truncates an excessively long name to 120 characters rather than rejecting", () => {
+  const result = validateOrderSubmission(body({ customerName: "A".repeat(400) }));
+  assert.equal(result.customerName.length, 120);
+});
+
+test("rejects a missing phone", () => {
+  assert.throws(() => validateOrderSubmission(body({ customerPhone: undefined })), OrderValidationError);
+});
+
+test("rejects a phone of the wrong type", () => {
+  [4834344, ["076"], {}].forEach((bad) => {
+    assert.throws(
+      () => validateOrderSubmission(body({ customerPhone: bad })),
+      OrderValidationError,
+      `expected rejection for customerPhone ${JSON.stringify(bad)}`
+    );
+  });
+});
+
+test("rejects an invalid/too-short phone number", () => {
+  assert.throws(() => validateOrderSubmission(body({ customerPhone: "12" })), OrderValidationError);
+});
+
+test("accepts a valid South African number and normalises formatting", () => {
   const result = validateOrderSubmission(body({
-    customerName: "  Thabo Nkosi  ",
-    customerPhone: "076 483 4344",
-    popiaConsent: true
+    customerName: "  Thabo Nkosi  ", customerPhone: "076 483 4344"
   }));
   assert.equal(result.customerName, "Thabo Nkosi");
   assert.equal(result.customerPhone, "076 483 4344");
   assert.equal(result.popiaConsent, true);
 });
 
-test("rejects an invalid phone number", () => {
-  assert.throws(() => validateOrderSubmission(body({
-    customerPhone: "12",
-    popiaConsent: true
-  })), OrderValidationError);
+test("accepts an international-format South African number", () => {
+  const result = validateOrderSubmission(body({ customerPhone: "+27 76 483 4344" }));
+  assert.equal(result.customerPhone, "+27 76 483 4344");
+});
+
+test("rejects missing consent even when name and phone are both valid", () => {
+  assert.throws(() => validateOrderSubmission(body({ popiaConsent: undefined })), OrderValidationError);
+});
+
+test("rejects consent explicitly set to false", () => {
+  assert.throws(() => validateOrderSubmission(body({ popiaConsent: false })), OrderValidationError);
+});
+
+test("rejects a truthy but non-boolean consent value (no coercion)", () => {
+  assert.throws(() => validateOrderSubmission(body({ popiaConsent: "yes" })), OrderValidationError);
+});
+
+test("a valid submission always returns popiaConsent: true", () => {
+  const result = validateOrderSubmission(body());
+  assert.equal(result.popiaConsent, true);
 });
 
 test("requires a submissionId of a sane length", () => {

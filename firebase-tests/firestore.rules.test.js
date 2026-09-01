@@ -580,12 +580,16 @@ async function seedOrder(id, data) {
       customerPhone: null,
       customerNote: null,
       popiaConsent: false,
+      receivedAt: null,
       confirmedAt: null,
       preparingAt: null,
       readyAt: null,
       collectedAt: null,
       cancelledAt: null,
       notCollectedAt: null,
+      deletedAt: null,
+      deletedBy: null,
+      deletionReason: null,
       internalNotes: null,
       isTestRecord: false,
       submissionId: "seed-submission-0001",
@@ -859,4 +863,176 @@ test("order reference counters remain unreachable from any client", async () => 
   const ownerDb = owner.firestore();
   await assertFails(getDoc(doc(ownerDb, "counters", "ORD-20260731")));
   await assertFails(setDoc(doc(ownerDb, "counters", "ORD-20260731"), { count: 9999 }));
+});
+
+// --- Received status, and soft delete/restore (order-integrity change) ---
+// "Delete" is never Firestore's delete operation — allow delete: if false
+// stays absolute, proven again below. It is an update to exactly three
+// metadata fields, so every test here uses updateDoc, never deleteDoc.
+
+test("Received is a valid status between Pending WhatsApp and Confirmed", async () => {
+  await seedOrder("o18", {});
+  const owner = testEnv.authenticatedContext("owner-uid", { role: "owner" });
+  await assertSucceeds(updateDoc(doc(owner.firestore(), "orders", "o18"), {
+    status: "Received", statusUpdatedAt: serverTimestamp(), statusUpdatedBy: "owner-uid",
+    receivedAt: serverTimestamp(), updatedAt: serverTimestamp()
+  }));
+});
+
+test("owner can soft-delete a non-deleted order with a valid reason", async () => {
+  await seedOrder("o19", {});
+  const owner = testEnv.authenticatedContext("owner-uid", { role: "owner" });
+  const ownerDb = owner.firestore();
+  await assertSucceeds(updateDoc(doc(ownerDb, "orders", "o19"), {
+    deletedAt: serverTimestamp(), deletedBy: "owner-uid", deletionReason: "Test",
+    updatedAt: serverTimestamp()
+  }));
+  let after;
+  await testEnv.withSecurityRulesDisabled(async (ctx) => {
+    after = await getDoc(doc(ctx.firestore(), "orders", "o19"));
+  });
+  const data = after.data();
+  assert.equal(data.deletionReason, "Test");
+  assert.equal(data.deletedBy, "owner-uid");
+  assert.ok(data.deletedAt, "deletedAt should be set");
+  // Every unrelated field is provably untouched by the soft-delete write.
+  assert.equal(data.status, "Pending WhatsApp");
+  assert.equal(data.customerName, null);
+  assert.equal(data.subtotalCents, 1700);
+  assert.equal(data.referenceNumber, "LINA-ORD-20260731-0001");
+});
+
+test("developer can soft-delete and restore, same as owner", async () => {
+  await seedOrder("o20", {});
+  const devDb = testEnv.authenticatedContext("dev-uid", { role: "developer" }).firestore();
+  await assertSucceeds(updateDoc(doc(devDb, "orders", "o20"), {
+    deletedAt: serverTimestamp(), deletedBy: "dev-uid", deletionReason: "Duplicate",
+    updatedAt: serverTimestamp()
+  }));
+  await assertSucceeds(updateDoc(doc(devDb, "orders", "o20"), {
+    deletedAt: null, deletedBy: null, deletionReason: null, updatedAt: serverTimestamp()
+  }));
+});
+
+test("owner can restore a currently-deleted order back to explicit null", async () => {
+  await seedOrder("o21", { deletedAt: new Date(), deletedBy: "owner-uid", deletionReason: "Spam" });
+  const ownerDb = testEnv.authenticatedContext("owner-uid", { role: "owner" }).firestore();
+  await assertSucceeds(updateDoc(doc(ownerDb, "orders", "o21"), {
+    deletedAt: null, deletedBy: null, deletionReason: null, updatedAt: serverTimestamp()
+  }));
+  let after;
+  await testEnv.withSecurityRulesDisabled(async (ctx) => {
+    after = await getDoc(doc(ctx.firestore(), "orders", "o21"));
+  });
+  const data = after.data();
+  assert.equal(data.deletedAt, null);
+  assert.equal(data.deletedBy, null);
+  assert.equal(data.deletionReason, null);
+});
+
+test("an invalid deletion reason is rejected", async () => {
+  await seedOrder("o22", {});
+  const ownerDb = testEnv.authenticatedContext("owner-uid", { role: "owner" }).firestore();
+  await assertFails(updateDoc(doc(ownerDb, "orders", "o22"), {
+    deletedAt: serverTimestamp(), deletedBy: "owner-uid", deletionReason: "Because",
+    updatedAt: serverTimestamp()
+  }));
+});
+
+test("a currently-deleted order cannot be soft-deleted again", async () => {
+  await seedOrder("o23", { deletedAt: new Date(), deletedBy: "owner-uid", deletionReason: "Test" });
+  const ownerDb = testEnv.authenticatedContext("owner-uid", { role: "owner" }).firestore();
+  await assertFails(updateDoc(doc(ownerDb, "orders", "o23"), {
+    deletedAt: serverTimestamp(), deletedBy: "owner-uid", deletionReason: "Duplicate",
+    updatedAt: serverTimestamp()
+  }));
+});
+
+test("deletedBy cannot be set on an order that isn't currently deleted", async () => {
+  // Setting deletedAt/deletedBy/deletionReason all to null on an
+  // already-not-deleted order is a genuine no-op (nothing actually differs)
+  // and is correctly allowed by the ordinary update path, same as touching
+  // updatedAt with no other change. What must be rejected is a write that
+  // actually introduces deletion-shaped data on a non-deleted order without
+  // satisfying isSoftDelete() — e.g. deletedBy alone, with deletedAt left
+  // null: not a valid soft-delete (deletedAt isn't request.time) and not a
+  // valid restore (nothing is currently deleted), and deletedBy is absent
+  // from the general update's own field allowlist.
+  await seedOrder("o24", {});
+  const ownerDb = testEnv.authenticatedContext("owner-uid", { role: "owner" }).firestore();
+  await assertFails(updateDoc(doc(ownerDb, "orders", "o24"), {
+    deletedBy: "owner-uid", updatedAt: serverTimestamp()
+  }));
+});
+
+test("deletedBy must equal the caller's own uid, not an arbitrary value", async () => {
+  await seedOrder("o25", {});
+  const ownerDb = testEnv.authenticatedContext("owner-uid", { role: "owner" }).firestore();
+  await assertFails(updateDoc(doc(ownerDb, "orders", "o25"), {
+    deletedAt: serverTimestamp(), deletedBy: "someone-else-entirely", deletionReason: "Test",
+    updatedAt: serverTimestamp()
+  }));
+});
+
+test("deletedAt must be the trusted request time, not a client-supplied date", async () => {
+  await seedOrder("o26", {});
+  const ownerDb = testEnv.authenticatedContext("owner-uid", { role: "owner" }).firestore();
+  await assertFails(updateDoc(doc(ownerDb, "orders", "o26"), {
+    deletedAt: new Date("2020-01-01"), deletedBy: "owner-uid", deletionReason: "Test",
+    updatedAt: serverTimestamp()
+  }));
+});
+
+test("a soft-delete cannot smuggle a change to status, customer or money fields", async () => {
+  await seedOrder("o27", {});
+  const ownerDb = testEnv.authenticatedContext("owner-uid", { role: "owner" }).firestore();
+  await assertFails(updateDoc(doc(ownerDb, "orders", "o27"), {
+    deletedAt: serverTimestamp(), deletedBy: "owner-uid", deletionReason: "Test",
+    status: "Collected", updatedAt: serverTimestamp()
+  }));
+  await assertFails(updateDoc(doc(ownerDb, "orders", "o27"), {
+    deletedAt: serverTimestamp(), deletedBy: "owner-uid", deletionReason: "Test",
+    subtotalCents: 1, updatedAt: serverTimestamp()
+  }));
+});
+
+test("a terminal (Collected) order can still be soft-deleted", async () => {
+  await seedOrder("o28", { status: "Collected", collectedAt: new Date() });
+  const ownerDb = testEnv.authenticatedContext("owner-uid", { role: "owner" }).firestore();
+  await assertSucceeds(updateDoc(doc(ownerDb, "orders", "o28"), {
+    deletedAt: serverTimestamp(), deletedBy: "owner-uid", deletionReason: "Test",
+    updatedAt: serverTimestamp()
+  }));
+});
+
+test("observer cannot soft-delete or restore an order", async () => {
+  await seedOrder("o29", {});
+  await seedOrder("o30", { deletedAt: new Date(), deletedBy: "owner-uid", deletionReason: "Test" });
+  const obsDb = testEnv.authenticatedContext("observer-uid", { role: "observer" }).firestore();
+  await assertFails(updateDoc(doc(obsDb, "orders", "o29"), {
+    deletedAt: serverTimestamp(), deletedBy: "observer-uid", deletionReason: "Test", updatedAt: serverTimestamp()
+  }));
+  await assertFails(updateDoc(doc(obsDb, "orders", "o30"), {
+    deletedAt: null, deletedBy: null, deletionReason: null, updatedAt: serverTimestamp()
+  }));
+});
+
+test("staff and unauthenticated cannot soft-delete or restore an order", async () => {
+  await seedOrder("o31", {});
+  const staffDb = testEnv.authenticatedContext("staff-uid", { role: "staff" }).firestore();
+  await assertFails(updateDoc(doc(staffDb, "orders", "o31"), {
+    deletedAt: serverTimestamp(), deletedBy: "staff-uid", deletionReason: "Test", updatedAt: serverTimestamp()
+  }));
+  const unauthDb = testEnv.unauthenticatedContext().firestore();
+  await assertFails(updateDoc(doc(unauthDb, "orders", "o31"), {
+    deletedAt: serverTimestamp(), deletedBy: "anon", deletionReason: "Test", updatedAt: serverTimestamp()
+  }));
+});
+
+test("orders still can never be Firestore-deleted, deleted or not", async () => {
+  await seedOrder("o32", {});
+  await seedOrder("o33", { deletedAt: new Date(), deletedBy: "owner-uid", deletionReason: "Test" });
+  const ownerDb = testEnv.authenticatedContext("owner-uid", { role: "owner" }).firestore();
+  await assertFails(deleteDoc(doc(ownerDb, "orders", "o32")));
+  await assertFails(deleteDoc(doc(ownerDb, "orders", "o33")));
 });

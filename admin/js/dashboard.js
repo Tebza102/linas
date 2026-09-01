@@ -74,7 +74,7 @@ async function main() {
     panel.hidden = false;
 
     const today = sastToday();
-    const real = orders.filter((o) => !o.isTestRecord);
+    const real = orders.filter((o) => !o.isTestRecord && !o.deletedAt);
     const collectedToday = real.filter((o) => o.status === "Collected" && sastDateOf(o.collectedAt) === today);
 
     document.getElementById("ordersKpis").innerHTML =

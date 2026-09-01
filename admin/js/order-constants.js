@@ -16,7 +16,7 @@
 export const ORDER_SALE_STATUSES = ["Collected"];
 
 /** Still moving through the kitchen — real money at stake, not yet earned. */
-export const ORDER_ACTIVE_STATUSES = ["Pending WhatsApp", "Confirmed", "Preparing", "Ready for Collection"];
+export const ORDER_ACTIVE_STATUSES = ["Pending WhatsApp", "Received", "Confirmed", "Preparing", "Ready for Collection"];
 
 /** Ended without a sale. Kept apart because they mean different things:
  *  Cancelled = called off; Not Collected = made, never fetched. */
@@ -36,7 +36,8 @@ export const PAYMENT_METHODS = ["Cash", "Card", "EFT", "Other"];
  * reasons, immutable money); the graph itself is a UI concern.
  */
 export const ALLOWED_TRANSITIONS = {
-  "Pending WhatsApp": ["Confirmed", "Cancelled"],
+  "Pending WhatsApp": ["Received", "Cancelled"],
+  "Received": ["Confirmed", "Cancelled"],
   "Confirmed": ["Preparing", "Cancelled"],
   "Preparing": ["Ready for Collection", "Cancelled"],
   "Ready for Collection": ["Collected", "Not Collected", "Cancelled"],
@@ -48,8 +49,16 @@ export const ALLOWED_TRANSITIONS = {
 /** Statuses that require a written reason before they can be applied. */
 export const REASON_REQUIRED_STATUSES = ["Cancelled", "Not Collected"];
 
+/**
+ * Soft-delete reasons — mirrored exactly in firestore.rules'
+ * isValidDeletionReason(). Change both together, same discipline as
+ * ORDER_STATUSES vs. isValidOrderStatus().
+ */
+export const DELETION_REASONS = ["Unconfirmed", "Test", "Duplicate", "Spam", "Other"];
+
 /** The timestamp field each status stamps when it is applied. */
 export const STATUS_TIMESTAMP_FIELD = {
+  "Received": "receivedAt",
   "Confirmed": "confirmedAt",
   "Preparing": "preparingAt",
   "Ready for Collection": "readyAt",
@@ -75,15 +84,17 @@ export function fmtCents(cents) {
   return "R" + whole.replace(/\B(?=(\d{3})+(?!\d))/g, " ") + "." + frac;
 }
 
-/** Sums subtotals of orders in the given statuses, excluding QA records. */
+/** Sums subtotals of orders in the given statuses, excluding QA records and
+ *  soft-deleted records (o.deletedAt absent/null means "not deleted" — see
+ *  firestore.rules' isCurrentlyDeleted() for the same check server-side). */
 export function sumCents(orders, statuses) {
   return orders
-    .filter((o) => !o.isTestRecord && statuses.includes(o.status))
+    .filter((o) => !o.isTestRecord && !o.deletedAt && statuses.includes(o.status))
     .reduce((total, o) => total + (Number(o.subtotalCents) || 0), 0);
 }
 
 export function countIn(orders, statuses) {
-  return orders.filter((o) => !o.isTestRecord && statuses.includes(o.status)).length;
+  return orders.filter((o) => !o.isTestRecord && !o.deletedAt && statuses.includes(o.status)).length;
 }
 
 /**

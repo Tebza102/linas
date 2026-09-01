@@ -25,6 +25,17 @@
   var SUBMISSION_KEY = "lina-cart-submission-v1";
   var MAX_QTY_PER_LINE = 20;
 
+  // Remembered-customer convenience layer (order-integrity change). Deliberately
+  // localStorage, not sessionStorage — the whole point is surviving a closed
+  // tab/browser restart on the same device — and deliberately narrow: name,
+  // normalized phone, and when it was saved, nothing else. It is never
+  // authoritative and never required; every value is re-validated by the
+  // server on every submission whether it came from here or was freshly
+  // typed. Written only after a real order attempt has been saved
+  // successfully (see submitOrder) — a failed submission never touches it.
+  var REMEMBER_KEY = "lina-remembered-customer-v1";
+  var REMEMBER_MAX_AGE_MS = 90 * 24 * 60 * 60 * 1000; // 90 days
+
   var state = { items: [] };
   var subscribers = [];
   var lastFocus = null;
@@ -36,6 +47,42 @@
   }
   function fmtCents(cents) {
     return "R" + ((Number(cents) || 0) / 100).toFixed(2);
+  }
+
+  /* ---------- Remembered customer (localStorage, convenience only) ----------
+     Every read/write is wrapped defensively: private browsing, disabled
+     storage, or a cleared/corrupt value must degrade to "no remembered
+     profile", never break checkout. */
+  function loadRemembered() {
+    try {
+      var raw = localStorage.getItem(REMEMBER_KEY);
+      if (!raw) return null;
+      var parsed = JSON.parse(raw);
+      if (!parsed || typeof parsed.name !== "string" || typeof parsed.phone !== "string" || typeof parsed.savedAt !== "number") {
+        return null;
+      }
+      if (Date.now() - parsed.savedAt > REMEMBER_MAX_AGE_MS) {
+        clearRemembered();
+        return null;
+      }
+      return { name: parsed.name, phone: parsed.phone };
+    } catch (err) {
+      return null;
+    }
+  }
+  function saveRemembered(name, phone) {
+    try {
+      localStorage.setItem(REMEMBER_KEY, JSON.stringify({ name: name, phone: phone, savedAt: Date.now() }));
+    } catch (err) { /* storage unavailable/full — the order itself already saved; this is convenience only */ }
+  }
+  function clearRemembered() {
+    try { localStorage.removeItem(REMEMBER_KEY); } catch (err) { /* ignore */ }
+  }
+  /** "076 483 4344" -> "•••• 4344" — every digit but the last four masked. */
+  function maskPhone(phone) {
+    var digits = String(phone || "").replace(/\D/g, "");
+    if (digits.length <= 4) return digits;
+    return "•••• " + digits.slice(-4);
   }
 
   /* ---------- Menu lookup (display only — never authoritative) ---------- */
@@ -191,6 +238,11 @@
   var panelEl = null;
   var view = "cart"; // "cart" | "confirmation"
   var lastOrder = null;
+  // Whether the raw name/phone inputs are shown (vs. a compact remembered-
+  // customer summary). Recomputed to false whenever a valid remembered
+  // profile exists when the cart opens; true whenever there is none, or the
+  // customer chose "Change details".
+  var editingDetails = true;
 
   function ensurePanel() {
     if (panelEl) return panelEl;
@@ -219,6 +271,9 @@
   function open() {
     lastFocus = document.activeElement;
     view = "cart";
+    // Fresh each time the panel opens: a profile could have expired, or been
+    // forgotten in another tab, since it was last checked.
+    editingDetails = !loadRemembered();
     ensurePanel().hidden = false;
     renderPanel();
     document.addEventListener("keydown", onPanelKey);
@@ -269,26 +324,53 @@
     });
     html += '</ul>';
 
+    var remembered = loadRemembered();
+    // A name/phone value to preload the (possibly hidden) inputs with: the
+    // remembered profile if there is one and we're not actively editing,
+    // otherwise blank — never resurrected from a previous failed attempt.
+    var preloadName = remembered ? remembered.name : "";
+    var preloadPhone = remembered ? remembered.phone : "";
+
     html +=
       '<p class="cart-subtotal"><span>Subtotal</span><strong>' + fmtCents(getSubtotalCents()) + '</strong></p>' +
       '<p class="cart-note-small">Confirmed on the next step. Lina’s confirms availability and the final amount on WhatsApp.</p>' +
       '<label class="cart-field">Note for Lina’s (optional)' +
         '<textarea id="cartNote" rows="2" maxlength="500" placeholder="e.g. no atchar, extra cheese"></textarea>' +
-      '</label>' +
-      '<label class="cart-field">Your name (optional)' +
-        '<input type="text" id="cartName" maxlength="120" autocomplete="name">' +
-      '</label>' +
-      '<label class="cart-field">Your phone (optional)' +
-        '<input type="tel" id="cartPhone" maxlength="40" autocomplete="tel">' +
-      '</label>' +
-      // Consent is revealed only when personal details are actually being
-      // given — an anonymous order needs no consent and is never asked for one.
-      '<div id="cartConsentWrap" hidden>' +
-        '<label class="cart-consent">' +
-          '<input type="checkbox" id="cartConsent">' +
-          '<span>I agree to Lina’s storing my name and phone number to process this order (POPIA).</span>' +
+      '</label>';
+
+    if (remembered && !editingDetails) {
+      // Compact returning-customer summary — no retyping required. The real
+      // name/phone inputs still exist (below, visually hidden) prefilled
+      // with these exact values, so submitOrder always reads from one place
+      // regardless of which view is showing.
+      html +=
+        '<div class="cart-remembered">' +
+          '<p class="cart-remembered__line">Ordering as <strong>' + escapeHtml(remembered.name) + '</strong></p>' +
+          '<p class="cart-remembered__line">' + escapeHtml(maskPhone(remembered.phone)) + '</p>' +
+          '<button type="button" class="cart-remembered__action" id="cartChangeDetails">Change details</button>' +
+          '<button type="button" class="cart-remembered__action" id="cartForgetMe">Forget me on this device</button>' +
+        '</div>';
+    }
+
+    var hiddenAttr = (remembered && !editingDetails) ? ' hidden' : '';
+    html +=
+      '<div id="cartDetailsFields"' + hiddenAttr + '>' +
+        '<label class="cart-field">Your name' +
+          '<input type="text" id="cartName" maxlength="120" autocomplete="name" required value="' + escapeHtml(preloadName) + '">' +
         '</label>' +
+        '<label class="cart-field">Your WhatsApp/mobile number' +
+          '<input type="tel" id="cartPhone" maxlength="40" autocomplete="tel" required value="' + escapeHtml(preloadPhone) + '">' +
+        '</label>' +
+        '<label class="cart-consent">' +
+          '<input type="checkbox" id="cartRemember"' + (remembered ? " checked" : "") + '>' +
+          '<span>Remember my details on this device</span>' +
+        '</label>' +
+        '<p class="cart-note-small cart-note-small--warning">Do not select this on a shared or public device.</p>' +
       '</div>' +
+      '<label class="cart-consent">' +
+        '<input type="checkbox" id="cartConsent">' +
+        '<span>I agree to Lina’s storing my name and phone number to process this order (POPIA).</span>' +
+      '</label>' +
       '<div aria-hidden="true" style="position:absolute; left:-9999px; top:-9999px;">' +
         '<label>Company<input type="text" id="cartCompany" tabindex="-1" autocomplete="off"></label>' +
       '</div>' +
@@ -315,14 +397,23 @@
       b.addEventListener("click", function () { remove(b.getAttribute("data-remove")); });
     });
 
-    var nameEl = panelEl.querySelector("#cartName");
-    var phoneEl = panelEl.querySelector("#cartPhone");
-    var consentWrap = panelEl.querySelector("#cartConsentWrap");
-    function toggleConsent() {
-      consentWrap.hidden = !(nameEl.value.trim() || phoneEl.value.trim());
+    var changeDetailsBtn = panelEl.querySelector("#cartChangeDetails");
+    if (changeDetailsBtn) {
+      changeDetailsBtn.addEventListener("click", function () {
+        editingDetails = true;
+        renderCart();
+      });
     }
-    nameEl.addEventListener("input", toggleConsent);
-    phoneEl.addEventListener("input", toggleConsent);
+    var forgetMeBtn = panelEl.querySelector("#cartForgetMe");
+    if (forgetMeBtn) {
+      forgetMeBtn.addEventListener("click", function () {
+        // Takes effect immediately — never leaves a stale profile sitting in
+        // storage just because the customer hasn't submitted anything yet.
+        clearRemembered();
+        editingDetails = true;
+        renderCart();
+      });
+    }
 
     panelEl.querySelector("#cartSubmit").addEventListener("click", submitOrder);
     panelEl.querySelector("#cartClose").focus();
@@ -334,9 +425,23 @@
     var name = panelEl.querySelector("#cartName").value.trim();
     var phone = panelEl.querySelector("#cartPhone").value.trim();
     var consentEl = panelEl.querySelector("#cartConsent");
+    var rememberEl = panelEl.querySelector("#cartRemember");
 
-    if ((name || phone) && (!consentEl || !consentEl.checked)) {
-      statusEl.textContent = "Please tick the consent box, or clear your name and phone to order anonymously.";
+    // A website order attempt must be identifiable — checked here for a fast,
+    // friendly error, and again (authoritatively) by validate-order.js on
+    // the server, which is what actually decides whether it can be saved.
+    if (!name) {
+      statusEl.textContent = "Please add your name.";
+      statusEl.setAttribute("data-state", "error");
+      return;
+    }
+    if (!phone) {
+      statusEl.textContent = "Please add a WhatsApp/mobile number.";
+      statusEl.setAttribute("data-state", "error");
+      return;
+    }
+    if (!consentEl || !consentEl.checked) {
+      statusEl.textContent = "Please agree to us storing your details to process this order.";
       statusEl.setAttribute("data-state", "error");
       return;
     }
@@ -347,10 +452,10 @@
 
     var payload = {
       items: state.items.map(function (l) { return { itemId: l.id, quantity: l.qty }; }),
-      customerName: name || null,
-      customerPhone: phone || null,
+      customerName: name,
+      customerPhone: phone,
       customerNote: panelEl.querySelector("#cartNote").value.trim() || null,
-      popiaConsent: Boolean(consentEl && consentEl.checked),
+      popiaConsent: true,
       submissionId: submissionId(),
       company: panelEl.querySelector("#cartCompany").value
     };
@@ -372,7 +477,15 @@
         btn.disabled = false;
         return;
       }
-      // Stored. Only now is the customer offered the WhatsApp link.
+      // Stored. Only now — after a real, successful save, never before and
+      // never on failure — is the remembered profile written or cleared.
+      // Unchecked means "don't keep remembering me", including when a
+      // returning customer changed their details and left it unchecked: the
+      // old profile must not linger, pointing at now-outdated information.
+      if (rememberEl && rememberEl.checked) saveRemembered(name, phone);
+      else clearRemembered();
+
+      // Only now is the customer offered the WhatsApp link.
       lastOrder = res.data.order;
       clear();
       resetSubmissionId();
@@ -395,10 +508,10 @@
     var html =
       '<div class="cart-panel__inner">' +
         '<button class="cart-panel__close" id="cartClose" aria-label="Close">Close ✕</button>' +
-        '<h2 class="cart-panel__title">Order saved</h2>' +
+        '<h2 class="cart-panel__title">Details saved</h2>' +
         '<p class="cart-reference-label">Your order reference</p>' +
         '<p class="cart-reference">' + escapeHtml(o.referenceNumber) + '</p>' +
-        '<p class="cart-note-small">This order is <strong>awaiting confirmation</strong>. Send the WhatsApp message below so Lina’s can confirm availability, collection and payment.</p>' +
+        '<p class="cart-note-small">Your details have been saved. Send the prepared WhatsApp message below to submit your order to Lina’s — it is <strong>awaiting WhatsApp</strong> until then, and Lina’s confirms availability, collection and payment once it arrives.</p>' +
         '<ul class="cart-lines cart-lines--summary">';
     (o.items || []).forEach(function (l) {
       html +=

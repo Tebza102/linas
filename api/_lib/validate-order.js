@@ -133,23 +133,32 @@ function validateOrderSubmission(body) {
     );
   }
 
-  // ---- Optional customer details ----
-  const customerName = optionalString(body.customerName, 120);
-  const rawPhone = optionalString(body.customerPhone, 40);
-  let customerPhone = null;
-  if (rawPhone) {
-    customerPhone = normalizePhone(rawPhone);
-    if (!isValidPhone(customerPhone)) {
-      throw new OrderValidationError("That phone number doesn't look right.", "customerPhone", "phone_invalid");
-    }
+  // ---- Required customer identity ----
+  // A website order attempt must be identifiable: a name and a working
+  // WhatsApp/mobile number, both required unconditionally. There is no
+  // longer an anonymous-order path — one previously existed, which let a
+  // fully anonymous cart persist as an indistinguishable "order" record.
+  // Non-string input is rejected outright rather than coerced (unlike
+  // optionalString above): a stray number/array/object silently becoming a
+  // printable placeholder name would defeat the point of this requirement.
+  if (typeof body.customerName !== "string" || !body.customerName.trim()) {
+    throw new OrderValidationError("Full name is required.", "customerName", "name_required");
+  }
+  const customerName = body.customerName.trim().slice(0, 120);
+
+  if (typeof body.customerPhone !== "string" || !body.customerPhone.trim()) {
+    throw new OrderValidationError("A WhatsApp/mobile number is required.", "customerPhone", "phone_required");
+  }
+  const customerPhone = normalizePhone(body.customerPhone.trim());
+  if (!isValidPhone(customerPhone)) {
+    throw new OrderValidationError("That phone number doesn't look right.", "customerPhone", "phone_invalid");
   }
 
-  // POPIA: consent is required only because — and only when — personal
-  // details are actually being stored. An anonymous order needs no consent.
-  const suppliedPersonalDetails = Boolean(customerName || customerPhone);
-  if (suppliedPersonalDetails && body.popiaConsent !== true) {
+  // POPIA consent is now unconditionally required, for the same reason: no
+  // path to a stored order exists without personal details being supplied.
+  if (body.popiaConsent !== true) {
     throw new OrderValidationError(
-      "Please agree to us storing your contact details, or leave those fields blank.",
+      "Please agree to us storing your contact details to process this order.",
       "popiaConsent", "consent_required"
     );
   }
@@ -174,7 +183,7 @@ function validateOrderSubmission(body) {
     customerName,
     customerPhone,
     customerNote: optionalString(body.customerNote, 500),
-    popiaConsent: suppliedPersonalDetails,
+    popiaConsent: true,
     submissionId
   };
 }

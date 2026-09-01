@@ -4,9 +4,16 @@
 // (see firestore.rules — this mirrors it, it does not replace it).
 //
 // Orders are created only by /api/orders/create, so there is deliberately no
-// "new order" button here. Nothing in this module deletes an order either:
-// a cancelled or uncollected order is a real business event and keeps its
-// place in the record with the appropriate status.
+// "new order" button here. A cancelled or uncollected order is a real
+// business event and keeps its place in the record with the appropriate
+// status — this module never touches status to hide one.
+//
+// "Delete" (owner/developer only) is narrower and different: it is for a
+// record that was never a valid order attempt at all — unconfirmed/no
+// identity, test, duplicate or spam. It is a soft-delete (deletedAt/
+// deletedBy/deletionReason set via the normal update path) — firestore.rules
+// keeps allow delete: if false unconditionally, so no document is ever
+// actually removed, and any of these records can be restored.
 import { requireAuth } from "./auth-guard.js";
 import { db } from "./firebase-init.js";
 import { initLayout } from "./layout.js";
@@ -17,7 +24,7 @@ import {
 import {
   ORDER_STATUSES, ORDER_ACTIVE_STATUSES,
   ALLOWED_TRANSITIONS, REASON_REQUIRED_STATUSES, STATUS_TIMESTAMP_FIELD,
-  PAYMENT_STATUSES, PAYMENT_METHODS,
+  PAYMENT_STATUSES, PAYMENT_METHODS, DELETION_REASONS,
   fmtCents, sastToday, sastDateOf
 } from "./order-constants.js";
 
@@ -49,6 +56,7 @@ async function main() {
     return;
   }
   document.getElementById("ordersBody").hidden = false;
+  if (canWrite) document.getElementById("viewDeleted").hidden = false;
 
   const statusFilter = document.getElementById("statusFilter");
   ORDER_STATUSES.forEach((s) => statusFilter.insertAdjacentHTML("beforeend", `<option value="${esc(s)}">${esc(s)}</option>`));
@@ -56,13 +64,14 @@ async function main() {
   const detailPanel = document.getElementById("detailPanel");
   const todayPanel = document.getElementById("todayPanel");
   const allPanel = document.getElementById("allPanel");
+  const deletedPanel = document.getElementById("deletedPanel");
   let orders = [];
   let view = "today";
 
   /* ---------- Today: the operational board ---------- */
   function renderToday() {
     const today = sastToday();
-    const real = orders.filter((o) => !o.isTestRecord);
+    const real = orders.filter((o) => !o.isTestRecord && !o.deletedAt);
     // Every unresolved order, not just today's: one placed late last night and
     // still unconfirmed is exactly what Lina needs to see when she opens up.
     const active = real.filter((o) => ORDER_ACTIVE_STATUSES.includes(o.status));
@@ -138,6 +147,8 @@ async function main() {
     const to = document.getElementById("dateTo").value;
 
     const rows = orders.filter((o) => {
+      // Active view: a soft-deleted record belongs only in the Deleted tab.
+      if (o.deletedAt) return false;
       if (statusQ && o.status !== statusQ) return false;
       // ISO dates sort lexicographically, so plain string comparison is correct.
       if (from && (o.orderDateKey || "") < from) return false;
@@ -160,8 +171,20 @@ async function main() {
     bindRows(list);
   }
 
+  /* ---------- Deleted: soft-deleted records, owner/developer only ---------- */
+  function renderDeleted() {
+    const rows = orders.filter((o) => o.deletedAt);
+    const list = document.getElementById("deletedList");
+    list.innerHTML = rows.length
+      ? rows.map((o) => orderRowHtml(o) + `<p class="empty-state" style="margin-top:-8px; margin-bottom:12px;">Reason: ${esc(o.deletionReason || "—")}</p>`).join("")
+      : '<p class="empty-state">Nothing deleted.</p>';
+    bindRows(list);
+  }
+
   function render() {
-    if (view === "today") renderToday(); else renderAll();
+    if (view === "today") renderToday();
+    else if (view === "deleted") renderDeleted();
+    else renderAll();
   }
 
   /* ---------- Detail panel ---------- */
@@ -200,6 +223,8 @@ async function main() {
         ${esc(a.actionType === "created" ? "Order placed" :
               a.actionType === "status-change" ? `${a.previousValue || "—"} → ${a.newValue}` :
               a.actionType === "payment-change" ? `Payment: ${a.newValue}` :
+              a.actionType === "deleted" ? "Deleted" :
+              a.actionType === "restored" ? "Restored" :
               a.actionType)}
         ${a.reason ? `<br><em>${esc(a.reason)}</em>` : ""}
         ${a.note ? `<br>${esc(a.note)}` : ""}
@@ -227,6 +252,28 @@ async function main() {
           <div class="detail-field"><dt>History</dt><dd>${activityHtml(activity)}</dd></div>
         </div>`;
       detailPanel.querySelector("#dpClose").addEventListener("click", () => { detailPanel.hidden = true; });
+      detailPanel.hidden = false;
+      return;
+    }
+
+    if (o.deletedAt) {
+      // Soft-deleted: no status/payment/note editing — the record is
+      // frozen except for the one action available here, restoring it.
+      detailPanel.innerHTML = `
+        <div class="detail-panel__inner">
+          <button class="detail-panel__close" id="dpClose" aria-label="Close">Close ✕</button>
+          <h2 style="font-family:var(--font-display);">${esc(o.referenceNumber)}</h2>
+          <div class="detail-field"><dt>Status</dt><dd><span class="status-badge" data-status="${esc(o.status)}">${esc(o.status)}</span></dd></div>
+          ${itemsTableHtml(o)}
+          <div class="detail-field"><dt>Customer</dt><dd>${esc(o.customerName || "Not provided")}${o.customerPhone ? `<br>${esc(o.customerPhone)}` : ""}</dd></div>
+          <div class="detail-field"><dt>Placed</dt><dd>${fmtDateTime(o.createdAt)}</dd></div>
+          <div class="detail-field"><dt>Deleted</dt><dd>${fmtDateTime(o.deletedAt)}<br>Reason: ${esc(o.deletionReason || "—")}</dd></div>
+          <button type="button" class="btn btn--primary" id="restoreOrderBtn" style="margin-top:16px;">Restore order</button>
+          <p class="form-status" id="restoreStatus" role="status" aria-live="polite"></p>
+          <div class="detail-field" style="margin-top:24px;"><dt>History</dt><dd>${activityHtml(activity)}</dd></div>
+        </div>`;
+      detailPanel.querySelector("#dpClose").addEventListener("click", () => { detailPanel.hidden = true; });
+      detailPanel.querySelector("#restoreOrderBtn").addEventListener("click", () => restoreOrder(o));
       detailPanel.hidden = false;
       return;
     }
@@ -285,6 +332,33 @@ async function main() {
         <button type="button" class="btn btn--primary" id="saveOrderBtn" style="margin-top:16px;">Save changes</button>
         <p class="form-status" id="orderSaveStatus" role="status" aria-live="polite"></p>
 
+        <div class="detail-field" style="margin-top:24px; border-top:1px solid var(--border-on-black); padding-top:16px;">
+          <dt>Remove this record</dt>
+          <dd>
+            <p style="font-size:13px; color:var(--white-faint); margin:0 0 8px;">
+              For an order attempt that should never have counted as real —
+              unconfirmed/no identity, a test, a duplicate or spam. This does
+              not delete the underlying record; an owner or developer can
+              restore it at any time from the Deleted tab.
+            </p>
+            <button type="button" class="btn btn--ghost" id="showDeleteBtn">Delete order…</button>
+            <div id="deleteConfirmWrap" hidden style="margin-top:12px;">
+              <p style="font-size:13px;">Delete <strong>${esc(o.referenceNumber)}</strong> — ${esc(o.customerName || "no name captured")}, ${fmtCents(o.subtotalCents)}?</p>
+              <label style="display:grid; gap:4px; font-size:14px;">Reason
+                <select id="fDeleteReason">
+                  <option value="">Select a reason</option>
+                  ${DELETION_REASONS.map((r) => `<option>${esc(r)}</option>`).join("")}
+                </select>
+              </label>
+              <div style="display:flex; gap:8px; margin-top:8px;">
+                <button type="button" class="btn btn--primary" id="confirmDeleteBtn" style="background:var(--red);">Confirm delete</button>
+                <button type="button" class="btn btn--ghost" id="cancelDeleteBtn">Cancel</button>
+              </div>
+              <p class="form-status" id="deleteStatus" role="status" aria-live="polite"></p>
+            </div>
+          </dd>
+        </div>
+
         <div class="detail-field" style="margin-top:24px;"><dt>History</dt><dd id="activityWrap">${activityHtml(activity)}</dd></div>
       </div>`;
 
@@ -299,6 +373,19 @@ async function main() {
     }
 
     detailPanel.querySelector("#saveOrderBtn").addEventListener("click", () => saveOrder(o));
+
+    const showDeleteBtn = detailPanel.querySelector("#showDeleteBtn");
+    const deleteConfirmWrap = detailPanel.querySelector("#deleteConfirmWrap");
+    showDeleteBtn.addEventListener("click", () => {
+      deleteConfirmWrap.hidden = false;
+      showDeleteBtn.hidden = true;
+    });
+    detailPanel.querySelector("#cancelDeleteBtn").addEventListener("click", () => {
+      deleteConfirmWrap.hidden = true;
+      showDeleteBtn.hidden = false;
+    });
+    detailPanel.querySelector("#confirmDeleteBtn").addEventListener("click", () => deleteOrder(o));
+
     detailPanel.hidden = false;
   }
 
@@ -385,21 +472,89 @@ async function main() {
     }
   }
 
+  /* ---------- Soft delete / restore ----------
+     Both are plain writeBatch updates, same shape and same commit-together-
+     with-an-activity-entry discipline as saveOrder above — firestore.rules'
+     isSoftDelete()/isRestore() are what actually enforce owner/developer-only,
+     a real reason, and that no other field can be touched by this write. */
+  async function deleteOrder(o) {
+    const out = detailPanel.querySelector("#deleteStatus");
+    const reason = detailPanel.querySelector("#fDeleteReason").value;
+    if (!DELETION_REASONS.includes(reason)) {
+      out.textContent = "Please select a reason.";
+      out.setAttribute("data-state", "error");
+      return;
+    }
+    out.textContent = "Deleting…";
+    out.removeAttribute("data-state");
+    try {
+      const batch = writeBatch(db);
+      batch.update(doc(db, "orders", o.id), {
+        deletedAt: serverTimestamp(), deletedBy: user.uid, deletionReason: reason,
+        updatedAt: serverTimestamp()
+      });
+      batch.set(doc(collection(db, "orderActivities")), {
+        orderId: o.id, orderReference: o.referenceNumber,
+        actionType: "deleted", previousValue: null, newValue: null, reason, note: null,
+        createdBy: user.uid, createdAt: serverTimestamp()
+      });
+      await batch.commit();
+      out.textContent = "Deleted.";
+      out.setAttribute("data-state", "success");
+      setTimeout(() => { detailPanel.hidden = true; }, 700);
+    } catch (err) {
+      console.error("Order delete failed:", err);
+      out.textContent = "Could not delete: " + (err.message || "unknown error");
+      out.setAttribute("data-state", "error");
+    }
+  }
+
+  async function restoreOrder(o) {
+    const out = detailPanel.querySelector("#restoreStatus");
+    out.textContent = "Restoring…";
+    out.removeAttribute("data-state");
+    try {
+      const batch = writeBatch(db);
+      batch.update(doc(db, "orders", o.id), {
+        deletedAt: null, deletedBy: null, deletionReason: null,
+        updatedAt: serverTimestamp()
+      });
+      batch.set(doc(collection(db, "orderActivities")), {
+        orderId: o.id, orderReference: o.referenceNumber,
+        actionType: "restored", previousValue: null, newValue: null, reason: null, note: null,
+        createdBy: user.uid, createdAt: serverTimestamp()
+      });
+      await batch.commit();
+      out.textContent = "Restored.";
+      out.setAttribute("data-state", "success");
+      setTimeout(() => { detailPanel.hidden = true; }, 700);
+    } catch (err) {
+      console.error("Order restore failed:", err);
+      out.textContent = "Could not restore: " + (err.message || "unknown error");
+      out.setAttribute("data-state", "error");
+    }
+  }
+
   /* ---------- View switching + filters ---------- */
   function setView(next) {
     view = next;
     const todayBtn = document.getElementById("viewToday");
     const allBtn = document.getElementById("viewAll");
+    const deletedBtn = document.getElementById("viewDeleted");
     todayPanel.hidden = next !== "today";
     allPanel.hidden = next !== "all";
+    deletedPanel.hidden = next !== "deleted";
     todayBtn.className = next === "today" ? "btn btn--primary" : "btn btn--ghost";
     allBtn.className = next === "all" ? "btn btn--primary" : "btn btn--ghost";
+    deletedBtn.className = next === "deleted" ? "btn btn--primary" : "btn btn--ghost";
     todayBtn.setAttribute("aria-selected", String(next === "today"));
     allBtn.setAttribute("aria-selected", String(next === "all"));
+    deletedBtn.setAttribute("aria-selected", String(next === "deleted"));
     render();
   }
   document.getElementById("viewToday").addEventListener("click", () => setView("today"));
   document.getElementById("viewAll").addEventListener("click", () => setView("all"));
+  document.getElementById("viewDeleted").addEventListener("click", () => setView("deleted"));
   ["searchInput", "statusFilter", "dateFrom", "dateTo"].forEach((id) => {
     document.getElementById(id).addEventListener("input", render);
     document.getElementById(id).addEventListener("change", render);

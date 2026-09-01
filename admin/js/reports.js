@@ -142,7 +142,7 @@ async function main() {
     section.hidden = false;
     document.getElementById("exportOrdersCsvBtn").hidden = false;
 
-    const real = orders.filter((o) => !o.isTestRecord);
+    const real = orders.filter((o) => !o.isTestRecord && !o.deletedAt);
     const collected = real.filter((o) => ORDER_SALE_STATUSES.includes(o.status));
     const revenueCents = sumCents(orders, ORDER_SALE_STATUSES);
     const finished = real.filter((o) => !ORDER_ACTIVE_STATUSES.includes(o.status)).length;
@@ -186,7 +186,7 @@ async function main() {
     const cols = ["referenceNumber", "status", "statusReason", "paymentStatus", "orderDateKey",
                   "itemCount", "subtotalRands", "customerName", "customerPhone", "items"];
     const lines = [cols.join(",")];
-    orders.filter((o) => !o.isTestRecord).forEach((o) => {
+    orders.filter((o) => !o.isTestRecord && !o.deletedAt).forEach((o) => {
       const row = {
         referenceNumber: o.referenceNumber, status: o.status, statusReason: o.statusReason || "",
         paymentStatus: o.paymentStatus, orderDateKey: o.orderDateKey,

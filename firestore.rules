@@ -309,7 +309,7 @@ service cloud.firestore {
     // chain of per-status conditions for no additional safety. That split is
     // deliberate, not an oversight.
     function isValidOrderStatus(s) {
-      return s in ['Pending WhatsApp', 'Confirmed', 'Preparing',
+      return s in ['Pending WhatsApp', 'Received', 'Confirmed', 'Preparing',
                    'Ready for Collection', 'Collected', 'Cancelled', 'Not Collected'];
     }
     function isValidPaymentStatus(s) {
@@ -317,6 +317,43 @@ service cloud.firestore {
     }
     function isTerminalOrderStatus(s) {
       return s in ['Collected', 'Cancelled', 'Not Collected'];
+    }
+    // Mirrors admin/js/order-constants.js's DELETION_REASONS exactly.
+    function isValidDeletionReason(r) {
+      return r in ['Unconfirmed', 'Test', 'Duplicate', 'Spam', 'Other'];
+    }
+    // Absent (a legacy order, created before this field existed) and an
+    // explicit null (every order created since, until deleted, and every
+    // restored order) both mean "not deleted" — checked the same way here
+    // as in admin/js/order-constants.js's sumCents/countIn.
+    function isCurrentlyDeleted() {
+      return ('deletedAt' in resource.data) && resource.data.deletedAt != null;
+    }
+    // A soft delete: exactly the three deletion fields (+ updatedAt) may
+    // change, only from not-deleted, only to a real server timestamp
+    // attributed to the caller's own uid with an allowlisted reason. Status,
+    // customer details, totals, items, reference and every other field are
+    // excluded from affectedKeys() entirely — not merely required to match
+    // their previous value, structurally impossible to include in this write.
+    function isSoftDelete() {
+      return !isCurrentlyDeleted()
+        && request.resource.data.deletedAt == request.time
+        && request.resource.data.deletedBy == request.auth.uid
+        && isValidDeletionReason(request.resource.data.deletionReason)
+        && request.resource.data.updatedAt == request.time
+        && request.resource.data.diff(resource.data).affectedKeys()
+             .hasOnly(['deletedAt', 'deletedBy', 'deletionReason', 'updatedAt']);
+    }
+    // The mirror image: only from currently-deleted, only clearing all three
+    // fields back to explicit null together — never a partial clear.
+    function isRestoreDelete() {
+      return isCurrentlyDeleted()
+        && request.resource.data.deletedAt == null
+        && request.resource.data.deletedBy == null
+        && request.resource.data.deletionReason == null
+        && request.resource.data.updatedAt == request.time
+        && request.resource.data.diff(resource.data).affectedKeys()
+             .hasOnly(['deletedAt', 'deletedBy', 'deletionReason', 'updatedAt']);
     }
 
     match /orders/{orderId} {
@@ -363,7 +400,7 @@ service cloud.firestore {
              'status', 'statusReason', 'statusUpdatedAt', 'statusUpdatedBy',
              'paymentStatus', 'paymentMethod', 'paymentReference', 'paymentUpdatedAt',
              'internalNotes', 'customerName', 'customerPhone',
-             'confirmedAt', 'preparingAt', 'readyAt', 'collectedAt',
+             'receivedAt', 'confirmedAt', 'preparingAt', 'readyAt', 'collectedAt',
              'cancelledAt', 'notCollectedAt', 'updatedAt'
            ])
           && request.resource.data.updatedAt == request.time
@@ -375,7 +412,16 @@ service cloud.firestore {
                    || isStatusTransition()));
       }
 
-      allow update: if isOwnerOrDev() && isOrderUpdate();
+      // Soft delete/restore are checked as alternatives to the normal
+      // status/terminal update, not folded into isOrderUpdate(): they touch
+      // a disjoint set of fields (deletion metadata, never status/customer/
+      // money/items) and must remain possible regardless of the order's
+      // current status, including a terminal one (Collected, Cancelled,
+      // Not Collected) — isTerminalUpdate()'s own hasOnly() does not
+      // include the deletion fields, so a terminal order could otherwise
+      // never be soft-deleted.
+      allow update: if isOwnerOrDev()
+        && (isSoftDelete() || isRestoreDelete() || isOrderUpdate());
     }
 
     // Immutable audit trail for orders, mirroring enquiryActivities. Written

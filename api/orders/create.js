@@ -186,12 +186,22 @@ module.exports = async (req, res) => {
 
         whatsappMessage,
 
+        receivedAt: null,
         confirmedAt: null,
         preparingAt: null,
         readyAt: null,
         collectedAt: null,
         cancelledAt: null,
         notCollectedAt: null,
+
+        // Soft-deletion metadata (order-integrity change). Explicit null at
+        // creation, matching the lifecycle-timestamp fields above — restore
+        // clears these back to explicit null too, never removes them, so
+        // "not deleted" has exactly one representation for every order
+        // created from this point on (see firestore.rules).
+        deletedAt: null,
+        deletedBy: null,
+        deletionReason: null,
 
         internalNotes: null,
         isTestRecord: false,

@@ -471,6 +471,21 @@ a { color: inherit; }
 .cart-consent { display: flex; gap: var(--space-2); align-items: flex-start; font-size: 12px; color: var(--white-dim); margin-bottom: var(--space-4); line-height: 1.5; }
 .cart-consent input { margin-top: 3px; flex: none; }
 
+/* Returning-customer summary (order-integrity change) — same panel tokens
+   as the rest of the cart, just a bordered block so it reads as its own
+   unit rather than blending into the field list above/below it. */
+.cart-remembered {
+  border: 1px solid var(--border-on-black); border-radius: 2px;
+  padding: var(--space-3); margin-bottom: var(--space-4);
+}
+.cart-remembered__line { margin: 0 0 var(--space-1); font-size: 14px; }
+.cart-remembered__action {
+  background: none; border: none; padding: 0; margin-right: var(--space-4);
+  font: inherit; font-size: 12px; color: var(--white); text-decoration: underline;
+  cursor: pointer; min-height: 32px;
+}
+.cart-note-small--warning { color: var(--red); }
+
 .cart-submit { width: 100%; margin-top: var(--space-2); min-height: 48px; display: block; }
 .cart-copy { width: 100%; margin-top: var(--space-3); }
 .cart-reference-label { font-size: 12px; text-transform: uppercase; letter-spacing: 0.1em; color: var(--white-dim); margin: 0; }

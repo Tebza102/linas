@@ -21,6 +21,9 @@
     <div class="admin-toolbar" role="tablist" aria-label="Order views">
       <button type="button" class="btn btn--primary" id="viewToday" role="tab" aria-selected="true">Today</button>
       <button type="button" class="btn btn--ghost" id="viewAll" role="tab" aria-selected="false">All orders</button>
+      <!-- Owner/developer only — hidden by orders.js for observer, who has no
+           reason to browse removed records and cannot restore them anyway. -->
+      <button type="button" class="btn btn--ghost" id="viewDeleted" role="tab" aria-selected="false" hidden>Deleted</button>
     </div>
 
     <!-- Today: the operational board Lina works from during a trading day. -->
@@ -40,6 +43,13 @@
       </div>
       <p class="empty-state" id="allSummary"></p>
       <div id="ordersList"></div>
+    </section>
+
+    <!-- Deleted: soft-deleted records only. Not a real Firestore delete —
+         see firestore.rules — so every record here can be restored. -->
+    <section id="deletedPanel" hidden>
+      <p class="empty-state">Removed order attempts — invalid, test, duplicate or spam. Nothing here is permanently gone; any of these can be restored.</p>
+      <div id="deletedList"></div>
     </section>
   </div>
 </main>
